@@ -226,6 +226,48 @@ Arte conceitual gerada por IA a pedido do Vitor. Serve para cores e clima, não 
 
 - Sem galeria pública por enquanto (exigiria moderação). Ideia guardada para o futuro.
 
+## ADR-025 · Atmosfera bonita com shaders baratos
+**Status:** Aprovada (20/10/2026)
+
+- **Objetivo:** atmosfera bonita como na referência `docs/referencias/arte-conceito-01.png`, vinda de luz e cor, não de polígonos.
+- **Usar:** shader toon (luz em degraus de cor), luz de contorno, névoa colorida por distância e altura, céu pintado, vegetação balançando por shader de vértice, água estilizada, brilho (glow) nas magias.
+- **Não usar no hardware mínimo:** névoa volumétrica, iluminação global em tempo real, muitas luzes com sombra simultâneas.
+- **Menu de qualidade (Baixo e Alto):** o Alto liga enfeites extras (partículas, sombras, vegetação) para PCs fortes. Nenhum ajuste de qualidade pode mudar o combate (colisões, visibilidade de inimigos, áreas de efeito).
+- **Fácil de mudar?** Sim, é camada visual.
+
+## ADR-026 · Sistema de som por camadas
+**Status:** Aprovada (20/10/2026)
+
+- Som montado como as magias: camadas de material + ação (ex.: "pedra + voo", "fogo + explosão"), com pequena variação de tom a cada execução.
+- Som posicional 3D.
+- Limite de sons simultâneos (valor definido medindo desempenho e clareza).
+- Volumes separados no menu: música, efeitos, vozes, interface.
+- Fontes: pacotes de domínio público (ex.: Kenney), Freesound com licença conferida por arquivo, geradores de efeito retrô (ex.: jsfxr). Toda licença registrada num arquivo de créditos.
+
+## ADR-027 · Música
+**Status:** Aprovada (20/10/2026)
+
+- Épica na exploração, bobinha e saltitante no combate. Transição suave entre as duas.
+- Música gerada por IA é permitida se for gratuita.
+- **Ressalva:** planos gratuitos de geradores de música costumam proibir uso comercial. Na fase A não importa; antes de qualquer lançamento comercial, cada faixa precisa ter licença compatível ou ser substituída. Registrar a origem de cada faixa nos créditos.
+
+## ADR-028 · Sons das criaturas gravados pelos jogadores
+**Status:** Aprovada (20/10/2026)
+
+- O Vitor e o amigo gravam vozes e sons das criaturas (ex.: galinha zumbi, armário possuído).
+- O jogo aplica variações de tom e velocidade para multiplicar as gravações.
+
+## ADR-029 · Voz entre jogadores pelo Discord
+**Status:** Aprovada (20/10/2026)
+
+- Conversa por voz entre os jogadores fica no Discord. O jogo não terá voz entre jogadores.
+- O jogo cuida apenas da voz que vira magia (tecla V, ADR-023) e do chat escrito (ADR-010).
+
+## ADR-030 · Canto de atmosfera na arena da Fase 1
+**Status:** Proposta (aguardando o Vitor)
+
+- Um canto da arena de testes recebe o tratamento visual completo (ADR-025), para medir cedo quanto o hardware mínimo aguenta.
+
 ---
 
 ## Status da descoberta
