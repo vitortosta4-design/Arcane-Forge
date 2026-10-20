@@ -20,6 +20,7 @@ var modo_camera_primeira_pessoa := true
 
 var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
+var _aguardando_interpretacao := false
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -101,12 +102,18 @@ func _tentar_conjurar_bola_de_fogo() -> void:
 
 
 ## Chamado pela caixa de conjuração (ADR-010) quando o jogador confirma uma
-## frase. O Interpretador ainda não tem IA (Fase 2 vai ligar o porteiro no
-## Supabase); por enquanto só reconhece algumas palavras-chave (ADR-002).
+## frase. Primeiro tenta o porteiro de verdade (Supabase + Groq); se a IA
+## estiver fora do ar, cai para o Interpretador local, que só reconhece
+## algumas palavras-chave sem precisar de internet (ADR-002). Se nenhum
+## dos dois entender, avisa o jogador.
 func conjurar_por_texto(frase: String) -> void:
-	if _cooldown_restante > 0.0:
+	if _cooldown_restante > 0.0 or _aguardando_interpretacao:
 		return
-	var ficha := Interpretador.interpretar(frase)
+	_aguardando_interpretacao = true
+	var ficha := await Porteiro.interpretar(frase)
+	if ficha.is_empty():
+		ficha = Interpretador.interpretar(frase)
+	_aguardando_interpretacao = false
 	if ficha.is_empty():
 		conjurou.emit("a magia está instável agora, use seu grimório")
 		return

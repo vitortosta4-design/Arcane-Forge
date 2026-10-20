@@ -19,6 +19,7 @@ func _ready() -> void:
 	await _testar_galinha_morre_com_vida_zero()
 	await _testar_explosao_quebra_caixa_e_acende_barril()
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
+	await _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio()
 	_testar_interpretador_reconhece_bola_de_fogo()
 	_testar_interpretador_nao_entende_frase_desconhecida()
 	_testar_validador_calcula_custo_de_mana_pelos_componentes()
@@ -182,6 +183,15 @@ func _testar_executor_cria_projetil_a_partir_da_ficha() -> void:
 		projetil.queue_free()
 
 
+## Testa o desligador do porteiro (usado pelos próprios testes para não
+## gastar cota nem depender de internet, e que também serve ao jogador se
+## quiser forçar o modo offline).
+func _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio() -> void:
+	Porteiro.ativo = false
+	var ficha: Dictionary = await Porteiro.interpretar("qualquer coisa")
+	_afirmar("porteiro desligado devolve ficha vazia sem tentar a rede", ficha.is_empty())
+
+
 ## Testa a camada trocável da ADR-002: hoje sem IA, só palavras-chave.
 func _testar_interpretador_reconhece_bola_de_fogo() -> void:
 	var ficha := Interpretador.interpretar("quero conjurar uma BOLA de FOGO enorme")
@@ -219,6 +229,7 @@ func _testar_validador_calcula_custo_de_mana_pelos_componentes() -> void:
 ## Testa o caminho completo da Fase 2: texto -> Interpretador -> Validador
 ## -> Executor, sem precisar de internet nem de IA de verdade ainda.
 func _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil() -> void:
+	Porteiro.ativo = false
 	var cena: PackedScene = load("res://cenas/mago.tscn")
 	var mago := cena.instantiate()
 	add_child(mago)
@@ -237,6 +248,7 @@ func _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil() -> void
 
 
 func _testar_conjurar_por_texto_desconhecido_nao_gasta_mana() -> void:
+	Porteiro.ativo = false
 	var cena: PackedScene = load("res://cenas/mago.tscn")
 	var mago := cena.instantiate()
 	add_child(mago)
