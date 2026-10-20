@@ -7,17 +7,15 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pedra"]
 shader = ExtResource("2")
-shader_parameter/cor_base = Color(0.55, 0.52, 0.5, 1)
-shader_parameter/contorno_intensidade = 0.45
-shader_parameter/contorno_mistura = 0.55
-shader_parameter/aspereza = 0.9
+shader_parameter/cor_base = Color(0.5, 0.48, 0.45, 1)
+shader_parameter/contorno_intensidade = 0.35
+shader_parameter/faixas = 2
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_faixa"]
 shader = ExtResource("2")
 shader_parameter/cor_base = Color(0.2, 0.35, 0.75, 1)
-shader_parameter/contorno_intensidade = 0.3
-shader_parameter/contorno_mistura = 0.5
-shader_parameter/aspereza = 0.7
+shader_parameter/contorno_intensidade = 0.2
+shader_parameter/faixas = 2
 
 [sub_resource type="SphereMesh" id="SphereMesh_chama"]
 radius = 0.12
