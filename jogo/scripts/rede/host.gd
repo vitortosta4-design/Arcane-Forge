@@ -5,6 +5,7 @@ extends Node
 
 const LIMITE_PROJETEIS_ATIVOS := 40
 const LIMITE_CRIATURAS_INVOCADAS := 6
+const CenaEfeitoExplosao := preload("res://cenas/efeitos/explosao_visual.tscn")
 
 var projeteis_ativos: Array[Node] = []
 var criaturas_invocadas: Array[Node] = []
@@ -21,6 +22,12 @@ func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, e
 	var mundo := get_tree().current_scene
 	if mundo == null:
 		return
+
+	var efeito := CenaEfeitoExplosao.instantiate()
+	efeito.raio_m = raio_m
+	mundo.add_child(efeito)
+	efeito.global_position = pos
+
 	var alvos := get_tree().get_nodes_in_group("recebe_dano")
 	for alvo in alvos:
 		if alvo in excluir:
