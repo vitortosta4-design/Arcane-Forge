@@ -81,7 +81,9 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 - Criaturas montadas proceduralmente a partir de formas simples e peças modulares. O visual tosco faz parte da identidade.
 
 ### Referência visual: `docs/referencias/arte-conceito-01.png` (adicionada em 20/10/2026)
-Arte conceitual gerada por IA a pedido do Vitor. Serve para cores e clima, não como alvo de detalhe: o Vitor achou que ela tem polígonos demais.
+Arte conceitual gerada por IA a pedido do Vitor.
+
+**Atualizado em 20/10/2026 a pedido do Vitor:** esta imagem é o objetivo do desenvolvimento visual em cores, iluminação, intensidade das cores, animação e ambiente. Em qualquer dúvida visual, comparar um print do jogo com ela e perguntar o que falta para chegar lá, dentro das limitações abaixo e do ADR-025. Ela não é alvo de detalhe: o Vitor achou que ela tem polígonos demais.
 
 **Aproveitar:**
 - Paleta saturada, com contraste de quente e frio: luz dourada, sombras azuladas, céu azul vivo.
