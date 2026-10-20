@@ -111,13 +111,20 @@ func conjurar_por_texto(frase: String) -> void:
 		return
 	_aguardando_interpretacao = true
 	var ficha := await Porteiro.interpretar(frase)
-	if ficha.is_empty():
+	if _ficha_sem_componentes(ficha):
 		ficha = Interpretador.interpretar(frase)
 	_aguardando_interpretacao = false
-	if ficha.is_empty():
+	if _ficha_sem_componentes(ficha):
 		conjurou.emit("a magia está instável agora, use seu grimório")
 		return
 	_conjurar_ficha(ficha)
+
+
+## A IA às vezes pode devolver uma ficha "educada" (com nome e legenda) mas
+## sem nenhum componente de verdade, o que faria o jogador gastar mana e
+## não ver nada acontecer. Isso conta como "não entendi" (ADR-002).
+func _ficha_sem_componentes(ficha: Dictionary) -> bool:
+	return ficha.is_empty() or (ficha.get("componentes", []) as Array).is_empty()
 
 
 func _conjurar_ficha(ficha: Dictionary) -> void:

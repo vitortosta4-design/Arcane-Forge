@@ -25,6 +25,7 @@ func _ready() -> void:
 	_testar_validador_calcula_custo_de_mana_pelos_componentes()
 	await _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil()
 	await _testar_conjurar_por_texto_desconhecido_nao_gasta_mana()
+	await _testar_ficha_sem_componentes_conta_como_nao_entendida()
 
 	print("")
 	if _falhas == 0:
@@ -244,6 +245,29 @@ func _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil() -> void
 	_afirmar("conjurar por texto reconhecido cria um projétil no mundo", projeteis.size() == 1)
 	for p in projeteis:
 		p.queue_free()
+	mago.queue_free()
+
+
+## Achado ao revisar a Fase 2: a IA às vezes pode devolver uma ficha
+## "educada" (com nome e legenda) mas sem nenhum componente de verdade.
+## Isso tem que contar como "não entendi", senão o jogador gasta a tentativa
+## e não vê nada acontecer, sem nenhum aviso.
+func _testar_ficha_sem_componentes_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	_afirmar("dicionário vazio conta como sem componentes", mago._ficha_sem_componentes({}))
+	_afirmar(
+		"ficha com lista de componentes vazia conta como sem componentes",
+		mago._ficha_sem_componentes({"nome": "Nada", "componentes": []})
+	)
+	_afirmar(
+		"ficha com um componente de verdade não conta como vazia",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "projetil"}]})
+	)
+
 	mago.queue_free()
 
 
