@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
+[ext_resource type="Script" path="res://scripts/ambiente/decorador_terreno.gd" id="8"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_chao"]
 size = Vector2(40, 40)
@@ -51,6 +52,13 @@ surface_material_override/0 = SubResource("StandardMaterial3D_chao")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Chao"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_chao")
+
+[node name="DecoradorTerreno" type="Node3D" parent="."]
+script = ExtResource("8")
+
+[node name="Rochas" type="MultiMeshInstance3D" parent="DecoradorTerreno"]
+
+[node name="Grama" type="MultiMeshInstance3D" parent="DecoradorTerreno"]
 
 [node name="Obstaculo1" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.75, -3)

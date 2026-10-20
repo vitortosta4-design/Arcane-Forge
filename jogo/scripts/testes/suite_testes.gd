@@ -20,6 +20,7 @@ func _ready() -> void:
 	await _testar_explosao_quebra_caixa_e_acende_barril()
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
 	await _testar_projetil_usa_a_cor_do_material_da_ficha()
+	await _testar_projetil_usa_a_forma_da_ficha()
 	await _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio()
 	_testar_interpretador_reconhece_bola_de_fogo()
 	_testar_interpretador_nao_entende_frase_desconhecida()
@@ -212,6 +213,33 @@ func _testar_projetil_usa_a_cor_do_material_da_ficha() -> void:
 		var cor_esperada := Validador.cor_para_material("agua")
 		var cor_aplicada: Color = mesh.get_surface_override_material(0).albedo_color
 		_afirmar("projétil de água tem a cor de água, não de fogo", cor_aplicada.is_equal_approx(cor_esperada))
+		projetil.queue_free()
+
+
+## Pedido do Vitor: as magias não podem ser sempre uma bolinha. Testa que um
+## componente com "forma": "cubo" realmente vira uma malha de cubo, não a
+## esfera padrão da cena do projétil.
+func _testar_projetil_usa_a_forma_da_ficha() -> void:
+	var ficha := {
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"material": "pedra",
+				"forma": "cubo",
+				"velocidade": 10.0,
+				"ao_impactar": []
+			}
+		]
+	}
+	Executor.executar_ficha(ficha, Vector3(0, 1, 0), Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+
+	var projeteis := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/projetil.gd"))
+	_afirmar("projétil cúbico foi criado", projeteis.size() == 1)
+	if projeteis.size() > 0:
+		var projetil = projeteis[0]
+		var mesh: MeshInstance3D = projetil.get_node("MeshInstance3D")
+		_afirmar("projétil com forma cubo usa uma malha de caixa", mesh.mesh is BoxMesh)
 		projetil.queue_free()
 
 

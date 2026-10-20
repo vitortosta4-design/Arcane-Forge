@@ -24,6 +24,24 @@ func definir_material(nome: String) -> void:
 	_mesh.set_surface_override_material(0, mat)
 
 
+## O Executor chama isto para o projétil parecer com a "forma" da ficha
+## (esfera, ovo ou cubo, ver Validador.FORMAS_VALIDAS), em vez de ser
+## sempre uma bolinha não importa o que o jogador pediu.
+func definir_forma(nome: String) -> void:
+	_mesh.scale = Vector3.ONE
+	match nome:
+		"cubo":
+			var malha := BoxMesh.new()
+			malha.size = Vector3(0.32, 0.32, 0.32)
+			_mesh.mesh = malha
+		"ovo":
+			# Sem malha de ovo pronta no Godot: alonga a esfera na direção
+			# do voo, que já dá a silhueta de ovo (ADR-007, formas simples).
+			_mesh.scale = Vector3(0.8, 0.8, 1.5)
+		_:
+			pass # esfera é a malha padrão da cena, nada a fazer
+
+
 func _physics_process(delta: float) -> void:
 	global_position += -global_transform.basis.z * velocidade * delta
 	_tempo_vivo += delta
