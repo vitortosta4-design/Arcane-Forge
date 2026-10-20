@@ -6,8 +6,22 @@ var velocidade := 10.0
 var ao_impactar: Array = []
 var dono: Node = null
 var tempo_de_vida_s := 5.0
+var material := "fogo"
 
 var _tempo_vivo := 0.0
+
+@onready var _mesh: MeshInstance3D = $MeshInstance3D
+
+
+## O Executor chama isto logo depois de criar o projétil, para ele ficar
+## com a cor do material da ficha em vez da cor fixa de fogo (ADR-007).
+func definir_material(nome: String) -> void:
+	material = nome
+	var cor := Validador.cor_para_material(nome)
+	var mat := (_mesh.get_surface_override_material(0) as StandardMaterial3D).duplicate()
+	mat.albedo_color = cor
+	mat.emission = cor
+	_mesh.set_surface_override_material(0, mat)
 
 
 func _physics_process(delta: float) -> void:
@@ -32,6 +46,7 @@ func _explodir() -> void:
 				efeito.get("dano", 5.0),
 				efeito.get("empurrao", 0.0),
 				efeito.get("etiquetas", []),
-				[dono]
+				[dono],
+				material
 			)
 	queue_free()

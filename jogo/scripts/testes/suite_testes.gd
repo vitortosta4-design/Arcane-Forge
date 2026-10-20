@@ -19,6 +19,7 @@ func _ready() -> void:
 	await _testar_galinha_morre_com_vida_zero()
 	await _testar_explosao_quebra_caixa_e_acende_barril()
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
+	await _testar_projetil_usa_a_cor_do_material_da_ficha()
 	await _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio()
 	_testar_interpretador_reconhece_bola_de_fogo()
 	_testar_interpretador_nao_entende_frase_desconhecida()
@@ -184,6 +185,36 @@ func _testar_executor_cria_projetil_a_partir_da_ficha() -> void:
 		projetil.queue_free()
 
 
+## Achado ao testar com o Vitor: magias de materiais diferentes (água,
+## pedra...) saíam todas com a cor fixa de fogo, porque nada aplicava a cor
+## do material de verdade. Testa que o projétil (e a explosão que ele
+## carrega) realmente ficam com a cor certa do material da ficha.
+func _testar_projetil_usa_a_cor_do_material_da_ficha() -> void:
+	var ficha := {
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"material": "agua",
+				"forma": "esfera",
+				"velocidade": 10.0,
+				"ao_impactar": []
+			}
+		]
+	}
+	Executor.executar_ficha(ficha, Vector3(0, 1, 0), Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+
+	var projeteis := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/projetil.gd"))
+	_afirmar("projétil de água foi criado", projeteis.size() == 1)
+	if projeteis.size() > 0:
+		var projetil = projeteis[0]
+		var mesh: MeshInstance3D = projetil.get_node("MeshInstance3D")
+		var cor_esperada := Validador.cor_para_material("agua")
+		var cor_aplicada: Color = mesh.get_surface_override_material(0).albedo_color
+		_afirmar("projétil de água tem a cor de água, não de fogo", cor_aplicada.is_equal_approx(cor_esperada))
+		projetil.queue_free()
+
+
 ## Testa o desligador do porteiro (usado pelos próprios testes para não
 ## gastar cota nem depender de internet, e que também serve ao jogador se
 ## quiser forçar o modo offline).
@@ -264,8 +295,20 @@ func _testar_ficha_sem_componentes_conta_como_nao_entendida() -> void:
 		mago._ficha_sem_componentes({"nome": "Nada", "componentes": []})
 	)
 	_afirmar(
-		"ficha com um componente de verdade não conta como vazia",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "projetil"}]})
+		"componente sem nenhum ao_impactar conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "projetil"}]})
+	)
+	_afirmar(
+		"componente com dano e empurrão zerados conta como sem componentes (achado com o Vitor)",
+		mago._ficha_sem_componentes({
+			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 0.0, "empurrao": 0.0}]}]
+		})
+	)
+	_afirmar(
+		"componente com dano de verdade não conta como vazia",
+		not mago._ficha_sem_componentes({
+			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 10.0, "empurrao": 0.0}]}]
+		})
 	)
 
 	mago.queue_free()

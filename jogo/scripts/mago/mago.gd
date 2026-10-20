@@ -120,10 +120,22 @@ func conjurar_por_texto(frase: String) -> void:
 
 
 ## A IA às vezes pode devolver uma ficha "educada" (com nome e legenda) mas
-## sem nenhum componente de verdade, o que faria o jogador gastar mana e
-## não ver nada acontecer. Isso conta como "não entendi" (ADR-002).
+## sem nenhum componente de verdade, ou um componente "fantasma" com dano e
+## empurrão zerados (aconteceu de verdade testando com o Vitor: frase sem
+## sentido virou uma bola de fogo que não fazia nada). As duas coisas fariam
+## o jogador gastar a tentativa e não ver nada acontecer, então contam como
+## "não entendi" (ADR-002).
 func _ficha_sem_componentes(ficha: Dictionary) -> bool:
-	return ficha.is_empty() or (ficha.get("componentes", []) as Array).is_empty()
+	if ficha.is_empty():
+		return true
+	var componentes: Array = ficha.get("componentes", [])
+	if componentes.is_empty():
+		return true
+	for componente in componentes:
+		for efeito in (componente.get("ao_impactar", []) as Array):
+			if efeito.get("dano", 0.0) > 0.0 or efeito.get("empurrao", 0.0) > 0.0:
+				return false
+	return true
 
 
 func _conjurar_ficha(ficha: Dictionary) -> void:

@@ -24,4 +24,5 @@ static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Ve
 	projetil.velocidade = componente.get("velocidade", 10.0)
 	projetil.ao_impactar = componente.get("ao_impactar", [])
 	projetil.dono = dono
+	projetil.definir_material(componente.get("material", "fogo"))
 	Host.registrar_projetil(projetil)

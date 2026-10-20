@@ -5,16 +5,20 @@ extends Node3D
 
 @export var duracao_s := 0.25
 
-var raio_m := 2.0
-
 @onready var _mesh: MeshInstance3D = $MeshInstance3D
 
 
-func _ready() -> void:
+## O Host chama isto logo depois de criar o efeito (em vez de usar _ready,
+## para não depender da ordem entre add_child e a atribuição de valores).
+func iniciar(raio_m: float, nome_material: String) -> void:
 	_mesh.scale = Vector3.ONE * 0.05
-	# Duplica o material: sem isso, explosões ao mesmo tempo compartilhariam o
-	# mesmo recurso e uma roubaria o desaparecimento da outra.
+
+	# Duplica o material: sem isso, explosões ao mesmo tempo compartilhariam
+	# o mesmo recurso e uma roubaria a cor/desaparecimento da outra.
 	var material := (_mesh.get_surface_override_material(0) as StandardMaterial3D).duplicate()
+	var cor := Validador.cor_para_material(nome_material)
+	material.albedo_color = Color(cor.r, cor.g, cor.b, material.albedo_color.a)
+	material.emission = cor
 	_mesh.set_surface_override_material(0, material)
 
 	var tween := create_tween()

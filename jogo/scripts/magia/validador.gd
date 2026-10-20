@@ -49,6 +49,24 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 	return c
 
 
+## Cor low poly aproximada de cada material (ADR-007), usada pelo projétil
+## e pela explosão para o jogador conseguir ver a diferença entre uma magia
+## de água, pedra, metal, madeira ou fogo (achado testando com o Vitor:
+## antes tudo tinha a cor fixa de fogo, não importa o material da ficha).
+static func cor_para_material(material: String) -> Color:
+	match material:
+		"agua":
+			return Color(0.25, 0.55, 0.95)
+		"pedra":
+			return Color(0.55, 0.5, 0.45)
+		"metal":
+			return Color(0.75, 0.78, 0.82)
+		"madeira":
+			return Color(0.5, 0.35, 0.15)
+		_:
+			return Color(1, 0.45, 0.05) # fogo, e qualquer coisa fora da lista
+
+
 static func _escolher_valido(valor: String, lista: Array, padrao: String) -> String:
 	if valor in lista:
 		return valor

@@ -18,15 +18,15 @@ func aplicar_dano(entidade: Node, dano: float, origem_dano: Vector3 = Vector3.ZE
 		entidade.receber_dano(dano, origem_dano, empurrao)
 
 
-func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, etiquetas: Array, excluir: Array = []) -> void:
+func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, etiquetas: Array, excluir: Array = [], material: String = "fogo") -> void:
 	var mundo := get_tree().current_scene
 	if mundo == null:
 		return
 
 	var efeito := CenaEfeitoExplosao.instantiate()
-	efeito.raio_m = raio_m
 	mundo.add_child(efeito)
 	efeito.global_position = pos
+	efeito.iniciar(raio_m, material)
 
 	var alvos := get_tree().get_nodes_in_group("recebe_dano")
 	for alvo in alvos:
