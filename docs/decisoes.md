@@ -80,6 +80,27 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 - Cores vibrantes, na linha de Fortnite: Salve o Mundo (2018).
 - Criaturas montadas proceduralmente a partir de formas simples e peças modulares. O visual tosco faz parte da identidade.
 
+### Referência visual: `docs/referencias/arte-conceito-01.png` (adicionada em 20/10/2026)
+Arte conceitual gerada por IA a pedido do Vitor. Serve para cores e clima, não como alvo de detalhe: o Vitor achou que ela tem polígonos demais.
+
+**Aproveitar:**
+- Paleta saturada, com contraste de quente e frio: luz dourada, sombras azuladas, céu azul vivo.
+- Magias brilhantes (emissivas) que se destacam do cenário: azul, roxo, verde e laranja.
+- Mãos do mago em primeira pessoa ocupando os cantos da tela.
+- HUD: retrato com vida e mana no canto superior esquerdo, 4 magias de bolso centralizadas embaixo, minimapa no canto inferior direito.
+- Profundidade com névoa colorida e um céu pintado ao fundo (castelo, ilhas flutuantes), que custa quase nada de desempenho porque é uma imagem, não modelos 3D.
+- Ruínas de pedra, tochas, barris e caixas como cenário típico.
+
+**Não seguir:**
+- Densidade de detalhe e de polígonos (personagens, pedras e vegetação muito esculpidos).
+- Iluminação volumétrica e partículas em excesso: inviável na GTX 1050 2 GB.
+- Inimigos com tom "sério": os nossos são absurdos (ADR-019).
+
+**Como chegar perto barato:**
+- Cores lisas por face (flat shading) a partir de uma única textura de paleta.
+- Luz de contorno (rim light) e sombra suave em tom azulado.
+- Brilho (glow) só nas magias, intensidade testada na Fase 1 medindo FPS.
+
 ## ADR-008 · Plataforma e controles
 **Status:** Aprovada (20/10/2026)
 
