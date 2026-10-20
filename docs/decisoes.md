@@ -80,6 +80,29 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 - Cores vibrantes, na linha de Fortnite: Salve o Mundo (2018).
 - Criaturas montadas proceduralmente a partir de formas simples e peças modulares. O visual tosco faz parte da identidade.
 
+### Referência visual: `docs/referencias/arte-conceito-01.png` (adicionada em 20/10/2026)
+Arte conceitual gerada por IA a pedido do Vitor.
+
+**Atualizado em 20/10/2026 a pedido do Vitor:** esta imagem é o objetivo do desenvolvimento visual em cores, iluminação, intensidade das cores, animação e ambiente. Em qualquer dúvida visual, comparar um print do jogo com ela e perguntar o que falta para chegar lá, dentro das limitações abaixo e do ADR-025. Ela não é alvo de detalhe: o Vitor achou que ela tem polígonos demais.
+
+**Aproveitar:**
+- Paleta saturada, com contraste de quente e frio: luz dourada, sombras azuladas, céu azul vivo.
+- Magias brilhantes (emissivas) que se destacam do cenário: azul, roxo, verde e laranja.
+- Mãos do mago em primeira pessoa ocupando os cantos da tela.
+- HUD: retrato com vida e mana no canto superior esquerdo, 4 magias de bolso centralizadas embaixo, minimapa no canto inferior direito.
+- Profundidade com névoa colorida e um céu pintado ao fundo (castelo, ilhas flutuantes), que custa quase nada de desempenho porque é uma imagem, não modelos 3D.
+- Ruínas de pedra, tochas, barris e caixas como cenário típico.
+
+**Não seguir:**
+- Densidade de detalhe e de polígonos (personagens, pedras e vegetação muito esculpidos).
+- Iluminação volumétrica e partículas em excesso: inviável na GTX 1050 2 GB.
+- Inimigos com tom "sério": os nossos são absurdos (ADR-019).
+
+**Como chegar perto barato:**
+- Cores lisas por face (flat shading) a partir de uma única textura de paleta.
+- Luz de contorno (rim light) e sombra suave em tom azulado.
+- Brilho (glow) só nas magias, intensidade testada na Fase 1 medindo FPS.
+
 ## ADR-008 · Plataforma e controles
 **Status:** Aprovada (20/10/2026)
 
@@ -204,6 +227,48 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 **Status:** Aprovada (20/10/2026)
 
 - Sem galeria pública por enquanto (exigiria moderação). Ideia guardada para o futuro.
+
+## ADR-025 · Atmosfera bonita com shaders baratos
+**Status:** Aprovada (20/10/2026)
+
+- **Objetivo:** atmosfera bonita como na referência `docs/referencias/arte-conceito-01.png`, vinda de luz e cor, não de polígonos.
+- **Usar:** shader toon (luz em degraus de cor), luz de contorno, névoa colorida por distância e altura, céu pintado, vegetação balançando por shader de vértice, água estilizada, brilho (glow) nas magias.
+- **Não usar no hardware mínimo:** névoa volumétrica, iluminação global em tempo real, muitas luzes com sombra simultâneas.
+- **Menu de qualidade (Baixo e Alto):** o Alto liga enfeites extras (partículas, sombras, vegetação) para PCs fortes. Nenhum ajuste de qualidade pode mudar o combate (colisões, visibilidade de inimigos, áreas de efeito).
+- **Fácil de mudar?** Sim, é camada visual.
+
+## ADR-026 · Sistema de som por camadas
+**Status:** Aprovada (20/10/2026)
+
+- Som montado como as magias: camadas de material + ação (ex.: "pedra + voo", "fogo + explosão"), com pequena variação de tom a cada execução.
+- Som posicional 3D.
+- Limite de sons simultâneos (valor definido medindo desempenho e clareza).
+- Volumes separados no menu: música, efeitos, vozes, interface.
+- Fontes: pacotes de domínio público (ex.: Kenney), Freesound com licença conferida por arquivo, geradores de efeito retrô (ex.: jsfxr). Toda licença registrada num arquivo de créditos.
+
+## ADR-027 · Música
+**Status:** Aprovada (20/10/2026)
+
+- Épica na exploração, bobinha e saltitante no combate. Transição suave entre as duas.
+- Música gerada por IA é permitida se for gratuita.
+- **Ressalva:** planos gratuitos de geradores de música costumam proibir uso comercial. Na fase A não importa; antes de qualquer lançamento comercial, cada faixa precisa ter licença compatível ou ser substituída. Registrar a origem de cada faixa nos créditos.
+
+## ADR-028 · Sons das criaturas gravados pelos jogadores
+**Status:** Aprovada (20/10/2026)
+
+- O Vitor e o amigo gravam vozes e sons das criaturas (ex.: galinha zumbi, armário possuído).
+- O jogo aplica variações de tom e velocidade para multiplicar as gravações.
+
+## ADR-029 · Voz entre jogadores pelo Discord
+**Status:** Aprovada (20/10/2026)
+
+- Conversa por voz entre os jogadores fica no Discord. O jogo não terá voz entre jogadores.
+- O jogo cuida apenas da voz que vira magia (tecla V, ADR-023) e do chat escrito (ADR-010).
+
+## ADR-030 · Canto de atmosfera na arena da Fase 1
+**Status:** Aprovada (20/10/2026)
+
+- Um canto da arena de testes recebe o tratamento visual completo (ADR-025), para medir cedo quanto o hardware mínimo aguenta.
 
 ---
 

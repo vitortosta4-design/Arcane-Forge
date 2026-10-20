@@ -167,6 +167,8 @@ Pedido de "um milhão de pombos" vira "3 pombos" (o máximo), com legenda avisan
 8. "Bola de fogo" como ficha escrita à mão, disparada com o botão do mouse.
 9. Estrutura host/convidado ativa, rodando local.
 10. Contador de FPS e escolha do renderizador.
+11. Canto de atmosfera na arena (ADR-030): shader toon, luz de contorno, névoa colorida, céu pintado, vegetação ao vento e brilho nas magias, seguindo a paleta de `docs/referencias/arte-conceito-01.png`.
+12. Sons provisórios com o sistema de camadas (ADR-026) para tiro, explosão e galinha zumbi; se o Vitor enviar gravações, usar as dele.
 
 ### Critérios de aceitação
 - [ ] A bola de fogo sai da mão, colide, explode, causa dano, empurra a galinha e quebra caixas (versão sem IA do Teste A).
@@ -175,7 +177,9 @@ Pedido de "um milhão de pombos" vira "3 pombos" (o máximo), com legenda avisan
 - [ ] A mana desce ao conjurar e impede conjurar sem mana.
 - [ ] Troca entre 1ª e 3ª pessoa funciona e a mira acerta o mesmo ponto nos dois modos.
 - [ ] Testes automáticos do executor e das regras de dano passando.
-- [ ] FPS medido no seu PC e registrado.
+- [ ] FPS medido no seu PC e registrado, inclusive dentro do canto de atmosfera com várias bolas de fogo ao mesmo tempo.
+- [ ] O canto de atmosfera lembra as cores e o clima da referência visual (avaliado pelo Vitor).
+- [ ] Explosão e galinha zumbi têm som posicional 3D.
 - [ ] Prints de evidência guardados em `evidencias/fase-1/`.
 - [ ] **Você joga 10 minutos e diz se o tiro e a explosão "dão gosto".**
 
