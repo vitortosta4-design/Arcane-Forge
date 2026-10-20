@@ -15,6 +15,7 @@ func _ready() -> void:
 	await _testar_gastar_mana_recusa_sem_mana_suficiente()
 	_testar_validador_corta_dano_acima_do_limite()
 	_testar_validador_rejeita_material_fora_da_lista()
+	await _testar_mira_identica_entre_1a_e_3a_pessoa()
 	await _testar_galinha_morre_com_vida_zero()
 	await _testar_explosao_quebra_caixa_e_acende_barril()
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
@@ -103,6 +104,28 @@ func _testar_validador_rejeita_material_fora_da_lista() -> void:
 	var componente: Dictionary = corrigida["componentes"][0]
 	_afirmar("material fora da lista vira um material válido", componente["material"] in Validador.MATERIAIS_VALIDOS)
 	_afirmar("forma fora da lista vira uma forma válida", componente["forma"] in Validador.FORMAS_VALIDAS)
+
+
+## Testa a consequência da ADR-011: a câmera de 3ª pessoa precisa acompanhar
+## também o olhar para cima/baixo (pitch), não só o giro para os lados (yaw),
+## para que a mira aponte para o mesmo lugar nos dois modos.
+func _testar_mira_identica_entre_1a_e_3a_pessoa() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	var pivot: Node3D = mago.get_node("PivotCabeca")
+	pivot.rotate_x(deg_to_rad(-30))
+	await get_tree().process_frame
+
+	var camera_1a: Camera3D = mago.get_node("PivotCabeca/CameraPrimeiraPessoa")
+	var camera_3a: Camera3D = mago.get_node("PivotCabeca/BracoCameraTerceiraPessoa/CameraTerceiraPessoa")
+	var direcao_1a := -camera_1a.global_transform.basis.z
+	var direcao_3a := -camera_3a.global_transform.basis.z
+	_afirmar("mira aponta na mesma direção nos dois modos de câmera", direcao_1a.is_equal_approx(direcao_3a))
+
+	mago.queue_free()
 
 
 func _testar_galinha_morre_com_vida_zero() -> void:

@@ -22,8 +22,7 @@ var _cooldown_restante := 0.0
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
-@onready var _braco_terceira_pessoa: SpringArm3D = $BracoCameraTerceiraPessoa
-@onready var _camera_terceira_pessoa: Camera3D = $BracoCameraTerceiraPessoa/CameraTerceiraPessoa
+@onready var _camera_terceira_pessoa: Camera3D = $PivotCabeca/BracoCameraTerceiraPessoa/CameraTerceiraPessoa
 @onready var _mao: Node3D = $PivotCabeca/CameraPrimeiraPessoa/Mao
 @onready var _corpo_visivel: Node3D = $CorpoVisivel
 

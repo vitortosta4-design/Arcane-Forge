@@ -57,11 +57,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.5)
 mesh = SubResource("BoxMesh_mao")
 surface_material_override/0 = SubResource("StandardMaterial3D_mao")
 
-[node name="BracoCameraTerceiraPessoa" type="SpringArm3D" parent="."]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1.6, 0)
+[node name="BracoCameraTerceiraPessoa" type="SpringArm3D" parent="PivotCabeca"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 spring_length = 3.5
 
-[node name="CameraTerceiraPessoa" type="Camera3D" parent="BracoCameraTerceiraPessoa"]
+[node name="CameraTerceiraPessoa" type="Camera3D" parent="PivotCabeca/BracoCameraTerceiraPessoa"]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
 current = false
 fov = 70.0
