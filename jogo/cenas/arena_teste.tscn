@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
 [ext_resource type="Script" path="res://scripts/ambiente/decorador_terreno.gd" id="8"]
+[ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_chao"]
 size = Vector2(40, 40)
@@ -24,12 +25,29 @@ albedo_color = Color(0.9, 0.35, 0.3, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obstaculo2"]
 albedo_color = Color(0.3, 0.5, 0.85, 1)
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
+sky_top_color = Color(0.22, 0.48, 0.95, 1)
+sky_horizon_color = Color(0.75, 0.82, 0.93, 1)
+ground_bottom_color = Color(0.32, 0.28, 0.26, 1)
+ground_horizon_color = Color(0.75, 0.82, 0.93, 1)
+sun_angle_max = 25.0
+
+[sub_resource type="Sky" id="Sky_arena"]
+sky_material = SubResource("ProceduralSkyMaterial_arena")
+
 [sub_resource type="Environment" id="Environment_arena"]
-background_mode = 1
-background_color = Color(0.55, 0.75, 0.9, 1)
+background_mode = 2
+sky = SubResource("Sky_arena")
 ambient_light_source = 2
-ambient_light_color = Color(0.8, 0.85, 0.9, 1)
-ambient_light_energy = 0.6
+ambient_light_color = Color(0.55, 0.65, 0.88, 1)
+ambient_light_energy = 0.55
+fog_enabled = true
+fog_light_color = Color(0.62, 0.72, 0.88, 1)
+fog_density = 0.015
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.1
+glow_hdr_threshold = 1.0
 
 [node name="ArenaTeste" type="Node3D"]
 script = ExtResource("1")
@@ -39,6 +57,8 @@ environment = SubResource("Environment_arena")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8, -0.5, 0.35, 0, 0.6, 0.8, -0.6, -0.65, 0.47, 0, 8, 0)
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 1.15
 shadow_enabled = true
 
 [node name="Chao" type="StaticBody3D" parent="."]
@@ -88,6 +108,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.3, -1)
 
 [node name="BarrilInflamavel" parent="." instance=ExtResource("6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, -1)
+
+[node name="CantoAtmosfera" parent="." instance=ExtResource("9")]
+transform = Transform3D(0.7, 0, 0.71, 0, 1, 0, -0.71, 0, 0.7, -13, 0, -13)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 

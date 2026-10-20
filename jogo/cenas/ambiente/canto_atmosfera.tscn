@@ -1,0 +1,86 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/ambiente/canto_atmosfera.gd" id="1"]
+[ext_resource type="Shader" path="res://shaders/toon_contorno.gdshader" id="2"]
+[ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="4"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pedra"]
+shader = ExtResource("2")
+shader_parameter/cor_base = Color(0.55, 0.52, 0.5, 1)
+shader_parameter/contorno_intensidade = 0.45
+shader_parameter/contorno_mistura = 0.55
+shader_parameter/aspereza = 0.9
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_faixa"]
+shader = ExtResource("2")
+shader_parameter/cor_base = Color(0.2, 0.35, 0.75, 1)
+shader_parameter/contorno_intensidade = 0.3
+shader_parameter/contorno_mistura = 0.5
+shader_parameter/aspereza = 0.7
+
+[sub_resource type="SphereMesh" id="SphereMesh_chama"]
+radius = 0.12
+height = 0.24
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chama"]
+shading_mode = 0
+albedo_color = Color(1, 0.55, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.5, 0.05, 1)
+emission_energy_multiplier = 4.0
+
+[node name="CantoAtmosfera" type="Node3D"]
+script = ExtResource("1")
+
+[node name="PilarEsquerdo" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 1.1, 0)
+size = Vector3(0.55, 2.2, 0.55)
+use_collision = true
+collision_layer = 1
+material = SubResource("ShaderMaterial_pedra")
+
+[node name="PilarDireito" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 1.1, 0)
+size = Vector3(0.55, 2.2, 0.55)
+use_collision = true
+collision_layer = 1
+material = SubResource("ShaderMaterial_pedra")
+
+[node name="Lintel" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0)
+size = Vector3(3.3, 0.5, 0.6)
+use_collision = true
+collision_layer = 1
+material = SubResource("ShaderMaterial_pedra")
+
+[node name="Faixa" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.32)
+size = Vector3(0.5, 1.1, 0.03)
+material = SubResource("ShaderMaterial_faixa")
+
+[node name="Tocha" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 0, 0.6)
+
+[node name="Poste" type="CSGCylinder3D" parent="Tocha"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+radius = 0.05
+height = 1.0
+sides = 6
+
+[node name="Chama" type="MeshInstance3D" parent="Tocha"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("SphereMesh_chama")
+surface_material_override/0 = SubResource("StandardMaterial3D_chama")
+
+[node name="Luz" type="OmniLight3D" parent="Tocha"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+light_color = Color(1, 0.6, 0.2, 1)
+light_energy = 1.3
+omni_range = 5.0
+
+[node name="Caixa1" parent="." instance=ExtResource("3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 0.3, 0.8)
+
+[node name="Barril1" parent="." instance=ExtResource("4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 0.3)

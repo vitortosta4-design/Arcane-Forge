@@ -55,15 +55,19 @@ func _espalhar(
 	alvo.multimesh = multi
 
 
+const ShaderToon := preload("res://shaders/toon_contorno.gdshader")
+const ShaderGramaVento := preload("res://shaders/grama_vento.gdshader")
+
+
 func _criar_malha_rocha() -> Mesh:
 	var malha := SphereMesh.new()
 	malha.radius = 0.4
 	malha.height = 0.7
 	malha.radial_segments = 6
 	malha.rings = 3
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.5, 0.47, 0.43)
-	material.vertex_color_use_as_albedo = true
+	var material := ShaderMaterial.new()
+	material.shader = ShaderToon
+	material.set_shader_parameter("cor_base", Color(0.5, 0.47, 0.43))
 	malha.surface_set_material(0, material)
 	return malha
 
@@ -71,8 +75,9 @@ func _criar_malha_rocha() -> Mesh:
 func _criar_malha_grama() -> Mesh:
 	var malha := BoxMesh.new()
 	malha.size = Vector3(0.12, 0.45, 0.12)
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.3, 0.6, 0.28)
-	material.vertex_color_use_as_albedo = true
+	var material := ShaderMaterial.new()
+	material.shader = ShaderGramaVento
+	material.set_shader_parameter("cor_base", Color(0.3, 0.6, 0.28))
+	material.set_shader_parameter("meia_altura", 0.225)
 	malha.surface_set_material(0, material)
 	return malha
