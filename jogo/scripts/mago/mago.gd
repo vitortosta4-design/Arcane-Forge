@@ -19,6 +19,7 @@ var conjurando := false
 var modo_camera_primeira_pessoa := true
 
 var _cooldown_restante := 0.0
+var _entrada_bloqueada := false
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -41,6 +42,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _entrada_bloqueada:
+		return
 	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * SENSIBILIDADE_MOUSE)
 		_pivot_cabeca.rotate_x(-event.relative.y * SENSIBILIDADE_MOUSE)
@@ -57,18 +60,28 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
-	elif Input.is_action_just_pressed("pular"):
+	elif not _entrada_bloqueada and Input.is_action_just_pressed("pular"):
 		velocity.y = FORCA_PULO
 
-	var entrada := Vector2(
-		Input.get_action_strength("mover_direita") - Input.get_action_strength("mover_esquerda"),
-		Input.get_action_strength("mover_tras") - Input.get_action_strength("mover_frente")
-	)
-	var direcao := (transform.basis * Vector3(entrada.x, 0, entrada.y)).normalized()
-	velocity.x = direcao.x * VELOCIDADE_ANDAR
-	velocity.z = direcao.z * VELOCIDADE_ANDAR
+	if _entrada_bloqueada:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:
+		var entrada := Vector2(
+			Input.get_action_strength("mover_direita") - Input.get_action_strength("mover_esquerda"),
+			Input.get_action_strength("mover_tras") - Input.get_action_strength("mover_frente")
+		)
+		var direcao := (transform.basis * Vector3(entrada.x, 0, entrada.y)).normalized()
+		velocity.x = direcao.x * VELOCIDADE_ANDAR
+		velocity.z = direcao.z * VELOCIDADE_ANDAR
 
 	move_and_slide()
+
+
+## Chamado pela caixa de conjuração (ADR-010) enquanto o jogador digita,
+## para não andar nem olhar em volta escrevendo ao mesmo tempo.
+func definir_entrada_bloqueada(valor: bool) -> void:
+	_entrada_bloqueada = valor
 
 
 func _trocar_camera() -> void:
@@ -84,10 +97,27 @@ func _camera_ativa() -> Camera3D:
 
 
 func _tentar_conjurar_bola_de_fogo() -> void:
+	_conjurar_ficha(FichasPadrao.bola_de_fogo())
+
+
+## Chamado pela caixa de conjuração (ADR-010) quando o jogador confirma uma
+## frase. O Interpretador ainda não tem IA (Fase 2 vai ligar o porteiro no
+## Supabase); por enquanto só reconhece algumas palavras-chave (ADR-002).
+func conjurar_por_texto(frase: String) -> void:
 	if _cooldown_restante > 0.0:
 		return
-	var ficha := FichasPadrao.bola_de_fogo()
-	var custo: float = ficha.get("custo_mana", 0.0)
+	var ficha := Interpretador.interpretar(frase)
+	if ficha.is_empty():
+		conjurou.emit("a magia está instável agora, use seu grimório")
+		return
+	_conjurar_ficha(ficha)
+
+
+func _conjurar_ficha(ficha: Dictionary) -> void:
+	if _cooldown_restante > 0.0:
+		return
+	var ficha_validada := Validador.validar_ficha(ficha)
+	var custo := Validador.calcular_custo_mana(ficha_validada)
 	if not Host.gastar_mana(self, custo):
 		return
 	_cooldown_restante = COOLDOWN_CONJURACAO_S
@@ -95,8 +125,8 @@ func _tentar_conjurar_bola_de_fogo() -> void:
 	var camera := _camera_ativa()
 	var origem := camera.global_position + -camera.global_transform.basis.z * 0.5
 	var direcao := -camera.global_transform.basis.z
-	Executor.executar_ficha(ficha, origem, direcao, self, get_tree().current_scene)
-	conjurou.emit(ficha.get("legenda", ""))
+	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
+	conjurou.emit(ficha_validada.get("legenda", ""))
 	conjurando = false
 
 

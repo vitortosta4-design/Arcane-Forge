@@ -10,7 +10,6 @@ static func bola_de_fogo() -> Dictionary:
 		"frase_original": "bola de fogo",
 		"natureza": "neutra",
 		"ingredientes": ["fogo"],
-		"custo_mana": 15.0,
 		"componentes": [
 			{
 				"tipo": "projetil",

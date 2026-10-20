@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://cenas/hud.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_chao"]
 size = Vector2(40, 40)
@@ -81,3 +82,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.3, -1)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, -1)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="CaixaConjuracao" parent="." instance=ExtResource("7")]

@@ -19,6 +19,11 @@ func _ready() -> void:
 	await _testar_galinha_morre_com_vida_zero()
 	await _testar_explosao_quebra_caixa_e_acende_barril()
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
+	_testar_interpretador_reconhece_bola_de_fogo()
+	_testar_interpretador_nao_entende_frase_desconhecida()
+	_testar_validador_calcula_custo_de_mana_pelos_componentes()
+	await _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil()
+	await _testar_conjurar_por_texto_desconhecido_nao_gasta_mana()
 
 	print("")
 	if _falhas == 0:
@@ -175,3 +180,71 @@ func _testar_executor_cria_projetil_a_partir_da_ficha() -> void:
 		_afirmar("projétil saiu com a velocidade da ficha", is_equal_approx(projetil.velocidade, 18.0))
 		_afirmar("projétil carrega o efeito de explosão da ficha", projetil.ao_impactar.size() == 1)
 		projetil.queue_free()
+
+
+## Testa a camada trocável da ADR-002: hoje sem IA, só palavras-chave.
+func _testar_interpretador_reconhece_bola_de_fogo() -> void:
+	var ficha := Interpretador.interpretar("quero conjurar uma BOLA de FOGO enorme")
+	_afirmar("interpretador reconhece \"bola de fogo\" (sem diferenciar maiúsculas)", not ficha.is_empty())
+	_afirmar("interpretador devolve a ficha certa", ficha.get("nome") == "Bola de Fogo")
+
+
+func _testar_interpretador_nao_entende_frase_desconhecida() -> void:
+	var ficha := Interpretador.interpretar("um dragão de cristal que canta ópera")
+	_afirmar("interpretador devolve ficha vazia para frase desconhecida", ficha.is_empty())
+
+
+## Testa a regra de que o custo de mana vem sempre do jogo, calculado a
+## partir dos componentes já validados (proposta técnica, seção 3), nunca
+## de um número sugerido pela ficha.
+func _testar_validador_calcula_custo_de_mana_pelos_componentes() -> void:
+	var ficha_pequena := {
+		"componentes": [{"tipo": "projetil", "velocidade": 5.0, "ao_impactar": []}]
+	}
+	var ficha_grande := {
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"velocidade": 20.0,
+				"ao_impactar": [{"tipo": "explosao", "raio_m": 4.0, "dano": 30.0, "empurrao": 0.0}]
+			}
+		]
+	}
+	var custo_pequeno := Validador.calcular_custo_mana(Validador.validar_ficha(ficha_pequena))
+	var custo_grande := Validador.calcular_custo_mana(Validador.validar_ficha(ficha_grande))
+	_afirmar("custo de mana é positivo", custo_pequeno > 0.0)
+	_afirmar("magia maior custa mais mana que uma pequena", custo_grande > custo_pequeno)
+
+
+## Testa o caminho completo da Fase 2: texto -> Interpretador -> Validador
+## -> Executor, sem precisar de internet nem de IA de verdade ainda.
+func _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	var mana_antes: float = mago.mana_atual
+	mago.conjurar_por_texto("uma bola de fogo")
+	await get_tree().process_frame
+
+	_afirmar("conjurar por texto reconhecido gasta mana", mago.mana_atual < mana_antes)
+	var projeteis := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/projetil.gd"))
+	_afirmar("conjurar por texto reconhecido cria um projétil no mundo", projeteis.size() == 1)
+	for p in projeteis:
+		p.queue_free()
+	mago.queue_free()
+
+
+func _testar_conjurar_por_texto_desconhecido_nao_gasta_mana() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	var mana_antes: float = mago.mana_atual
+	mago.conjurar_por_texto("um dragão de cristal que canta ópera")
+	await get_tree().process_frame
+
+	_afirmar("conjurar por texto desconhecido não gasta mana", mago.mana_atual == mana_antes)
+	mago.queue_free()
