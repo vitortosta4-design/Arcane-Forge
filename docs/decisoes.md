@@ -213,3 +213,8 @@ Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026. Pró
 ## Requisito mínimo de hardware (referência)
 O PC do Vitor é o piso: Pentium G5400 (2 núcleos), GTX 1050 com 2 GB de VRAM, 16 GB de RAM.
 Se rodar bem nele, roda na maioria dos PCs.
+
+## Notas de implementação da Fase 2
+
+- **Projeto Supabase criado** em 20/10/2026 (ADR-003): nome `arcane-forge`, região São Paulo (`sa-east-1`), plano grátis. Para abrir vaga (o plano grátis só permite 2 projetos ativos), o projeto pessoal `ana-e-eu` do Vitor foi pausado, a pedido dele; pode ser reativado quando ele quiser.
+- **Provedor de IA provisório da Fase 2: Groq.** A ADR-002 deixa a escolha final para a Fase 4 (medindo qualidade e velocidade), mas a Fase 2 precisa de algum provedor para testar o caminho completo. Groq foi escolhido como provisório porque: (1) tem plano grátis generoso, (2) é muito rápido, o que importa para a magia não demorar para sair, (3) a ADR-023 já previa usar o Whisper da Groq na Fase 6 (voz), então é uma conta só para gerenciar. Essa escolha pode mudar na Fase 4 sem problema.
