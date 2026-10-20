@@ -1,0 +1,83 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/testes/arena_teste.gd" id="1"]
+[ext_resource type="PackedScene" path="res://cenas/mago.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://cenas/inimigos/galinha_zumbi.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://cenas/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_chao"]
+size = Vector2(40, 40)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chao"]
+albedo_color = Color(0.3, 0.55, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chao"]
+size = Vector3(40, 0.2, 40)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obstaculo1"]
+albedo_color = Color(0.9, 0.35, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obstaculo2"]
+albedo_color = Color(0.3, 0.5, 0.85, 1)
+
+[sub_resource type="Environment" id="Environment_arena"]
+background_mode = 1
+background_color = Color(0.55, 0.75, 0.9, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.8, 0.85, 0.9, 1)
+ambient_light_energy = 0.6
+
+[node name="ArenaTeste" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_arena")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8, -0.5, 0.35, 0, 0.6, 0.8, -0.6, -0.65, 0.47, 0, 8, 0)
+shadow_enabled = true
+
+[node name="Chao" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Chao"]
+mesh = SubResource("PlaneMesh_chao")
+surface_material_override/0 = SubResource("StandardMaterial3D_chao")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Chao"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("BoxShape3D_chao")
+
+[node name="Obstaculo1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.75, -3)
+size = Vector3(1.5, 1.5, 1.5)
+use_collision = true
+collision_layer = 1
+material = SubResource("StandardMaterial3D_obstaculo1")
+
+[node name="Obstaculo2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1, 2)
+size = Vector3(2, 2, 2)
+use_collision = true
+collision_layer = 1
+material = SubResource("StandardMaterial3D_obstaculo2")
+
+[node name="Mago" parent="." instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="GalinhaZumbi" parent="." instance=ExtResource("3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+
+[node name="Caixa1" parent="." instance=ExtResource("5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.3, -1)
+
+[node name="Caixa2" parent="." instance=ExtResource("5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.3, -1)
+
+[node name="BarrilInflamavel" parent="." instance=ExtResource("6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, -1)
+
+[node name="HUD" parent="." instance=ExtResource("4")]

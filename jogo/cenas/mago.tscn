@@ -1,0 +1,67 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/mago/mago.gd" id="1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_corpo"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_corpo"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_robe"]
+albedo_color = Color(0.4, 0.2, 0.7, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_cabeca"]
+radius = 0.28
+height = 0.56
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pele"]
+albedo_color = Color(0.9, 0.7, 0.55, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mao"]
+size = Vector3(0.1, 0.1, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mao"]
+albedo_color = Color(0.9, 0.7, 0.55, 1)
+
+[node name="Mago" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 21
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_corpo")
+
+[node name="CorpoVisivel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_corpo")
+surface_material_override/0 = SubResource("StandardMaterial3D_robe")
+
+[node name="Cabeca" type="MeshInstance3D" parent="CorpoVisivel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+mesh = SubResource("SphereMesh_cabeca")
+surface_material_override/0 = SubResource("StandardMaterial3D_pele")
+
+[node name="PivotCabeca" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="CameraPrimeiraPessoa" type="Camera3D" parent="PivotCabeca"]
+current = true
+fov = 80.0
+
+[node name="Mao" type="MeshInstance3D" parent="PivotCabeca/CameraPrimeiraPessoa"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.5)
+mesh = SubResource("BoxMesh_mao")
+surface_material_override/0 = SubResource("StandardMaterial3D_mao")
+
+[node name="BracoCameraTerceiraPessoa" type="SpringArm3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1.6, 0)
+spring_length = 3.5
+
+[node name="CameraTerceiraPessoa" type="Camera3D" parent="BracoCameraTerceiraPessoa"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+current = false
+fov = 70.0
