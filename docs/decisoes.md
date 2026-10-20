@@ -264,7 +264,7 @@ Arte conceitual gerada por IA a pedido do Vitor. Serve para cores e clima, não 
 - O jogo cuida apenas da voz que vira magia (tecla V, ADR-023) e do chat escrito (ADR-010).
 
 ## ADR-030 · Canto de atmosfera na arena da Fase 1
-**Status:** Proposta (aguardando o Vitor)
+**Status:** Aprovada (20/10/2026)
 
 - Um canto da arena de testes recebe o tratamento visual completo (ADR-025), para medir cedo quanto o hardware mínimo aguenta.
 
