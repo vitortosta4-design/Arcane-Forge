@@ -15,7 +15,6 @@ const REGEN_MANA_POR_S := 5.0
 
 var vida_atual := vida_maxima
 var mana_atual := mana_maxima
-var conjurando := false
 var modo_camera_primeira_pessoa := true
 
 var _cooldown_restante := 0.0
@@ -135,13 +134,11 @@ func _conjurar_ficha(ficha: Dictionary) -> void:
 	if not Host.gastar_mana(self, custo):
 		return
 	_cooldown_restante = COOLDOWN_CONJURACAO_S
-	conjurando = true
 	var camera := _camera_ativa()
 	var origem := camera.global_position + -camera.global_transform.basis.z * 0.5
 	var direcao := -camera.global_transform.basis.z
 	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
 	conjurou.emit(ficha_validada.get("legenda", ""))
-	conjurando = false
 
 
 func gastar_mana(custo: float) -> bool:
