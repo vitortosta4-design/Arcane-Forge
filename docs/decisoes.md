@@ -321,6 +321,14 @@ Prints novos em `evidencias/fase-1/`: `canto_atmosfera_render_nuvem.png`, `arena
 
 **Nota sobre os números:** o FPS mostrado nos prints tirados na nuvem (14 a 18) não serve de referência nenhuma — é renderização por software (CPU), não GPU. O FPS real (60, no print do próprio Vitor) continua sendo o que vale.
 
+## Primeiro ajuste de luz/brilho depois da ADR-031 (21/10/2026)
+
+Depois de subir o piso para RTX 2060 (ADR-031), ajustei `arena_teste.tscn` (Environment) e `canto_atmosfera.tscn` (tocha): mais brilho (glow), ambiente mais azulado, luz da tocha mais forte e agora com sombra própria (lançando luz quente sobre o pilar), e liguei névoa volumétrica no Environment. Print novo: `canto_atmosfera_glow_e_luz_quente_ajustados.png`.
+
+**Limitação importante descoberta:** esta sessão na nuvem só tem OpenGL por software (Mesa llvmpipe), sem Vulkan. O renderizador real do projeto é Forward+ (precisa de Vulkan), e só ele suporta névoa volumétrica e iluminação global em tempo real (SDFGI) — rodando aqui, o motor avisou "Volumetric fog is only available when using the Forward+ renderer" e ignorou essa parte. Ou seja: **a luz da tocha mais forte e o brilho eu confirmei de verdade no print; a névoa volumétrica eu liguei no Environment mas não consegui ver funcionando daqui — só o Vitor consegue confirmar isso no PC dele, com Forward+ de verdade.** SDFGI eu nem liguei ainda, por causa dessa mesma limitação: não tem como testar certo sem o Vitor.
+
+**Resultado visível na nuvem:** a luz da tocha ficou claramente mais forte e quente, com um brilho bem perceptível no pilar ao lado (efeito de "tocha mágica" que não existia antes). Ainda não aparece o halo clássico de glow ao redor da chama em si — pode ser limitação do render por software, ou pode precisar de mais ajuste; só dá pra saber de verdade vendo no PC do Vitor com o renderizador certo.
+
 ## Requisito mínimo de hardware (referência)
 **Atualizado pela ADR-031 (21/10/2026):** o piso oficial agora é CPU Ryzen 5 3600 ou Intel i5-9400F (6 núcleos), GPU RTX 2060 6GB, 16GB de RAM.
 O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso oficial, mas continua sendo o hardware real que ele tem para jogar e testar — vale a pena medir FPS nele também, mesmo não sendo mais o alvo mínimo.
