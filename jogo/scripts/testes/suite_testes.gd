@@ -119,6 +119,7 @@ func _ready() -> void:
 	await _testar_clareira()
 	await _testar_caixa_e_barril_de_madeira()
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
+	_testar_hud_tem_mira_no_centro()
 
 	print("")
 	if _falhas == 0:
@@ -1803,3 +1804,10 @@ func _testar_magia_sai_da_mao_e_acerta_a_mira() -> void:
 	mago.queue_free()
 	parede.queue_free()
 	await get_tree().process_frame
+
+
+func _testar_hud_tem_mira_no_centro() -> void:
+	var hud: CanvasLayer = load("res://cenas/hud.tscn").instantiate()
+	var mira: Control = hud.get_node_or_null("Mira")
+	_afirmar("HUD tem mira presa no centro da tela", mira != null and mira.anchor_left == 0.5 and mira.anchor_top == 0.5)
+	hud.free()
