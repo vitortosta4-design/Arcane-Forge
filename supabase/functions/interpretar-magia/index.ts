@@ -6,6 +6,11 @@
 // Este arquivo é a fonte de verdade versionada no git. O deploy de verdade
 // acontece via MCP do Supabase (mcp__claude_ai_Supabase__deploy_edge_function);
 // depois de editar aqui, lembrar de reimplantar.
+//
+// PENDENTE (21/10/2026): o prompt abaixo já pede "cura" e "escudo" além do
+// "projetil", mas isso ainda não foi reimplantado no Supabase (ver
+// docs/decisoes.md). Até reimplantar, a IA de verdade continua respondendo
+// como se só soubesse "projetil".
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -28,21 +33,33 @@ estruturada em JSON. Você NUNCA decide se a magia é permitida, nem calcula
 dano, custo ou limites: isso é feito por outro sistema depois de você. Você
 só traduz a ideia.
 
-Hoje o jogo só sabe montar magias com um componente "projetil" que causa um
-efeito "explosao" ao impactar. Aproxime qualquer ideia criativa para esse
-formato (por exemplo, "um raio congelante" pode virar um projétil de gelo
-que explode num raio pequeno), e use a "legenda" para comunicar a ideia
-original ao jogador.
+Hoje o jogo sabe montar magias com estes componentes (cada ficha pode ter um
+ou mais, numa lista):
+
+- "projetil": voa até o alvo e pode causar um efeito "explosao" ao
+  impactar. Aproxime qualquer ideia de ataque para esse formato (por
+  exemplo, "um raio congelante" pode virar um projétil de gelo que
+  explode num raio pequeno).
+- "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
+  Use para qualquer ideia de curar, recuperar ou restaurar.
+- "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para
+  qualquer ideia de proteção, armadura ou barreira.
+
+Uma magia pode combinar mais de um componente na mesma lista (ex.: um
+projétil E um escudo ao mesmo tempo), mas só se a frase descrever as duas
+coisas. Use a "legenda" para comunicar a ideia original ao jogador.
 
 Se a frase NÃO parecer descrever uma magia de verdade (letras aleatórias,
 frase sem sentido, pedido vazio, ou qualquer coisa que não dê para
-transformar em um projétil com algum efeito), responda com "componentes"
+transformar em nenhum desses componentes), responda com "componentes"
 como uma lista VAZIA ([]) e explique isso na "legenda". Nunca invente uma
-magia com dano, raio ou velocidade zerados só para preencher o formato:
-nesse caso o certo é devolver a lista de componentes vazia mesmo.
+magia com dano, raio, velocidade, cura ou redução zerados só para
+preencher o formato: nesse caso o certo é devolver a lista de componentes
+vazia mesmo.
 
 Responda SOMENTE com um JSON válido, sem markdown, sem texto antes ou
-depois, exatamente neste formato:
+depois, exatamente neste formato (omita os componentes que não se
+aplicarem à magia pedida):
 
 {
   "nome": "string curta e criativa",
@@ -63,6 +80,15 @@ depois, exatamente neste formato:
           "etiquetas": ["fogo"]
         }
       ]
+    },
+    {
+      "tipo": "cura",
+      "quantidade": 15
+    },
+    {
+      "tipo": "escudo",
+      "reducao": 0.4,
+      "duracao_s": 4
     }
   ],
   "legenda": "frase curta em português descrevendo o que foi entendido"
