@@ -23,30 +23,60 @@ const CUSTO_POR_RAIO := 1.0
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
 ## tudo que passar dos limites e substituindo valores fora das listas
 ## fechadas por um padrão seguro.
+##
+## A IA pode mandar qualquer coisa nos campos (um "componentes": null, um
+## "dano": "muito", uma lista com lixo dentro...). Achado numa revisão de
+## segurança: ler esses campos direto numa variável de tipo fixo (Array,
+## float) quebra no meio e faz a função toda devolver o valor padrão do seu
+## tipo de retorno sem avisar ninguém — exatamente o "passa sem ser
+## entendido direito" que esta função existe para evitar. Por isso cada
+## leitura abaixo confere o tipo de verdade antes de confiar nele.
 static func validar_ficha(ficha: Dictionary) -> Dictionary:
 	var corrigida := ficha.duplicate(true)
-	var componentes: Array = corrigida.get("componentes", [])
-	for i in componentes.size():
-		componentes[i] = _validar_componente(componentes[i])
-	corrigida["componentes"] = componentes
+	corrigida["componentes"] = _lista_de_dicionarios(corrigida.get("componentes")).map(_validar_componente)
 	return corrigida
 
 
 static func _validar_componente(componente: Dictionary) -> Dictionary:
 	var c := componente.duplicate(true)
 	if c.get("tipo") == "projetil":
-		c["material"] = _escolher_valido(c.get("material", ""), MATERIAIS_VALIDOS, "pedra")
-		c["forma"] = _escolher_valido(c.get("forma", ""), FORMAS_VALIDAS, "esfera")
-		c["velocidade"] = clampf(c.get("velocidade", 10.0), 1.0, VELOCIDADE_MAXIMA)
-		var impactos: Array = c.get("ao_impactar", [])
-		for i in impactos.size():
-			impactos[i] = _validar_componente(impactos[i])
-		c["ao_impactar"] = impactos
+		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
+		c["forma"] = _escolher_valido(_como_texto(c.get("forma")), FORMAS_VALIDAS, "esfera")
+		c["velocidade"] = clampf(_como_numero(c.get("velocidade"), 10.0), 1.0, VELOCIDADE_MAXIMA)
+		c["ao_impactar"] = _lista_de_dicionarios(c.get("ao_impactar")).map(_validar_componente)
 	elif c.get("tipo") == "explosao":
-		c["raio_m"] = clampf(c.get("raio_m", 2.0), 0.5, RAIO_EXPLOSAO_MAXIMO)
-		c["dano"] = clampf(c.get("dano", 5.0), 0.0, DANO_MAXIMO)
-		c["empurrao"] = clampf(c.get("empurrao", 0.0), 0.0, EMPURRAO_MAXIMO)
+		c["raio_m"] = clampf(_como_numero(c.get("raio_m"), 2.0), 0.5, RAIO_EXPLOSAO_MAXIMO)
+		c["dano"] = clampf(_como_numero(c.get("dano"), 5.0), 0.0, DANO_MAXIMO)
+		c["empurrao"] = clampf(_como_numero(c.get("empurrao"), 0.0), 0.0, EMPURRAO_MAXIMO)
 	return c
+
+
+## Só aceita de volta uma Array cujos itens sejam Dictionary; qualquer outra
+## coisa (null, string, número, lista com lixo dentro) vira lista vazia.
+static func _lista_de_dicionarios(valor) -> Array:
+	if typeof(valor) != TYPE_ARRAY:
+		return []
+	var somente_dicionarios: Array = []
+	for item in valor:
+		if typeof(item) == TYPE_DICTIONARY:
+			somente_dicionarios.append(item)
+	return somente_dicionarios
+
+
+## Converte com segurança para número; se não for int/float de verdade
+## (string, null, lista...), usa o padrão.
+static func _como_numero(valor, padrao: float) -> float:
+	if typeof(valor) == TYPE_FLOAT or typeof(valor) == TYPE_INT:
+		return float(valor)
+	return padrao
+
+
+## Converte com segurança para texto; se não for String de verdade, devolve
+## vazio (o que faz _escolher_valido cair no padrão da lista fechada).
+static func _como_texto(valor) -> String:
+	if typeof(valor) == TYPE_STRING:
+		return valor
+	return ""
 
 
 ## Cor low poly aproximada de cada material (ADR-007), usada pelo projétil

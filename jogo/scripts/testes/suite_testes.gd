@@ -15,6 +15,8 @@ func _ready() -> void:
 	await _testar_gastar_mana_recusa_sem_mana_suficiente()
 	_testar_validador_corta_dano_acima_do_limite()
 	_testar_validador_rejeita_material_fora_da_lista()
+	_testar_validador_aguenta_campos_com_tipo_errado_da_ia()
+	await _testar_ficha_com_componentes_null_conta_como_nao_entendida()
 	await _testar_mira_identica_entre_1a_e_3a_pessoa()
 	await _testar_galinha_morre_com_vida_zero()
 	await _testar_explosao_quebra_caixa_e_acende_barril()
@@ -102,6 +104,45 @@ func _testar_validador_corta_dano_acima_do_limite() -> void:
 	_afirmar("dano cortado no limite máximo", explosao["dano"] == Validador.DANO_MAXIMO)
 	_afirmar("raio cortado no limite máximo", explosao["raio_m"] == Validador.RAIO_EXPLOSAO_MAXIMO)
 	_afirmar("velocidade cortada no limite máximo", corrigida["componentes"][0]["velocidade"] == Validador.VELOCIDADE_MAXIMA)
+
+
+## Achado numa revisão de segurança: a IA pode mandar "componentes": null
+## (ou outro lixo de tipo errado em qualquer campo) em vez de uma lista de
+## verdade. Antes disso quebrava um tipo fixo (Array/float) no meio da
+## função e devolvia um resultado errado sem avisar ninguém. Testa que o
+## validador aguenta isso sem travar e sem deixar passar.
+func _testar_validador_aguenta_campos_com_tipo_errado_da_ia() -> void:
+	var corrigida := Validador.validar_ficha({"componentes": null})
+	_afirmar(
+		"componentes: null vira lista vazia, não quebra",
+		(corrigida["componentes"] as Array).is_empty()
+	)
+
+	var corrigida2 := Validador.validar_ficha({
+		"componentes": ["isso não é um dicionário", 123, null, {"tipo": "projetil", "velocidade": "muito rápido"}]
+	})
+	var lista2: Array = corrigida2["componentes"]
+	_afirmar("lixo dentro da lista de componentes é ignorado, só sobra o dicionário válido", lista2.size() == 1)
+	_afirmar(
+		"velocidade como texto vira o padrão em vez de quebrar",
+		is_equal_approx(lista2[0]["velocidade"], 10.0)
+	)
+
+
+## A mesma ficha maluca não pode fazer o mago gastar mana e conjurar nada
+## sem o jogador perceber (o bug de verdade que a revisão achou).
+func _testar_ficha_com_componentes_null_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	_afirmar(
+		"ficha com componentes:null conta como sem componentes (não passa sem ser percebida)",
+		mago._ficha_sem_componentes({"nome": "Mistério", "componentes": null, "legenda": "..."})
+	)
+
+	mago.queue_free()
 
 
 func _testar_validador_rejeita_material_fora_da_lista() -> void:

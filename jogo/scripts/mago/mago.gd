@@ -125,10 +125,18 @@ func conjurar_por_texto(frase: String) -> void:
 ## sentido virou uma bola de fogo que não fazia nada). As duas coisas fariam
 ## o jogador gastar a tentativa e não ver nada acontecer, então contam como
 ## "não entendi" (ADR-002).
+##
+## Passa a ficha pelo Validador antes de olhar os campos: achado numa
+## revisão de segurança que ler "componentes" direto da ficha crua (ex.: a
+## IA manda "componentes": null) quebra o tipo fixo de Array no meio e faz
+## esta função devolver `false` (o padrão do tipo de retorno) sem avisar
+## ninguém — ou seja, o exato "passar sem ser entendido" que ela existe
+## para barrar. O Validador já sabe devolver sempre uma Array de verdade,
+## não importa o que a IA mande.
 func _ficha_sem_componentes(ficha: Dictionary) -> bool:
 	if ficha.is_empty():
 		return true
-	var componentes: Array = ficha.get("componentes", [])
+	var componentes: Array = Validador.validar_ficha(ficha).get("componentes", [])
 	if componentes.is_empty():
 		return true
 	for componente in componentes:
