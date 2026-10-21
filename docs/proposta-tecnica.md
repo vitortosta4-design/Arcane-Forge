@@ -171,17 +171,17 @@ Pedido de "um milhão de pombos" vira "3 pombos" (o máximo), com legenda avisan
 12. Sons provisórios com o sistema de camadas (ADR-026) para tiro, explosão e galinha zumbi; se o Vitor enviar gravações, usar as dele.
 
 ### Critérios de aceitação
-- [ ] A bola de fogo sai da mão, colide, explode, causa dano, empurra a galinha e quebra caixas (versão sem IA do Teste A).
-- [ ] O barril inflamável pega fogo com a explosão (primeira interação por etiquetas).
-- [ ] A galinha zumbi persegue, ataca e morre.
-- [ ] A mana desce ao conjurar e impede conjurar sem mana.
-- [ ] Troca entre 1ª e 3ª pessoa funciona e a mira acerta o mesmo ponto nos dois modos.
-- [ ] Testes automáticos do executor e das regras de dano passando.
-- [ ] FPS medido no seu PC e registrado, inclusive dentro do canto de atmosfera com várias bolas de fogo ao mesmo tempo.
-- [ ] O canto de atmosfera lembra as cores e o clima da referência visual (avaliado pelo Vitor).
-- [ ] Explosão e galinha zumbi têm som posicional 3D.
-- [ ] Prints de evidência guardados em `evidencias/fase-1/`.
-- [ ] **Você joga 10 minutos e diz se o tiro e a explosão "dão gosto".**
+- [x] A bola de fogo sai da mão, colide, explode, causa dano, empurra a galinha e quebra caixas (versão sem IA do Teste A). Verificado por teste automático e jogando.
+- [x] O barril inflamável pega fogo com a explosão (primeira interação por etiquetas). Verificado por teste automático.
+- [x] A galinha zumbi persegue, ataca e morre. Verificado por teste automático e jogando.
+- [x] A mana desce ao conjurar e impede conjurar sem mana. Verificado por teste automático.
+- [x] Troca entre 1ª e 3ª pessoa funciona e a mira acerta o mesmo ponto nos dois modos. Verificado por teste automático (achado e corrigido um bug real nisso); confirmação visual sua ainda bem-vinda.
+- [x] Testes automáticos do executor e das regras de dano passando. 39/39.
+- [x] FPS medido no seu PC e registrado, inclusive dentro do canto de atmosfera com várias bolas de fogo ao mesmo tempo. Ficou entre 53 e 60 FPS.
+- [ ] O canto de atmosfera lembra as cores e o clima da referência visual (avaliado pelo Vitor). **Pendente: depende do seu olho.**
+- [x] Explosão e galinha zumbi têm som posicional 3D. Implementado e testado sem erros; qualidade sonora ainda depende de você ouvir.
+- [x] Prints de evidência guardados em `evidencias/fase-1/`.
+- [ ] **Você joga 10 minutos e diz se o tiro e a explosão "dão gosto".** **Pendente: depende de você jogar.**
 
 ### O que você precisa fazer na Fase 1
 - Aprovar a instalação do Godot e do MCP quando o Claude Code pedir.
