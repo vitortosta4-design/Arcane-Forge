@@ -286,6 +286,27 @@ Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026.
 - **"Empurrar/puxar" implementado** em 21/10/2026 (proposta técnica, seção 3, primeira leva da Fase 2): não é um componente novo, é o campo "empurrao" da explosão aceitando número negativo para puxar para o centro em vez de afastar (ex.: um mini buraco negro). Mudou em 3 arquivos que já tratavam empurrão (`mago.gd`, `caixa.gd`, `galinha_zumbi.gd`): a condição passou de "só empurra se for maior que zero" para "qualquer empurrão diferente de zero conta". Achado durante o teste: o primeiro teste de direção do puxão falhou porque a gravidade já acumulada no mago (caindo, sem chão na cena de teste) sujava a comparação de direção — corrigido zerando a velocidade antes de aplicar o empurrão isolado no teste, não é um bug do jogo. `Interpretador` local reconhece "buraco negro"/"puxar"/"puxa". 4 testes novos (67 → 72/72, já reimplantado no Supabase, versão 7).
 - **Componente "estado" implementado (parcial)** em 21/10/2026 (proposta técnica, seção 3, primeira leva da Fase 2: "estados — queimando, molhado, eletrizado, cego, lento"). Implementados só dois por enquanto: "queimando" (dano aos poucos, um tick de dano por segundo, nunca dois incêndios somados no mesmo alvo — reaplicar só estende a duração) e "lento" (reduz a velocidade de andar pela metade, por um tempo). "Molhado", "eletrizado" (a interação entre os dois, destacada como exemplo na proposta técnica) e "cego" ficam para um próximo incremento. Diferente de cura/escudo (efeito em quem conjurou), estado é aplicado em quem o PROJÉTIL atinge — mudou a assinatura de `projetil.gd::_explodir()` para receber o alvo atingido. `Validador.ESTADOS_VALIDOS` deixa claro para a IA que só esses dois valem; qualquer outro nome cai num padrão seguro. `Interpretador` local reconhece "queimar/queimando/chama" e "lento/lentidao/gelado". 9 testes novos (72 → 89/89), reimplantado no Supabase (versão 8).
 
+## Primeira comparação do canto de atmosfera com a referência visual (21/10/2026)
+
+Descoberta nesta sessão: dá para rodar o jogo de verdade (com tela, não só os testes automáticos) numa sessão na nuvem, usando Xvfb (tela virtual) + Mesa llvmpipe (OpenGL por software, sem GPU). Isso permitiu tirar prints de verdade e adiantar parte do critério de aceitação pendente da Fase 1 ("o canto de atmosfera lembra a referência"), embora a palavra final continue sendo do Vitor.
+
+Prints novos em `evidencias/fase-1/`: `canto_atmosfera_render_nuvem.png`, `arena_spawn_render_nuvem.png`, `arena_terceira_pessoa_render_nuvem.png`. Comparados com o print que o Vitor já tinha tirado no PC dele (`canto_atmosfera_de_perto.png`, 60 FPS, GPU de verdade) — os dois batem: o jogo está honestamente igual nos dois ambientes, então a comparação abaixo vale também para o hardware real do Vitor, não é um artefato da renderização por software.
+
+**O que já se parece com a referência:**
+- O arco de ruína com dois pilares e verga, a tocha com chama e luz quente, o barril e a caixa no cenário: os elementos que a ADR-007/ADR-025 pediram estão todos lá.
+- Luz quente (sol alaranjado) e céu azul vivo, parecido com a paleta da referência.
+- Sombras aparecem no chão (luz direcional com sombra ligada).
+
+**O que ainda falta:**
+- A chama da tocha e a faixa azul não têm brilho (glow) visível, mesmo com emissão ligada no material — na referência, toda luz mágica e toda chama "estoura" com bloom. Vale investigar se o glow do Environment está realmente chegando na tela ou se a intensidade está baixa demais para esta cena.
+- Sem céu pintado ao fundo (castelo, ilhas flutuantes) — o céu hoje é um gradiente processual liso, sem a profundidade de cenário que a referência tem. Isso nunca foi implementado (estava previsto no item 11 da Fase 1, proposta técnica).
+- Cores mais lisas e menos saturadas que a referência; sombras cinza, não azuladas como o ADR-007 sugeriu.
+- Vegetação (grama) parada nos prints (não dá pra ver animação de vento numa imagem parada; só rodando ao vivo para confirmar).
+
+**O que não dá para alcançar no hardware mínimo (GTX 1050 2 GB):** a densidade de polígonos e o número de luzes com sombra simultâneas da referência continuam fora de cogitação (ADR-007, ADR-025); isso é esperado e não é uma falha.
+
+**Nota sobre os números:** o FPS mostrado nos prints tirados na nuvem (14 a 18) não serve de referência nenhuma — é renderização por software (CPU), não GPU. O FPS real (60, no print do próprio Vitor) continua sendo o que vale.
+
 ## Requisito mínimo de hardware (referência)
 O PC do Vitor é o piso: Pentium G5400 (2 núcleos), GTX 1050 com 2 GB de VRAM, 16 GB de RAM.
 Se rodar bem nele, roda na maioria dos PCs.
