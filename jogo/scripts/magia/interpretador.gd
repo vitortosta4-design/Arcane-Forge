@@ -19,4 +19,8 @@ static func interpretar(frase: String) -> Dictionary:
 		return FichasPadrao.escudo_de_pedra()
 	if "buraco negro" in normalizada or "puxar" in normalizada or "puxa" in normalizada:
 		return FichasPadrao.mini_buraco_negro()
+	if "queimar" in normalizada or "queimando" in normalizada or "chama" in normalizada:
+		return FichasPadrao.chama_persistente()
+	if "lento" in normalizada or "lentidao" in normalizada or "gelado" in normalizada:
+		return FichasPadrao.vento_gelado()
 	return {}

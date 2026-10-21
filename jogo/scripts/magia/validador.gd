@@ -6,6 +6,10 @@ class_name Validador
 
 const MATERIAIS_VALIDOS := ["pedra", "agua", "fogo", "metal", "madeira"]
 const FORMAS_VALIDAS := ["esfera", "ovo", "cubo"]
+## Proposta técnica, seção 3: "estados (queimando, molhado, eletrizado, cego,
+## lento)". Só "queimando" e "lento" têm efeito de verdade por enquanto; os
+## outros três ficam para um próximo incremento (ver docs/decisoes.md).
+const ESTADOS_VALIDOS := ["queimando", "lento"]
 
 const DURACAO_MAXIMA_S := 8.0
 const DANO_MAXIMO := 30.0
@@ -25,6 +29,8 @@ const CUSTO_POR_CURA := 0.5
 const CUSTO_BASE_ESCUDO := 5.0
 const CUSTO_POR_REDUCAO := 20.0
 const CUSTO_POR_DURACAO_ESCUDO := 1.0
+const CUSTO_BASE_ESTADO := 4.0
+const CUSTO_POR_DURACAO_ESTADO := 1.0
 
 
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
@@ -62,6 +68,9 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["quantidade"] = clampf(_como_numero(c.get("quantidade"), 0.0), 0.0, CURA_MAXIMA)
 	elif c.get("tipo") == "escudo":
 		c["reducao"] = clampf(_como_numero(c.get("reducao"), 0.0), 0.0, REDUCAO_ESCUDO_MAXIMA)
+		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
+	elif c.get("tipo") == "estado":
+		c["nome_estado"] = _escolher_valido(_como_texto(c.get("nome_estado")), ESTADOS_VALIDOS, "lento")
 		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
 	return c
 
@@ -146,4 +155,7 @@ static func _custo_componente(componente: Dictionary) -> float:
 		custo += CUSTO_BASE_ESCUDO
 		custo += componente.get("reducao", 0.0) * CUSTO_POR_REDUCAO
 		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_ESCUDO
+	elif tipo == "estado":
+		custo += CUSTO_BASE_ESTADO
+		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_ESTADO
 	return custo

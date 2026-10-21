@@ -52,10 +52,10 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body == dono:
 		return
-	_explodir()
+	_explodir(body)
 
 
-func _explodir() -> void:
+func _explodir(alvo: Node) -> void:
 	for efeito in ao_impactar:
 		if efeito.get("tipo") == "explosao":
 			Host.criar_explosao(
@@ -67,4 +67,14 @@ func _explodir() -> void:
 				[dono],
 				material
 			)
+		elif efeito.get("tipo") == "estado":
+			_aplicar_estado(efeito, alvo)
 	queue_free()
+
+
+## Estados (proposta técnica, seção 3: queimando, molhado, eletrizado, cego,
+## lento) são aplicados direto em quem o projétil atingiu, não numa área —
+## diferente da explosão, que afeta todo mundo perto do ponto de impacto.
+func _aplicar_estado(efeito: Dictionary, alvo: Node) -> void:
+	if alvo and alvo.has_method("aplicar_estado"):
+		alvo.aplicar_estado(efeito.get("nome_estado", ""), efeito.get("duracao_s", 0.0))

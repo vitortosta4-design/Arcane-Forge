@@ -95,3 +95,58 @@ static func mini_buraco_negro() -> Dictionary:
 		],
 		"legenda": "uma esfera que puxa tudo que está perto para o centro"
 	}
+
+
+## Estado "queimando" (proposta técnica, seção 3): aplicado direto em quem
+## o projétil atinge, não numa área, por isso sem efeito de explosão junto.
+static func chama_persistente() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Chama Persistente",
+		"frase_original": "chama persistente",
+		"natureza": "ma",
+		"ingredientes": ["fogo"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "fogo",
+				"velocidade": 14.0,
+				"ao_impactar": [
+					{
+						"tipo": "estado",
+						"nome_estado": "queimando",
+						"duracao_s": 3.0
+					}
+				]
+			}
+		],
+		"legenda": "uma chama que gruda e queima aos poucos"
+	}
+
+
+## Estado "lento" (proposta técnica, seção 3).
+static func vento_gelado() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Vento Gelado",
+		"frase_original": "vento gelado",
+		"natureza": "neutra",
+		"ingredientes": ["agua"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "agua",
+				"velocidade": 14.0,
+				"ao_impactar": [
+					{
+						"tipo": "estado",
+						"nome_estado": "lento",
+						"duracao_s": 4.0
+					}
+				]
+			}
+		],
+		"legenda": "um vento gelado que deixa quem é atingido mais lento"
+	}

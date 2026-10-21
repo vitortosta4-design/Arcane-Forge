@@ -51,6 +51,15 @@ func _ready() -> void:
 	await _testar_empurrao_negativo_puxa_o_mago_para_o_centro()
 	await _testar_empurrao_negativo_conta_como_efeito_real()
 	_testar_interpretador_reconhece_buraco_negro()
+	_testar_validador_corta_estado_fora_da_lista_e_duracao_maxima()
+	_testar_validador_calcula_custo_de_mana_do_estado()
+	await _testar_lento_reduz_multiplicador_de_velocidade()
+	await _testar_lento_expira_depois_da_duracao()
+	await _testar_queimando_causa_dano_imediato_no_primeiro_tick()
+	await _testar_reaplicar_queimando_estende_sem_duplicar_o_tick()
+	await _testar_projetil_aplica_estado_em_quem_atingiu()
+	_testar_ficha_so_com_estado_sem_duracao_conta_como_nao_entendida()
+	_testar_interpretador_reconhece_queimando_e_lento()
 
 	print("")
 	if _falhas == 0:
@@ -695,3 +704,129 @@ func _testar_interpretador_reconhece_buraco_negro() -> void:
 	var ficha := Interpretador.interpretar("quero invocar um buraco negro que puxa tudo")
 	_afirmar("interpretador reconhece \"buraco negro\"", not ficha.is_empty())
 	_afirmar("interpretador devolve a ficha do mini buraco negro", ficha.get("nome") == "Mini Buraco Negro")
+
+
+## Componente "estado" (proposta técnica, seção 3: queimando, molhado,
+## eletrizado, cego, lento). Só "queimando" e "lento" têm efeito de verdade
+## por enquanto; os outros caem no padrão seguro, igual a qualquer valor
+## fora de uma lista fechada.
+func _testar_validador_corta_estado_fora_da_lista_e_duracao_maxima() -> void:
+	var ficha := {"componentes": [{"tipo": "estado", "nome_estado": "cego", "duracao_s": 999.0}]}
+	var corrigida := Validador.validar_ficha(ficha)
+	var estado: Dictionary = corrigida["componentes"][0]
+	_afirmar(
+		"estado ainda não implementado vira um padrão seguro da lista",
+		estado["nome_estado"] in Validador.ESTADOS_VALIDOS
+	)
+	_afirmar("duração do estado cortada no limite máximo", estado["duracao_s"] == Validador.DURACAO_MAXIMA_S)
+
+
+func _testar_validador_calcula_custo_de_mana_do_estado() -> void:
+	var ficha_curta := Validador.validar_ficha({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 1.0}]})
+	var ficha_longa := Validador.validar_ficha({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 6.0}]})
+	var custo_curto := Validador.calcular_custo_mana(ficha_curta)
+	var custo_longo := Validador.calcular_custo_mana(ficha_longa)
+	_afirmar("estado custa mana", custo_curto > 0.0)
+	_afirmar("estado mais longo custa mais mana", custo_longo > custo_curto)
+
+
+func _testar_lento_reduz_multiplicador_de_velocidade() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	_afirmar("sem lentidão, multiplicador de velocidade é 1", mago._multiplicador_velocidade() == 1.0)
+	mago.aplicar_estado("lento", 2.0)
+	_afirmar("com lentidão, multiplicador de velocidade cai", mago._multiplicador_velocidade() < 1.0)
+	mago.queue_free()
+
+
+func _testar_lento_expira_depois_da_duracao() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.aplicar_estado("lento", 0.05)
+	await get_tree().create_timer(0.3).timeout
+	_afirmar("lentidão termina depois da duração", mago._multiplicador_velocidade() == 1.0)
+	mago.queue_free()
+
+
+func _testar_queimando_causa_dano_imediato_no_primeiro_tick() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	var vida_antes: float = mago.vida_atual
+	mago.aplicar_estado("queimando", 1.0)
+	_afirmar("queimando causa dano logo no primeiro tick, sem esperar 1s", mago.vida_atual < vida_antes)
+	mago.queue_free()
+
+
+## Achado pensando no caso "duas chamas no mesmo alvo": reaplicar queimando
+## não pode somar um segundo incêndio por cima (dano em dobro na hora), só
+## estender a duração do que já está queimando.
+func _testar_reaplicar_queimando_estende_sem_duplicar_o_tick() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.aplicar_estado("queimando", 3.0)
+	var vida_depois_do_primeiro_tick: float = mago.vida_atual
+	mago.aplicar_estado("queimando", 5.0) # reaplica por cima, antes do próximo tick
+	_afirmar(
+		"reaplicar queimando não causa um segundo tick de dano na hora",
+		mago.vida_atual == vida_depois_do_primeiro_tick
+	)
+	_afirmar(
+		"reaplicar queimando estende a duração para a maior das duas",
+		mago._ticks_queimando_restantes == 5
+	)
+	mago.queue_free()
+
+
+## Testa o caminho completo: um projétil com "estado" no ao_impactar aplica
+## o estado em quem ele atingiu, não numa área ao redor (diferente da
+## explosão).
+func _testar_projetil_aplica_estado_em_quem_atingiu() -> void:
+	var projetil: Node = load("res://cenas/magias/projetil.tscn").instantiate()
+	add_child(projetil)
+	projetil.ao_impactar = [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 3.0}]
+
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	projetil._explodir(mago)
+	_afirmar("projétil aplicou o estado em quem atingiu", mago._lentidao_restante_s > 0.0)
+	mago.queue_free()
+
+
+func _testar_ficha_so_com_estado_sem_duracao_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	_afirmar(
+		"estado sem duração conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 0.0}]})
+	)
+	_afirmar(
+		"estado com duração real não conta como vazio",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 3.0}]})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_queimando_e_lento() -> void:
+	var ficha_queimando := Interpretador.interpretar("quero uma chama que fica queimando")
+	_afirmar("interpretador reconhece \"queimando\"", not ficha_queimando.is_empty())
+	_afirmar("interpretador devolve a ficha de chama persistente", ficha_queimando.get("nome") == "Chama Persistente")
+
+	var ficha_lento := Interpretador.interpretar("um vento gelado que deixa tudo mais lento")
+	_afirmar("interpretador reconhece \"lento\"", not ficha_lento.is_empty())
+	_afirmar("interpretador devolve a ficha de vento gelado", ficha_lento.get("nome") == "Vento Gelado")

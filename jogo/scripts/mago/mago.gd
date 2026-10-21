@@ -9,6 +9,9 @@ const SENSIBILIDADE_MOUSE := 0.0025
 const LIMITE_OLHAR_CIMA_BAIXO := deg_to_rad(85)
 const COOLDOWN_CONJURACAO_S := 0.5
 const REGEN_MANA_POR_S := 5.0
+const MULTIPLICADOR_LENTO := 0.5
+const DANO_QUEIMANDO_POR_TICK := 3.0
+const INTERVALO_QUEIMANDO_S := 1.0
 
 @export var vida_maxima := 100.0
 @export var mana_maxima := 100.0
@@ -21,6 +24,8 @@ var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
 var _aguardando_interpretacao := false
 var _reducao_escudo := 0.0
+var _lentidao_restante_s := 0.0
+var _ticks_queimando_restantes := 0
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -57,6 +62,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_cooldown_restante = maxf(0.0, _cooldown_restante - delta)
+	_lentidao_restante_s = maxf(0.0, _lentidao_restante_s - delta)
 	_regenerar_mana(delta)
 
 	if not is_on_floor():
@@ -73,10 +79,18 @@ func _physics_process(delta: float) -> void:
 			Input.get_action_strength("mover_tras") - Input.get_action_strength("mover_frente")
 		)
 		var direcao := (transform.basis * Vector3(entrada.x, 0, entrada.y)).normalized()
-		velocity.x = direcao.x * VELOCIDADE_ANDAR
-		velocity.z = direcao.z * VELOCIDADE_ANDAR
+		var velocidade := VELOCIDADE_ANDAR * _multiplicador_velocidade()
+		velocity.x = direcao.x * velocidade
+		velocity.z = direcao.z * velocidade
 
 	move_and_slide()
+
+
+## Proposta técnica, seção 3 ("estados"): enquanto a lentidão estiver
+## ativa, o mago anda mais devagar. Função à parte (em vez de só usar a
+## variável direto) para dar pra testar sem precisar simular tecla.
+func _multiplicador_velocidade() -> float:
+	return MULTIPLICADOR_LENTO if _lentidao_restante_s > 0.0 else 1.0
 
 
 ## Chamado pela caixa de conjuração (ADR-010) enquanto o jogador digita,
@@ -159,6 +173,8 @@ func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 		return true
 	if tipo == "escudo" and componente.get("reducao", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
 		return true
+	if tipo == "estado" and componente.get("duracao_s", 0.0) > 0.0:
+		return true
 	for efeito in (componente.get("ao_impactar", []) as Array):
 		if _componente_tem_efeito_real(efeito):
 			return true
@@ -220,6 +236,40 @@ func aplicar_escudo(reducao: float, duracao_s: float) -> void:
 func _remover_escudo(reducao_que_expirou: float) -> void:
 	if _reducao_escudo == reducao_que_expirou:
 		_reducao_escudo = 0.0
+
+
+## Chamado pelo Executor/Projétil quando uma ficha tem um componente
+## "estado" (proposta técnica, seção 3). Só "queimando" e "lento" têm
+## efeito de verdade por enquanto (ver Validador.ESTADOS_VALIDOS).
+func aplicar_estado(nome_estado: String, duracao_s: float) -> void:
+	if duracao_s <= 0.0:
+		return
+	match nome_estado:
+		"lento":
+			_lentidao_restante_s = maxf(_lentidao_restante_s, duracao_s)
+		"queimando":
+			_iniciar_queimando(duracao_s)
+
+
+## Dano em etapas (um "tick" por segundo) em vez de tudo de uma vez, para
+## parecer fogo queimando aos poucos em vez de uma segunda explosão. Reaplicar
+## queimando estende a duração, não soma um incêndio por cima do outro.
+func _iniciar_queimando(duracao_s: float) -> void:
+	var novos_ticks := int(ceili(duracao_s / INTERVALO_QUEIMANDO_S))
+	var ja_estava_queimando := _ticks_queimando_restantes > 0
+	_ticks_queimando_restantes = maxi(_ticks_queimando_restantes, novos_ticks)
+	if not ja_estava_queimando:
+		_continuar_queimando()
+
+
+func _continuar_queimando() -> void:
+	if _ticks_queimando_restantes <= 0:
+		return
+	receber_dano(DANO_QUEIMANDO_POR_TICK, global_position, 0.0)
+	_ticks_queimando_restantes -= 1
+	if _ticks_queimando_restantes > 0:
+		var timer := get_tree().create_timer(INTERVALO_QUEIMANDO_S)
+		timer.timeout.connect(_continuar_queimando)
 
 
 func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:

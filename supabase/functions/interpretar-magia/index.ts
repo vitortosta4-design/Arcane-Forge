@@ -31,13 +31,18 @@ só traduz a ideia.
 Hoje o jogo sabe montar magias com estes componentes (cada ficha pode ter um
 ou mais, numa lista):
 
-- "projetil": voa até o alvo e pode causar um efeito "explosao" ao
-  impactar. Aproxime qualquer ideia de ataque para esse formato (por
-  exemplo, "um raio congelante" pode virar um projétil de gelo que
-  explode num raio pequeno). O "empurrao" da explosão aceita número
-  negativo para PUXAR para o centro em vez de afastar (ex.: "um buraco
-  negro que atrai os inimigos" vira um projétil com "empurrao": -5 e
-  "dano": 0).
+- "projetil": voa até o alvo e pode causar efeitos ao impactar (campo
+  "ao_impactar", uma lista):
+  - "explosao": dano numa área. O "empurrao" aceita número negativo para
+    PUXAR para o centro em vez de afastar (ex.: "um buraco negro que
+    atrai os inimigos" vira um projétil com "empurrao": -5 e "dano": 0).
+  - "estado": aplica um efeito só em quem o projétil atingiu (não numa
+    área). Hoje só existem dois: "queimando" (dano aos poucos, por
+    "duracao_s") e "lento" (deixa quem foi atingido mais devagar, por
+    "duracao_s"). NÃO use nenhum outro nome de estado (ex.: molhado,
+    eletrizado, cego) — ainda não existem no jogo.
+  Aproxime qualquer ideia de ataque para esse formato (por exemplo, "um
+  raio congelante" pode virar um projétil de gelo com "estado": "lento").
 - "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
   Use para qualquer ideia de curar, recuperar ou restaurar.
 - "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para
@@ -56,8 +61,10 @@ preencher o formato: nesse caso o certo é devolver a lista de componentes
 vazia mesmo.
 
 Responda SOMENTE com um JSON válido, sem markdown, sem texto antes ou
-depois, exatamente neste formato (omita os componentes que não se
-aplicarem à magia pedida):
+depois, exatamente neste formato (omita os componentes e os efeitos de
+"ao_impactar" que não se aplicarem à magia pedida — o exemplo abaixo mostra
+"explosao" e "estado" juntos só para ilustrar o formato de cada um, a
+maioria das magias usa só um dos dois):
 
 {
   "nome": "string curta e criativa",
@@ -76,6 +83,11 @@ aplicarem à magia pedida):
           "dano": 10,
           "empurrao": 2,
           "etiquetas": ["fogo"]
+        },
+        {
+          "tipo": "estado",
+          "nome_estado": "queimando",
+          "duracao_s": 3
         }
       ]
     },
