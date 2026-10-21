@@ -300,3 +300,33 @@ static func nuvem_de_chuva() -> Dictionary:
 		],
 		"legenda": "uma chuva em volta de você que encharca quem chegar perto"
 	}
+
+
+## Parede (proposta técnica, seção 3): segura projéteis e inimigos.
+static func muro_de_pedra() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Muro de Pedra",
+		"frase_original": "muro de pedra na minha frente",
+		"natureza": "neutra",
+		"ingredientes": ["pedra", "construcao"],
+		"componentes": [
+			{"tipo": "parede", "largura_m": 3.0, "altura_m": 2.0, "duracao_s": 5.0, "distancia_m": 3.0, "material": "pedra"}
+		],
+		"legenda": "um muro de pedra que sobe do chão na sua frente"
+	}
+
+
+## Teleporte curto (proposta técnica, seção 3).
+static func salto_arcano() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Salto Arcano",
+		"frase_original": "teleporte para a frente",
+		"natureza": "neutra",
+		"ingredientes": ["deslocamento"],
+		"componentes": [
+			{"tipo": "teleporte", "distancia_m": 6.0}
+		],
+		"legenda": "você some e reaparece alguns metros à frente"
+	}

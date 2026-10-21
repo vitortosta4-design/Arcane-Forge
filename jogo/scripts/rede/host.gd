@@ -5,12 +5,12 @@ extends Node
 
 const LIMITE_PROJETEIS_ATIVOS := 40
 const LIMITE_CRIATURAS_INVOCADAS := 6
-const LIMITE_AREAS_POR_DONO := 3
+const LIMITE_MAGIAS_ATIVAS_POR_DONO := 3
 const CenaEfeitoExplosao := preload("res://cenas/efeitos/explosao_visual.tscn")
 
 var projeteis_ativos: Array[Node] = []
 var criaturas_invocadas: Array[Node] = []
-var areas_ativas: Array[Node] = []
+var magias_ativas: Array[Node] = []
 
 
 func aplicar_dano(entidade: Node, dano: float, origem_dano: Vector3 = Vector3.ZERO, empurrao: float = 0.0) -> void:
@@ -87,16 +87,16 @@ func _dentro_do_disco(ponto: Vector3, centro: Vector3, raio_m: float) -> bool:
 	return plano.length() <= raio_m and absf(ponto.y - centro.y) <= 2.0
 
 
-## Proposta técnica, seção 5: no máximo 3 magias ativas por jogador. Até
-## aqui nada aplicava esse limite; as áreas persistentes são a primeira
-## magia que fica no mundo por vários segundos, então começam por elas.
-func pode_criar_area(dono: Node) -> bool:
-	areas_ativas = areas_ativas.filter(func(a): return is_instance_valid(a))
-	return areas_ativas.filter(func(a): return a.dono == dono).size() < LIMITE_AREAS_POR_DONO
+## Proposta técnica, seção 5: no máximo 3 magias ativas por jogador. Vale
+## para as magias que ficam no mundo por vários segundos e têm um dono
+## (áreas persistentes e paredes). Projéteis e criaturas têm limites próprios.
+func pode_criar_magia_ativa(dono: Node) -> bool:
+	magias_ativas = magias_ativas.filter(func(m): return is_instance_valid(m))
+	return magias_ativas.filter(func(m): return m.dono == dono).size() < LIMITE_MAGIAS_ATIVAS_POR_DONO
 
 
-func registrar_area(area: Node) -> void:
-	areas_ativas.append(area)
+func registrar_magia_ativa(magia: Node) -> void:
+	magias_ativas.append(magia)
 
 
 func gastar_mana(mago: Node, custo: float) -> bool:

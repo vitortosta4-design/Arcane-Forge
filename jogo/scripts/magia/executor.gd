@@ -7,6 +7,11 @@ class_name Executor
 const CenaProjetil := preload("res://cenas/magias/projetil.tscn")
 const CenaInvocacao := preload("res://cenas/magias/invocacao.tscn")
 const CenaArea := preload("res://cenas/magias/area_persistente.tscn")
+const CenaParede := preload("res://cenas/magias/parede.tscn")
+## Folga antes de um obstáculo no teleporte, para o mago não entrar na parede.
+const FOLGA_TELEPORTE_M := 0.6
+## Camadas que barram o teleporte: cenário (1) e caixas/barris (16).
+const CAMADAS_QUE_BARRAM_TELEPORTE := 1 | 16
 
 
 static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> void:
@@ -28,6 +33,10 @@ static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3,
 					criar_area(componente, ponto_no_chao(dono, (dono as Node3D).global_position), dono, [], mundo)
 				else:
 					criar_area(componente, origem, dono, [], mundo)
+			"parede":
+				_criar_parede(componente, origem, direcao, dono, mundo)
+			"teleporte":
+				_teleportar(componente, direcao, dono)
 			"invocacao":
 				var criatura := _criar_invocacao(componente, origem, dono, mundo)
 				if criatura:
@@ -63,7 +72,7 @@ static func criar_projetil(componente: Dictionary, origem: Vector3, direcao: Vec
 ## magias ativas por jogador (seção 5). Nunca afeta quem a criou nem os
 ## aliados dele.
 static func criar_area(componente: Dictionary, posicao: Vector3, dono: Node, aliados: Array, mundo: Node) -> Node:
-	if not Host.pode_criar_area(dono):
+	if not Host.pode_criar_magia_ativa(dono):
 		return null
 	var area := CenaArea.instantiate()
 	area.raio_m = componente.get("raio_m", 2.0)
@@ -75,8 +84,50 @@ static func criar_area(componente: Dictionary, posicao: Vector3, dono: Node, ali
 	area.excluir = ([dono] if dono else []) + aliados
 	mundo.add_child(area)
 	area.global_position = posicao
-	Host.registrar_area(area)
+	Host.registrar_magia_ativa(area)
 	return area
+
+
+## Parede (proposta técnica, seção 3): nasce no chão, à frente de quem
+## conjurou, virada para ele. Conta no limite de 3 magias ativas (seção 5).
+static func _criar_parede(componente: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> Node:
+	if not Host.pode_criar_magia_ativa(dono):
+		return null
+	var frente := Vector3(direcao.x, 0.0, direcao.z).normalized()
+	if frente == Vector3.ZERO:
+		frente = Vector3.FORWARD
+	var base: Vector3 = (dono as Node3D).global_position if dono is Node3D else origem
+	var alvo: Vector3 = base + frente * componente.get("distancia_m", 3.0)
+	var parede := CenaParede.instantiate()
+	parede.largura_m = componente.get("largura_m", 3.0)
+	parede.altura_m = componente.get("altura_m", 2.0)
+	parede.duracao_s = componente.get("duracao_s", 5.0)
+	parede.material_nome = componente.get("material", "pedra")
+	parede.dono = dono
+	mundo.add_child(parede)
+	parede.global_position = ponto_no_chao(parede, alvo)
+	parede.look_at(parede.global_position + frente, Vector3.UP)
+	Host.registrar_magia_ativa(parede)
+	return parede
+
+
+## Teleporte curto (proposta técnica, seção 3): leva quem conjurou para a
+## frente, parando antes de qualquer parede ou caixa no caminho e caindo no
+## chão. Só no plano horizontal: olhar para cima não vira um voo.
+static func _teleportar(componente: Dictionary, direcao: Vector3, dono: Node) -> void:
+	if not dono is Node3D:
+		return
+	var corpo := dono as Node3D
+	var frente := Vector3(direcao.x, 0.0, direcao.z).normalized()
+	if frente == Vector3.ZERO:
+		return
+	var distancia: float = componente.get("distancia_m", 0.0)
+	var peito := corpo.global_position + Vector3.UP
+	var consulta := PhysicsRayQueryParameters3D.create(peito, peito + frente * distancia, CAMADAS_QUE_BARRAM_TELEPORTE)
+	var batida := corpo.get_world_3d().direct_space_state.intersect_ray(consulta)
+	if batida:
+		distancia = maxf(0.0, peito.distance_to(batida["position"]) - FOLGA_TELEPORTE_M)
+	corpo.global_position = ponto_no_chao(corpo, corpo.global_position + frente * distancia)
 
 
 ## Ponto no chão logo abaixo de "ponto" (até 10 m): a área nasce no chão

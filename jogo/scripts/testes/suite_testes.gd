@@ -97,6 +97,17 @@ func _ready() -> void:
 	await _testar_area_no_topo_da_ficha_nasce_aos_pes_do_mago()
 	_testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida()
 	_testar_interpretador_reconhece_lava_e_chuva()
+	_testar_validador_corta_parede_e_teleporte()
+	_testar_validador_calcula_custo_de_parede_e_teleporte()
+	await _testar_parede_nasce_na_frente_do_mago()
+	await _testar_parede_segura_projetil()
+	await _testar_parede_some_depois_da_duracao()
+	await _testar_parede_e_area_dividem_o_limite_de_magias_ativas()
+	await _testar_teleporte_leva_o_mago_para_frente()
+	await _testar_teleporte_para_antes_da_parede()
+	await _testar_teleporte_nao_vira_voo()
+	_testar_parede_e_teleporte_contam_como_magia_de_verdade()
+	_testar_interpretador_reconhece_muro_e_teleporte()
 
 	print("")
 	if _falhas == 0:
@@ -1360,7 +1371,7 @@ func _testar_limite_de_tres_areas_por_jogador() -> void:
 		criadas.append(_criar_area_de_teste(Vector3(150 + i * 10, 0, 0), {"duracao_s": 5.0, "dano_por_s": 1.0}, dono))
 	var do_outro := _criar_area_de_teste(Vector3(150, 0, 20), {"duracao_s": 5.0, "dano_por_s": 1.0}, outro)
 	var validas := criadas.filter(func(a): return a != null)
-	_afirmar("no máximo 3 áreas ativas por jogador", validas.size() == Host.LIMITE_AREAS_POR_DONO)
+	_afirmar("no máximo 3 áreas ativas por jogador", validas.size() == Host.LIMITE_MAGIAS_ATIVAS_POR_DONO)
 	_afirmar("o limite é por jogador: outro jogador ainda pode criar", do_outro != null)
 	for a in validas + [do_outro]:
 		a.queue_free()
@@ -1424,3 +1435,140 @@ func _testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida() -> void:
 func _testar_interpretador_reconhece_lava_e_chuva() -> void:
 	_afirmar("interpretador reconhece \"lava\"", Interpretador.interpretar("uma poça de lava").get("nome") == "Poça de Lava")
 	_afirmar("interpretador reconhece \"chuva\"", Interpretador.interpretar("uma nuvem de chuva").get("nome") == "Nuvem de Chuva")
+
+
+## Parede e teleporte curto (proposta técnica, seção 3): fecham a primeira
+## leva de componentes (só "cego" fica de fora).
+func _testar_validador_corta_parede_e_teleporte() -> void:
+	var fichas: Array = Validador.validar_ficha({"componentes": [
+		{"tipo": "parede", "largura_m": 99.0, "altura_m": 99.0, "duracao_s": 99.0, "distancia_m": 99.0, "material": "queijo"},
+		{"tipo": "teleporte", "distancia_m": 999.0}
+	]})["componentes"]
+	_afirmar("largura da parede cortada", fichas[0]["largura_m"] == Validador.LARGURA_PAREDE_MAXIMA)
+	_afirmar("altura da parede cortada", fichas[0]["altura_m"] == Validador.ALTURA_PAREDE_MAXIMA)
+	_afirmar("distância da parede cortada", fichas[0]["distancia_m"] == Validador.DISTANCIA_PAREDE_MAXIMA)
+	_afirmar("material da parede cai na lista fechada", fichas[0]["material"] in Validador.MATERIAIS_VALIDOS)
+	_afirmar("distância do teleporte cortada", fichas[1]["distancia_m"] == Validador.DISTANCIA_TELEPORTE_MAXIMA)
+
+
+func _testar_validador_calcula_custo_de_parede_e_teleporte() -> void:
+	var pequena := Validador.validar_ficha({"componentes": [{"tipo": "parede", "largura_m": 1.0, "altura_m": 1.0, "duracao_s": 3.0}]})
+	var grande := Validador.validar_ficha({"componentes": [{"tipo": "parede", "largura_m": 4.0, "altura_m": 3.0, "duracao_s": 3.0}]})
+	var perto := Validador.validar_ficha({"componentes": [{"tipo": "teleporte", "distancia_m": 2.0}]})
+	var longe := Validador.validar_ficha({"componentes": [{"tipo": "teleporte", "distancia_m": 8.0}]})
+	_afirmar("parede maior custa mais", Validador.calcular_custo_mana(grande) > Validador.calcular_custo_mana(pequena))
+	_afirmar("teleporte mais longe custa mais", Validador.calcular_custo_mana(longe) > Validador.calcular_custo_mana(perto))
+
+
+func _mago_em(pos: Vector3) -> Node:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	mago.global_position = pos
+	return mago
+
+
+func _testar_parede_nasce_na_frente_do_mago() -> void:
+	var chao := _chao_em(Vector3(300, 0, 0))
+	var mago := _mago_em(Vector3(300, 0, 0))
+	await get_tree().physics_frame
+	Executor.executar_ficha(FichasPadrao.muro_de_pedra(), Vector3(300, 1.6, -0.5), Vector3.FORWARD, mago, self)
+	var paredes := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/parede.gd"))
+	_afirmar("muro cria uma parede", paredes.size() == 1)
+	if paredes.size() == 1:
+		var parede: Node3D = paredes[0]
+		_afirmar("parede nasce 3 m à frente do mago", parede.global_position.distance_to(Vector3(300, 0, -3)) < 0.1)
+		var largura_no_mundo := parede.global_transform.basis.x.normalized()
+		_afirmar("parede fica atravessada na frente do mago, não de lado", absf(largura_no_mundo.dot(Vector3.FORWARD)) < 0.01)
+		parede.queue_free()
+	mago.queue_free()
+	chao.queue_free()
+
+
+func _testar_parede_segura_projetil() -> void:
+	var parede: Node = load("res://cenas/magias/parede.tscn").instantiate()
+	add_child(parede)
+	parede.global_position = Vector3(320, 0, -3)
+	var projetil: Node = load("res://cenas/magias/projetil.tscn").instantiate()
+	add_child(projetil)
+	projetil.global_position = Vector3(320, 1, 0)
+	projetil.look_at(Vector3(320, 1, -10), Vector3.UP)
+	projetil.velocidade = 20.0
+	await get_tree().create_timer(0.5).timeout
+	var passou: bool = is_instance_valid(projetil) and projetil.global_position.z < -3.5
+	_afirmar("parede segura o projétil (ele não passa para o outro lado)", not passou)
+	if is_instance_valid(projetil):
+		projetil.queue_free()
+	parede.queue_free()
+
+
+func _testar_parede_some_depois_da_duracao() -> void:
+	var parede: Node = load("res://cenas/magias/parede.tscn").instantiate()
+	parede.duracao_s = 0.2
+	add_child(parede)
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("parede some sozinha depois da duração", not is_instance_valid(parede))
+
+
+## As duas ficam no mundo e têm dono: dividem o limite de 3 da seção 5.
+func _testar_parede_e_area_dividem_o_limite_de_magias_ativas() -> void:
+	var mago := _mago_em(Vector3(340, 0, 0))
+	await get_tree().process_frame
+	var a1 := _criar_area_de_teste(Vector3(340, 0, 5), {"duracao_s": 5.0, "dano_por_s": 1.0}, mago)
+	var a2 := _criar_area_de_teste(Vector3(340, 0, 10), {"duracao_s": 5.0, "dano_por_s": 1.0}, mago)
+	Executor.executar_ficha(FichasPadrao.muro_de_pedra(), Vector3(340, 1.6, 0), Vector3.FORWARD, mago, self)
+	var a3 := _criar_area_de_teste(Vector3(340, 0, 15), {"duracao_s": 5.0, "dano_por_s": 1.0}, mago)
+	_afirmar("duas áreas e uma parede usam as 3 vagas; a quarta magia não sai", a1 != null and a2 != null and a3 == null)
+	for m in Host.magias_ativas.duplicate():
+		if is_instance_valid(m) and m.dono == mago:
+			m.queue_free()
+	mago.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_teleporte_leva_o_mago_para_frente() -> void:
+	var chao := _chao_em(Vector3(360, 0, 0))
+	var mago := _mago_em(Vector3(360, 0, 0))
+	await get_tree().physics_frame
+	Executor.executar_ficha(FichasPadrao.salto_arcano(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	_afirmar("teleporte leva o mago 6 m para a frente, no chão", mago.global_position.distance_to(Vector3(360, 0, -6)) < 0.1)
+	mago.queue_free()
+	chao.queue_free()
+
+
+func _testar_teleporte_para_antes_da_parede() -> void:
+	var chao := _chao_em(Vector3(380, 0, 0))
+	var mago := _mago_em(Vector3(380, 0, 0))
+	var parede: Node = load("res://cenas/magias/parede.tscn").instantiate()
+	add_child(parede)
+	parede.global_position = Vector3(380, 0, -3)
+	await get_tree().physics_frame
+	Executor.executar_ficha(FichasPadrao.salto_arcano(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	_afirmar("teleporte para antes da parede, sem atravessar", mago.global_position.z > -3.0 + 0.2)
+	_afirmar("teleporte ainda anda até perto da parede", mago.global_position.z < -1.5)
+	mago.queue_free()
+	parede.queue_free()
+	chao.queue_free()
+
+
+func _testar_teleporte_nao_vira_voo() -> void:
+	var chao := _chao_em(Vector3(400, 0, 0))
+	var mago := _mago_em(Vector3(400, 0, 0))
+	await get_tree().physics_frame
+	Executor.executar_ficha(FichasPadrao.salto_arcano(), Vector3.ZERO, Vector3(0, 1, -1).normalized(), mago, self)
+	_afirmar("olhar para cima no teleporte não faz o mago voar", absf(mago.global_position.y) < 0.1)
+	mago.queue_free()
+	chao.queue_free()
+
+
+func _testar_parede_e_teleporte_contam_como_magia_de_verdade() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	_afirmar("parede com duração conta como magia", not mago._ficha_sem_componentes(FichasPadrao.muro_de_pedra()))
+	_afirmar("teleporte com distância conta como magia", not mago._ficha_sem_componentes(FichasPadrao.salto_arcano()))
+	_afirmar("teleporte de distância zero não conta", mago._ficha_sem_componentes({"componentes": [{"tipo": "teleporte", "distancia_m": 0.0}]}))
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_muro_e_teleporte() -> void:
+	_afirmar("interpretador reconhece \"muro\"", Interpretador.interpretar("um muro de pedra").get("nome") == "Muro de Pedra")
+	_afirmar("interpretador reconhece \"teleporte\"", Interpretador.interpretar("quero me teleportar").get("nome") == "Salto Arcano")

@@ -54,10 +54,18 @@ ou mais, numa lista):
   a área nasce em volta de quem conjurou (ex.: "uma chuva ao meu redor"),
   e nunca afeta quem conjurou. Precisa de dano OU estado; sem nenhum dos
   dois não faz nada.
+- "parede": um bloco sólido que sobe do chão à frente de quem conjurou e
+  segura projéteis e inimigos por "duracao_s". Campos: "largura_m",
+  "altura_m", "distancia_m" (quão à frente) e "material". Use para muro,
+  barreira física, construção.
+- "teleporte": leva quem conjurou "distancia_m" metros para a frente na
+  hora, parando antes de obstáculos. Use para sumir e reaparecer, dar um
+  salto mágico, fugir.
 - "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
   Use para qualquer ideia de curar, recuperar ou restaurar.
 - "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para
-  qualquer ideia de proteção, armadura ou barreira.
+  proteção no próprio corpo (armadura, pele de pedra, aura). Para uma
+  barreira no chão, à frente, use "parede".
 - "invocacao": cria uma criatura que persegue e ataca o inimigo mais
   próximo sozinha. Campos: "corpo" ("ave" | "quadrupede" | "verme" |
   "bolha"), "material" (mesma lista do projétil), "escala" (ex.: 0.7 para
@@ -132,6 +140,18 @@ maioria das magias usa só um dos dois):
       "dano_por_s": 0,
       "nome_estado": "molhado",
       "material": "agua"
+    },
+    {
+      "tipo": "parede",
+      "largura_m": 3,
+      "altura_m": 2,
+      "distancia_m": 3,
+      "duracao_s": 5,
+      "material": "pedra"
+    },
+    {
+      "tipo": "teleporte",
+      "distancia_m": 6
     },
     {
       "id": "pombo",

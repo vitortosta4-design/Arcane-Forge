@@ -353,3 +353,9 @@ O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso
   - **Achados implementando:** (1) mesma armadilha da invocação: o primeiro tick rodava no `_ready()`, antes da área ser posicionada, e acertava o ponto (0,0,0); agora o primeiro tick é no primeiro quadro de física. (2) Lava meio transparente sobre grama verde parecia terra marrom; disco mais opaco.
   - **Limitação:** a área só age a cada 1 s, então quem entra pode levar até 1 s para sentir o efeito. A nuvem de chuva é só um disco azul no chão, sem gotas caindo.
   - 30 testes novos (135 → 165/165). Prints em `evidencias/fase-1/estado_*.png` e `area_*.png`.
+- **Lote: parede + teleporte curto** em 21/10/2026 (versão 12 do prompt). Com eles, a "primeira leva" de componentes da proposta técnica (seção 3) está completa, menos o estado "cego".
+  - **Parede:** bloco sólido que sobe do chão à frente de quem conjurou, atravessado na frente dele, e some sozinho. Fica na camada de colisão do cenário, então segura projéteis, inimigos e o próprio mago sem código extra. Conta no limite de 3 magias ativas por jogador junto com as áreas (o controle do Host foi generalizado de "áreas" para "magias ativas").
+  - **Teleporte curto:** leva quem conjurou para a frente, só no plano do chão (olhar para cima não vira voo), para 0,6 m antes de qualquer parede, caixa ou barril no caminho e cai no chão.
+  - Prompt da IA: escudo e parede tinham as duas a palavra "barreira"; o escudo agora é "proteção no próprio corpo" e a parede "barreira no chão, à frente".
+  - **Limitações:** a parede é um bloco cinza liso, bem longe da pedra trabalhada da referência (decisão visual para o Vitor). O teleporte não tem nenhum efeito visual: o mago simplesmente aparece em outro lugar.
+  - 22 testes novos (165 → 187/187). Print em `evidencias/fase-1/parede_muro_de_pedra.png`.

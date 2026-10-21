@@ -27,6 +27,10 @@ static func interpretar(frase: String) -> Dictionary:
 		return FichasPadrao.pombo_bombardeiro()
 	if "pombo" in normalizada or "invocar" in normalizada or "invocacao" in normalizada or "invocação" in normalizada:
 		return FichasPadrao.pombo_de_pedra()
+	if "muro" in normalizada or "parede" in normalizada:
+		return FichasPadrao.muro_de_pedra()
+	if "teleport" in normalizada or "teletransport" in normalizada:
+		return FichasPadrao.salto_arcano()
 	if "lava" in normalizada or "poça" in normalizada or "poca" in normalizada:
 		return FichasPadrao.poca_de_lava()
 	if "chuva" in normalizada:

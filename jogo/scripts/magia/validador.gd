@@ -28,6 +28,10 @@ const DANO_CONTATO_MAXIMO := 8.0 # menor que o da explosão: repete a cada ataqu
 const INTERVALO_LANCADOR_MINIMO_S := 0.8 # menos que isso vira metralhadora
 const RAIO_AREA_MAXIMO := 4.0
 const DANO_AREA_POR_S_MAXIMO := 8.0 # menor que a explosão: repete a cada segundo
+const LARGURA_PAREDE_MAXIMA := 4.0
+const ALTURA_PAREDE_MAXIMA := 3.0
+const DISTANCIA_PAREDE_MAXIMA := 6.0
+const DISTANCIA_TELEPORTE_MAXIMA := 8.0
 
 const CUSTO_BASE_PROJETIL := 5.0
 const CUSTO_POR_VELOCIDADE := 0.3
@@ -48,6 +52,11 @@ const CUSTO_POR_DANO_CONTATO := 0.5
 const CUSTO_BASE_AREA := 5.0
 const CUSTO_POR_RAIO_AREA := 1.0
 const CUSTO_POR_DURACAO_AREA := 0.5
+const CUSTO_BASE_PAREDE := 5.0
+const CUSTO_POR_M2_PAREDE := 1.0
+const CUSTO_POR_DURACAO_PAREDE := 0.5
+const CUSTO_BASE_TELEPORTE := 6.0
+const CUSTO_POR_M_TELEPORTE := 1.0
 const CUSTO_BASE_LANCADOR := 4.0
 ## O custo do lançador é uma estimativa: o custo de um disparo vezes quantos
 ## disparos caberiam em REFERENCIA_DISPAROS_S segundos. Ajustável jogando.
@@ -109,6 +118,14 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		# Estado é opcional aqui: fora da lista vira "nenhum", não um padrão.
 		var estado := _como_texto(c.get("nome_estado"))
 		c["nome_estado"] = estado if estado in ESTADOS_VALIDOS else ""
+	elif c.get("tipo") == "parede":
+		c["largura_m"] = clampf(_como_numero(c.get("largura_m"), 3.0), 0.5, LARGURA_PAREDE_MAXIMA)
+		c["altura_m"] = clampf(_como_numero(c.get("altura_m"), 2.0), 0.5, ALTURA_PAREDE_MAXIMA)
+		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
+		c["distancia_m"] = clampf(_como_numero(c.get("distancia_m"), 3.0), 1.0, DISTANCIA_PAREDE_MAXIMA)
+		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
+	elif c.get("tipo") == "teleporte":
+		c["distancia_m"] = clampf(_como_numero(c.get("distancia_m"), 0.0), 0.0, DISTANCIA_TELEPORTE_MAXIMA)
 	elif c.get("tipo") == "lancador":
 		c["anexado_a"] = _como_texto(c.get("anexado_a"))
 		c["intervalo_s"] = clampf(_como_numero(c.get("intervalo_s"), 1.5), INTERVALO_LANCADOR_MINIMO_S, DURACAO_MAXIMA_S)
@@ -221,6 +238,12 @@ static func _custo_componente(componente: Dictionary) -> float:
 		custo += componente.get("dano_por_s", 0.0) * duracao * CUSTO_POR_DANO
 		if componente.get("nome_estado", "") != "":
 			custo += duracao * CUSTO_POR_DURACAO_AREA
+	elif tipo == "parede":
+		custo += CUSTO_BASE_PAREDE
+		custo += componente.get("largura_m", 0.0) * componente.get("altura_m", 0.0) * CUSTO_POR_M2_PAREDE
+		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_PAREDE
+	elif tipo == "teleporte":
+		custo += CUSTO_BASE_TELEPORTE + componente.get("distancia_m", 0.0) * CUSTO_POR_M_TELEPORTE
 	elif tipo == "lancador":
 		var disparos: float = REFERENCIA_DISPAROS_S / componente.get("intervalo_s", 1.5)
 		custo += CUSTO_BASE_LANCADOR + _custo_componente(componente.get("projetil", {})) * disparos
