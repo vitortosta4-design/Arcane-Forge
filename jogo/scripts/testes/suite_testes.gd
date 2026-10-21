@@ -45,6 +45,8 @@ func _ready() -> void:
 	await _testar_escudo_expira_depois_da_duracao()
 	_testar_ficha_so_com_escudo_sem_duracao_conta_como_nao_entendida()
 	_testar_interpretador_reconhece_escudo()
+	await _testar_ficha_com_cura_e_escudo_juntos_aplica_os_dois()
+	_testar_custo_de_mana_soma_componentes_diferentes()
 
 	print("")
 	if _falhas == 0:
@@ -596,3 +598,41 @@ func _testar_interpretador_reconhece_escudo() -> void:
 	var ficha := Interpretador.interpretar("quero um ESCUDO para me proteger")
 	_afirmar("interpretador reconhece \"escudo\"", not ficha.is_empty())
 	_afirmar("interpretador devolve a ficha de escudo de pedra", ficha.get("nome") == "Escudo de Pedra")
+
+
+## O prompt da IA (supabase/functions/interpretar-magia/index.ts) agora avisa
+## que uma ficha pode combinar mais de um componente na mesma lista (ex.: um
+## projétil E um escudo). Testa que o jogo realmente aplica os dois quando
+## isso acontece, não só o primeiro da lista.
+func _testar_ficha_com_cura_e_escudo_juntos_aplica_os_dois() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.receber_dano(50.0, Vector3.ZERO, 0.0)
+	var ficha := {
+		"componentes": [
+			{"tipo": "cura", "quantidade": 10.0},
+			{"tipo": "escudo", "reducao": 0.5, "duracao_s": 5.0}
+		]
+	}
+	Executor.executar_ficha(ficha, Vector3.ZERO, Vector3.FORWARD, mago, self)
+	await get_tree().process_frame
+
+	_afirmar("ficha com cura e escudo juntos aplicou a cura", is_equal_approx(mago.vida_atual, 60.0))
+	_afirmar("ficha com cura e escudo juntos aplicou o escudo", mago._reducao_escudo > 0.0)
+	mago.queue_free()
+
+
+func _testar_custo_de_mana_soma_componentes_diferentes() -> void:
+	var ficha_so_cura := Validador.validar_ficha({"componentes": [{"tipo": "cura", "quantidade": 10.0}]})
+	var ficha_cura_e_escudo := Validador.validar_ficha({
+		"componentes": [
+			{"tipo": "cura", "quantidade": 10.0},
+			{"tipo": "escudo", "reducao": 0.3, "duracao_s": 3.0}
+		]
+	})
+	var custo_so_cura := Validador.calcular_custo_mana(ficha_so_cura)
+	var custo_dos_dois := Validador.calcular_custo_mana(ficha_cura_e_escudo)
+	_afirmar("custo de mana soma os dois componentes, não só o primeiro", custo_dos_dois > custo_so_cura)
