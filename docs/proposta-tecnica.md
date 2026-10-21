@@ -145,9 +145,9 @@ Pedido de "um milhão de pombos" vira "3 pombos" (o máximo), com legenda avisan
 
 ## 8. Desempenho
 
-- **Hardware mínimo oficial:** o PC do Vitor (Pentium G5400, GTX 1050 2 GB, 16 GB).
-- **Meta inicial:** 60 FPS na arena vazia e nunca abaixo de 30 FPS no pior caso permitido pelos limites, em 1080p com gráficos baixos. A meta será confirmada ou ajustada após a primeira medição na Fase 1.
-- O renderizador (Mobile ou Compatibility) será escolhido medindo os dois no seu PC.
+- **Hardware mínimo oficial (atualizado pela ADR-031, 21/10/2026):** CPU Ryzen 5 3600 ou Intel i5-9400F (6 núcleos), GPU RTX 2060 6GB, 16GB de RAM. Antes era o PC do Vitor (Pentium G5400, GTX 1050 2GB); o Vitor pediu para subir o piso para poder deixar o jogo visualmente mais cheio (ver ADR-031 em `decisoes.md`), mesmo isso significando que seu PC atual deixa de garantir rodar bem.
+- **Meta inicial:** 60 FPS na arena vazia e nunca abaixo de 30 FPS no pior caso permitido pelos limites, em 1080p com gráficos altos (dentro do novo piso). Já medido uma vez no PC antigo do Vitor (Fase 1: 53-60 FPS com o piso antigo); precisa remedir depois que a atmosfera usar o orçamento novo (névoa volumétrica, iluminação global em tempo real, mais luzes com sombra — ADR-025 revisado).
+- Renderizador: Forward+ (já configurado no projeto), que é o que aguenta SDFGI e névoa volumétrica.
 - Contador de FPS ligável no jogo, desde a Fase 1.
 
 ---

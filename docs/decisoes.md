@@ -229,13 +229,27 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - Sem galeria pública por enquanto (exigiria moderação). Ideia guardada para o futuro.
 
 ## ADR-025 · Atmosfera bonita com shaders baratos
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026). **Revisada em 21/10/2026, ver ADR-031.**
 
 - **Objetivo:** atmosfera bonita como na referência `docs/referencias/arte-conceito-01.png`, vinda de luz e cor, não de polígonos.
 - **Usar:** shader toon (luz em degraus de cor), luz de contorno, névoa colorida por distância e altura, céu pintado, vegetação balançando por shader de vértice, água estilizada, brilho (glow) nas magias.
-- **Não usar no hardware mínimo:** névoa volumétrica, iluminação global em tempo real, muitas luzes com sombra simultâneas.
+- ~~**Não usar no hardware mínimo:** névoa volumétrica, iluminação global em tempo real, muitas luzes com sombra simultâneas.~~ **Revisto pela ADR-031:** com o piso subindo para RTX 2060, essas três técnicas passam a ser permitidas, dentro do que a GPU aguentar (medir FPS de verdade, não só confiar no papel).
 - **Menu de qualidade (Baixo e Alto):** o Alto liga enfeites extras (partículas, sombras, vegetação) para PCs fortes. Nenhum ajuste de qualidade pode mudar o combate (colisões, visibilidade de inimigos, áreas de efeito).
 - **Fácil de mudar?** Sim, é camada visual.
+
+## ADR-031 · Hardware mínimo sobe de GTX 1050 2GB para RTX 2060 6GB
+**Status:** Aprovada (21/10/2026, a pedido do Vitor)
+
+- **Problema:** depois de ver os primeiros prints do canto de atmosfera (ADR-030) comparados com a referência visual, o Vitor achou o resultado limitado demais pela GTX 1050 2GB e quer o jogo mais "cheio" — o suficiente para chegar perto da referência.
+- **Escolha:** o novo PC de referência (piso mínimo) passa a ser: **CPU Ryzen 5 3600 ou Intel i5-9400F (6 núcleos), GPU RTX 2060 6GB, 16GB de RAM.** O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB) deixa de ser o piso oficial, mas continua sendo testado informalmente como "PC fraco" de referência, já que ainda é o hardware que o Vitor tem em mãos para jogar e testar.
+- **O que isso libera (pedido do Vitor: só iluminação/efeitos/densidade de cena, mantendo o visual tosco/low poly do ADR-007 e o tom absurdo do ADR-019 — ele não quer modelos mais detalhados, só o jogo "parecendo mais" com a referência em luz, cor e atmosfera):**
+  - Névoa volumétrica, iluminação global em tempo real (SDFGI do Godot) e mais luzes com sombra simultâneas (ADR-025, revisado).
+  - Brilho (glow) mais forte nas magias e fontes de luz.
+  - Cenas mais densas: mais inimigos, projéteis e efeitos ao mesmo tempo (os limites da seção 5 da proposta técnica podem subir, mas isso é ajuste de game design, não decidido aqui — fica para quando o Vitor pedir especificamente).
+- **O que continua igual:** ADR-007 (low poly "feiozinho de propósito") e ADR-019 (inimigos absurdos) não mudam. Mais luz e efeito, não mais polígono.
+- **Risco aceito:** o jogo pode ficar pesado demais para o Pentium G5400/GTX 1050 que o Vitor tem agora. Ele sabe disso e decidiu aceitar, priorizando o resultado visual. Se algum dia o jogo for compartilhado com alguém que só tem hardware mais fraco, um "modo Baixo" de verdade (ADR-025) precisa ser testado nessa máquina antes.
+- **Consequências práticas:** `docs/proposta-tecnica.md` (seção 8) e a nota "Requisito mínimo de hardware" neste arquivo foram atualizadas. SDFGI e névoa volumétrica ainda não foram ligados no código nesta sessão — são mudanças de Environment inteiras, melhor testadas com FPS real no PC do Vitor (uma sessão na nuvem sem GPU não mede isso direito). O que já foi feito nesta sessão: brilho (glow) e sombra mais visíveis no canto de atmosfera, dentro do que dava para confirmar com o render por software (ver notas abaixo).
+- **Fácil de mudar?** Sim, é um número de referência; pode subir ou descer de novo facilmente.
 
 ## ADR-026 · Sistema de som por camadas
 **Status:** Aprovada (20/10/2026)
@@ -308,8 +322,8 @@ Prints novos em `evidencias/fase-1/`: `canto_atmosfera_render_nuvem.png`, `arena
 **Nota sobre os números:** o FPS mostrado nos prints tirados na nuvem (14 a 18) não serve de referência nenhuma — é renderização por software (CPU), não GPU. O FPS real (60, no print do próprio Vitor) continua sendo o que vale.
 
 ## Requisito mínimo de hardware (referência)
-O PC do Vitor é o piso: Pentium G5400 (2 núcleos), GTX 1050 com 2 GB de VRAM, 16 GB de RAM.
-Se rodar bem nele, roda na maioria dos PCs.
+**Atualizado pela ADR-031 (21/10/2026):** o piso oficial agora é CPU Ryzen 5 3600 ou Intel i5-9400F (6 núcleos), GPU RTX 2060 6GB, 16GB de RAM.
+O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso oficial, mas continua sendo o hardware real que ele tem para jogar e testar — vale a pena medir FPS nele também, mesmo não sendo mais o alvo mínimo.
 
 ## Notas de implementação da Fase 2
 
