@@ -13,4 +13,6 @@ static func interpretar(frase: String) -> Dictionary:
 	var normalizada := frase.to_lower()
 	if "fogo" in normalizada and ("bola" in normalizada or "bala" in normalizada):
 		return FichasPadrao.bola_de_fogo()
+	if "cura" in normalizada or "curar" in normalizada:
+		return FichasPadrao.luz_curativa()
 	return {}

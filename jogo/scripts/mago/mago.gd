@@ -140,10 +140,26 @@ func _ficha_sem_componentes(ficha: Dictionary) -> bool:
 	if componentes.is_empty():
 		return true
 	for componente in componentes:
-		for efeito in (componente.get("ao_impactar", []) as Array):
-			if efeito.get("dano", 0.0) > 0.0 or efeito.get("empurrao", 0.0) > 0.0:
-				return false
+		if _componente_tem_efeito_real(componente):
+			return false
 	return true
+
+
+## Confere se um componente (ou algum efeito dentro do seu "ao_impactar")
+## faz alguma coisa de verdade, independente do tipo. Generalizado para
+## incluir "cura" (proposta técnica, seção 3) sem repetir a regra de
+## "projétil fantasma" (dano/empurrão zerados) achada com o Vitor na
+## Fase 2: um componente sem efeito real também conta como "não entendi".
+func _componente_tem_efeito_real(componente: Dictionary) -> bool:
+	var tipo = componente.get("tipo")
+	if tipo == "explosao" and (componente.get("dano", 0.0) > 0.0 or componente.get("empurrao", 0.0) > 0.0):
+		return true
+	if tipo == "cura" and componente.get("quantidade", 0.0) > 0.0:
+		return true
+	for efeito in (componente.get("ao_impactar", []) as Array):
+		if _componente_tem_efeito_real(efeito):
+			return true
+	return false
 
 
 func _conjurar_ficha(ficha: Dictionary) -> void:
@@ -174,6 +190,13 @@ func _regenerar_mana(delta: float) -> void:
 	if mana_atual < mana_maxima:
 		mana_atual = minf(mana_maxima, mana_atual + REGEN_MANA_POR_S * delta)
 		mana_mudou.emit(mana_atual, mana_maxima)
+
+
+## Chamado pelo Executor quando uma ficha tem um componente "cura" (proposta
+## técnica, seção 3). Simétrico a receber_dano: nunca passa do teto de vida.
+func curar(quantidade: float) -> void:
+	vida_atual = minf(vida_maxima, vida_atual + quantidade)
+	vida_mudou.emit(vida_atual, vida_maxima)
 
 
 func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:

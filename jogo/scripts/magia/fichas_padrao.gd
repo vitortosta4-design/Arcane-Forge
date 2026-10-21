@@ -29,3 +29,20 @@ static func bola_de_fogo() -> Dictionary:
 		],
 		"legenda": "uma bola de fogo que explode ao impacto"
 	}
+
+
+static func luz_curativa() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Luz Curativa",
+		"frase_original": "luz curativa",
+		"natureza": "boa",
+		"ingredientes": ["cura"],
+		"componentes": [
+			{
+				"tipo": "cura",
+				"quantidade": 20.0
+			}
+		],
+		"legenda": "uma luz calorosa que cura quem a conjurou"
+	}

@@ -12,12 +12,15 @@ const DANO_MAXIMO := 30.0
 const RAIO_EXPLOSAO_MAXIMO := 4.0
 const EMPURRAO_MAXIMO := 6.0
 const VELOCIDADE_MAXIMA := 25.0
+const CURA_MAXIMA := 25.0
 
 const CUSTO_BASE_PROJETIL := 5.0
 const CUSTO_POR_VELOCIDADE := 0.3
 const CUSTO_BASE_EXPLOSAO := 5.0
 const CUSTO_POR_DANO := 0.4
 const CUSTO_POR_RAIO := 1.0
+const CUSTO_BASE_CURA := 5.0
+const CUSTO_POR_CURA := 0.5
 
 
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
@@ -48,6 +51,8 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["raio_m"] = clampf(_como_numero(c.get("raio_m"), 2.0), 0.5, RAIO_EXPLOSAO_MAXIMO)
 		c["dano"] = clampf(_como_numero(c.get("dano"), 5.0), 0.0, DANO_MAXIMO)
 		c["empurrao"] = clampf(_como_numero(c.get("empurrao"), 0.0), 0.0, EMPURRAO_MAXIMO)
+	elif c.get("tipo") == "cura":
+		c["quantidade"] = clampf(_como_numero(c.get("quantidade"), 0.0), 0.0, CURA_MAXIMA)
 	return c
 
 
@@ -124,4 +129,7 @@ static func _custo_componente(componente: Dictionary) -> float:
 		custo += CUSTO_BASE_EXPLOSAO
 		custo += componente.get("dano", 0.0) * CUSTO_POR_DANO
 		custo += componente.get("raio_m", 0.0) * CUSTO_POR_RAIO
+	elif tipo == "cura":
+		custo += CUSTO_BASE_CURA
+		custo += componente.get("quantidade", 0.0) * CUSTO_POR_CURA
 	return custo

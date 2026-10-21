@@ -12,6 +12,8 @@ static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3,
 	for componente in ficha_validada.get("componentes", []):
 		if componente.get("tipo") == "projetil":
 			_criar_projetil(componente, origem, direcao, dono, mundo)
+		elif componente.get("tipo") == "cura":
+			_aplicar_cura(componente, dono)
 
 
 static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> void:
@@ -27,3 +29,12 @@ static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Ve
 	projetil.definir_material(componente.get("material", "fogo"))
 	projetil.definir_forma(componente.get("forma", "esfera"))
 	Host.registrar_projetil(projetil)
+
+
+## Cura (proposta técnica, seção 3): efeito direto em quem conjurou, sem
+## projétil nem alvo, igual à bola de fogo não precisa de projétil para
+## existir. Se "dono" não souber se curar (ex.: chamado direto num teste
+## sem um mago de verdade), não faz nada em vez de quebrar.
+static func _aplicar_cura(componente: Dictionary, dono: Node) -> void:
+	if dono and dono.has_method("curar"):
+		dono.curar(componente.get("quantidade", 0.0))

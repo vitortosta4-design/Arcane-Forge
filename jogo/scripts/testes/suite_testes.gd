@@ -31,6 +31,12 @@ func _ready() -> void:
 	await _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil()
 	await _testar_conjurar_por_texto_desconhecido_nao_gasta_mana()
 	await _testar_ficha_sem_componentes_conta_como_nao_entendida()
+	_testar_validador_corta_cura_acima_do_limite()
+	_testar_validador_calcula_custo_de_mana_da_cura()
+	await _testar_executor_aplica_cura_no_dono_da_ficha()
+	await _testar_cura_nao_passa_do_teto_de_vida()
+	await _testar_ficha_so_com_cura_zero_conta_como_nao_entendida()
+	_testar_interpretador_reconhece_cura()
 
 	print("")
 	if _falhas == 0:
@@ -413,3 +419,78 @@ func _testar_conjurar_por_texto_desconhecido_nao_gasta_mana() -> void:
 
 	_afirmar("conjurar por texto desconhecido não gasta mana", mago.mana_atual == mana_antes)
 	mago.queue_free()
+
+
+## Testa o componente "cura" (proposta técnica, seção 3, primeira leva da
+## Fase 2): mesma regra de corte de outros componentes, nunca confiar num
+## número que a IA sugira sem passar pelo limite do jogo.
+func _testar_validador_corta_cura_acima_do_limite() -> void:
+	var ficha := {"componentes": [{"tipo": "cura", "quantidade": 999.0}]}
+	var corrigida := Validador.validar_ficha(ficha)
+	_afirmar(
+		"cura cortada no limite máximo",
+		corrigida["componentes"][0]["quantidade"] == Validador.CURA_MAXIMA
+	)
+
+
+func _testar_validador_calcula_custo_de_mana_da_cura() -> void:
+	var ficha_pequena := Validador.validar_ficha({"componentes": [{"tipo": "cura", "quantidade": 5.0}]})
+	var ficha_grande := Validador.validar_ficha({"componentes": [{"tipo": "cura", "quantidade": 20.0}]})
+	var custo_pequeno := Validador.calcular_custo_mana(ficha_pequena)
+	var custo_grande := Validador.calcular_custo_mana(ficha_grande)
+	_afirmar("cura custa mana", custo_pequeno > 0.0)
+	_afirmar("cura maior custa mais mana que uma pequena", custo_grande > custo_pequeno)
+
+
+## Testa o caminho completo: Executor lê o componente "cura" da ficha e
+## chama mago.curar(), em vez de precisar de projétil ou colisão.
+func _testar_executor_aplica_cura_no_dono_da_ficha() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.receber_dano(40.0, Vector3.ZERO, 0.0)
+	Executor.executar_ficha(FichasPadrao.luz_curativa(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	await get_tree().process_frame
+
+	_afirmar("executor curou o dono da ficha", is_equal_approx(mago.vida_atual, 80.0))
+	mago.queue_free()
+
+
+func _testar_cura_nao_passa_do_teto_de_vida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.receber_dano(10.0, Vector3.ZERO, 0.0)
+	mago.curar(1000.0)
+	_afirmar("cura nunca passa do teto de vida", mago.vida_atual == mago.vida_maxima)
+	mago.queue_free()
+
+
+## Mesma regra do "projétil fantasma": uma cura de quantidade zero não pode
+## passar como magia entendida, senão o jogador gasta a tentativa e não vê
+## nada acontecer sem nenhum aviso (ADR-002).
+func _testar_ficha_so_com_cura_zero_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	_afirmar(
+		"cura de quantidade zero conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "cura", "quantidade": 0.0}]})
+	)
+	_afirmar(
+		"cura de quantidade real não conta como vazia",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "cura", "quantidade": 15.0}]})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_cura() -> void:
+	var ficha := Interpretador.interpretar("quero uma luz de CURA para mim")
+	_afirmar("interpretador reconhece \"cura\"", not ficha.is_empty())
+	_afirmar("interpretador devolve a ficha de luz curativa", ficha.get("nome") == "Luz Curativa")
