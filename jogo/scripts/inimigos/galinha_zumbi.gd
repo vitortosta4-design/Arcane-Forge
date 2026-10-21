@@ -46,6 +46,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		if _cooldown_ataque <= 0.0:
 			_cooldown_ataque = INTERVALO_ATAQUE_S
+			GerenciadorSom.tocar_galinha(global_position)
 			Host.aplicar_dano(alvo, DANO_BICADA, global_position, 1.0)
 	else:
 		var direcao := (alvo.global_position - global_position)

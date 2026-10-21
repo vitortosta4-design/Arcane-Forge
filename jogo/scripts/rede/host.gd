@@ -27,6 +27,7 @@ func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, e
 	mundo.add_child(efeito)
 	efeito.global_position = pos
 	efeito.iniciar(raio_m, material)
+	GerenciadorSom.tocar_explosao(pos)
 
 	var alvos := get_tree().get_nodes_in_group("recebe_dano")
 	for alvo in alvos:

@@ -22,6 +22,7 @@ func _ready() -> void:
 	await _testar_projetil_usa_a_cor_do_material_da_ficha()
 	await _testar_projetil_usa_a_forma_da_ficha()
 	await _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio()
+	await _testar_gerenciador_som_respeita_limite_simultaneo()
 	_testar_interpretador_reconhece_bola_de_fogo()
 	_testar_interpretador_nao_entende_frase_desconhecida()
 	_testar_validador_calcula_custo_de_mana_pelos_componentes()
@@ -241,6 +242,22 @@ func _testar_projetil_usa_a_forma_da_ficha() -> void:
 		var mesh: MeshInstance3D = projetil.get_node("MeshInstance3D")
 		_afirmar("projétil com forma cubo usa uma malha de caixa", mesh.mesh is BoxMesh)
 		projetil.queue_free()
+
+
+## Testa o limite de sons simultâneos do ADR-026: pedir mais sons do que o
+## limite não deve travar nem estourar a lista de tocadores ativos.
+func _testar_gerenciador_som_respeita_limite_simultaneo() -> void:
+	for i in GerenciadorSom.LIMITE_SONS_SIMULTANEOS + 10:
+		GerenciadorSom.tocar_tiro(Vector3.ZERO)
+	_afirmar(
+		"gerenciador de som nunca passa do limite simultâneo",
+		GerenciadorSom._tocadores_ativos.size() <= GerenciadorSom.LIMITE_SONS_SIMULTANEOS
+	)
+	for tocador in GerenciadorSom._tocadores_ativos:
+		tocador.stop()
+		tocador.queue_free()
+	GerenciadorSom._tocadores_ativos.clear()
+	await get_tree().process_frame
 
 
 ## Testa o desligador do porteiro (usado pelos próprios testes para não

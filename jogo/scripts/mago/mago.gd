@@ -149,6 +149,7 @@ func _conjurar_ficha(ficha: Dictionary) -> void:
 	var camera := _camera_ativa()
 	var origem := camera.global_position + -camera.global_transform.basis.z * 0.5
 	var direcao := -camera.global_transform.basis.z
+	GerenciadorSom.tocar_tiro(origem)
 	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
 	conjurou.emit(ficha_validada.get("legenda", ""))
 
