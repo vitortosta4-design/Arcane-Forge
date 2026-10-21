@@ -10,6 +10,10 @@ const FORMAS_VALIDAS := ["esfera", "ovo", "cubo"]
 ## lento)". Só "queimando" e "lento" têm efeito de verdade por enquanto; os
 ## outros três ficam para um próximo incremento (ver docs/decisoes.md).
 const ESTADOS_VALIDOS := ["queimando", "lento"]
+## Proposta técnica, seção 3, exemplo do "Pombo de Pedra": só
+## "perseguir_inimigo_proximo" está implementado por enquanto.
+const CORPOS_VALIDOS := ["ave", "quadrupede", "verme", "bolha"]
+const COMPORTAMENTOS_VALIDOS := ["perseguir_inimigo_proximo"]
 
 const DURACAO_MAXIMA_S := 8.0
 const DANO_MAXIMO := 30.0
@@ -18,6 +22,10 @@ const EMPURRAO_MAXIMO := 6.0
 const VELOCIDADE_MAXIMA := 25.0
 const CURA_MAXIMA := 25.0
 const REDUCAO_ESCUDO_MAXIMA := 0.9 # nunca 100%: escudo reduz dano, não anula
+const VIDA_INVOCACAO_MAXIMA := 40.0
+const ESCALA_INVOCACAO_MINIMA := 0.3
+const ESCALA_INVOCACAO_MAXIMA := 2.0
+const DANO_CONTATO_MAXIMO := 8.0 # menor que o da explosão: repete a cada ataque
 
 const CUSTO_BASE_PROJETIL := 5.0
 const CUSTO_POR_VELOCIDADE := 0.3
@@ -31,6 +39,10 @@ const CUSTO_POR_REDUCAO := 20.0
 const CUSTO_POR_DURACAO_ESCUDO := 1.0
 const CUSTO_BASE_ESTADO := 4.0
 const CUSTO_POR_DURACAO_ESTADO := 1.0
+const CUSTO_BASE_INVOCACAO := 8.0
+const CUSTO_POR_VIDA_INVOCACAO := 0.3
+const CUSTO_POR_DURACAO_INVOCACAO := 1.0
+const CUSTO_POR_DANO_CONTATO := 0.5
 
 
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
@@ -72,6 +84,14 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 	elif c.get("tipo") == "estado":
 		c["nome_estado"] = _escolher_valido(_como_texto(c.get("nome_estado")), ESTADOS_VALIDOS, "lento")
 		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
+	elif c.get("tipo") == "invocacao":
+		c["corpo"] = _escolher_valido(_como_texto(c.get("corpo")), CORPOS_VALIDOS, "bolha")
+		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
+		c["comportamento"] = _escolher_valido(_como_texto(c.get("comportamento")), COMPORTAMENTOS_VALIDOS, "perseguir_inimigo_proximo")
+		c["escala"] = clampf(_como_numero(c.get("escala"), 1.0), ESCALA_INVOCACAO_MINIMA, ESCALA_INVOCACAO_MAXIMA)
+		c["vida"] = clampf(_como_numero(c.get("vida"), 10.0), 0.0, VIDA_INVOCACAO_MAXIMA)
+		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
+		c["dano_contato"] = clampf(_como_numero(c.get("dano_contato"), 0.0), 0.0, DANO_CONTATO_MAXIMO)
 	return c
 
 
@@ -158,4 +178,9 @@ static func _custo_componente(componente: Dictionary) -> float:
 	elif tipo == "estado":
 		custo += CUSTO_BASE_ESTADO
 		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_ESTADO
+	elif tipo == "invocacao":
+		custo += CUSTO_BASE_INVOCACAO
+		custo += componente.get("vida", 0.0) * CUSTO_POR_VIDA_INVOCACAO
+		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_INVOCACAO
+		custo += componente.get("dano_contato", 0.0) * CUSTO_POR_DANO_CONTATO
 	return custo

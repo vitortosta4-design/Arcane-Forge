@@ -150,3 +150,30 @@ static func vento_gelado() -> Dictionary:
 		],
 		"legenda": "um vento gelado que deixa quem é atingido mais lento"
 	}
+
+
+## Invocação (proposta técnica, seção 3): versão simplificada do exemplo
+## "Pombo de Pedra" — sem o lançador de ovos explosivos ainda, só a
+## criatura perseguindo e batendo. O lançador fica para um próximo
+## incremento (ver docs/decisoes.md).
+static func pombo_de_pedra() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Pombo de Pedra",
+		"frase_original": "pombo de pedra",
+		"natureza": "neutra",
+		"ingredientes": ["invocacao"],
+		"componentes": [
+			{
+				"tipo": "invocacao",
+				"corpo": "ave",
+				"material": "pedra",
+				"escala": 0.7,
+				"comportamento": "perseguir_inimigo_proximo",
+				"vida": 20.0,
+				"duracao_s": 6.0,
+				"dano_contato": 5.0
+			}
+		],
+		"legenda": "um pombo de pedra que persegue e bica os inimigos"
+	}

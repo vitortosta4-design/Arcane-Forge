@@ -23,4 +23,6 @@ static func interpretar(frase: String) -> Dictionary:
 		return FichasPadrao.chama_persistente()
 	if "lento" in normalizada or "lentidao" in normalizada or "gelado" in normalizada:
 		return FichasPadrao.vento_gelado()
+	if "pombo" in normalizada or "invocar" in normalizada or "invocacao" in normalizada or "invocação" in normalizada:
+		return FichasPadrao.pombo_de_pedra()
 	return {}

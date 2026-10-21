@@ -5,6 +5,7 @@ class_name Executor
 ## só sabe instanciar os componentes previstos (proposta técnica, seção 3).
 
 const CenaProjetil := preload("res://cenas/magias/projetil.tscn")
+const CenaInvocacao := preload("res://cenas/magias/invocacao.tscn")
 
 
 static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> void:
@@ -16,6 +17,8 @@ static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3,
 			_aplicar_cura(componente, dono)
 		elif componente.get("tipo") == "escudo":
 			_aplicar_escudo(componente, dono)
+		elif componente.get("tipo") == "invocacao":
+			_criar_invocacao(componente, origem, mundo)
 
 
 static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> void:
@@ -47,3 +50,23 @@ static func _aplicar_cura(componente: Dictionary, dono: Node) -> void:
 static func _aplicar_escudo(componente: Dictionary, dono: Node) -> void:
 	if dono and dono.has_method("aplicar_escudo"):
 		dono.aplicar_escudo(componente.get("reducao", 0.0), componente.get("duracao_s", 0.0))
+
+
+## Invocação (proposta técnica, seção 3, exemplo do "Pombo de Pedra"):
+## respeita o limite de criaturas no mapa (ADR-004, Host já tinha esse
+## controle pronto, só não estava ligado a nada ainda).
+static func _criar_invocacao(componente: Dictionary, origem: Vector3, mundo: Node) -> void:
+	if not Host.pode_invocar_criatura():
+		return
+	var criatura := CenaInvocacao.instantiate()
+	# Precisa ser antes do add_child: _ready() da criatura já lê vida e
+	# duracao_s para começar o timer de expirar e a vida atual. Lido depois,
+	# a ficha seria ignorada e a criatura nasceria sempre com os padrões.
+	criatura.vida = componente.get("vida", 10.0)
+	criatura.dano_contato = componente.get("dano_contato", 0.0)
+	criatura.duracao_s = componente.get("duracao_s", 6.0)
+	mundo.add_child(criatura)
+	criatura.global_position = origem
+	criatura.scale = Vector3.ONE * componente.get("escala", 1.0)
+	criatura.definir_material(componente.get("material", "pedra"))
+	Host.registrar_criatura(criatura)

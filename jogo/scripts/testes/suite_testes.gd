@@ -60,6 +60,15 @@ func _ready() -> void:
 	await _testar_projetil_aplica_estado_em_quem_atingiu()
 	_testar_ficha_so_com_estado_sem_duracao_conta_como_nao_entendida()
 	_testar_interpretador_reconhece_queimando_e_lento()
+	_testar_validador_corta_invocacao_nos_limites_e_padroes()
+	_testar_validador_calcula_custo_de_mana_da_invocacao()
+	await _testar_executor_cria_invocacao_com_vida_e_duracao_da_ficha()
+	await _testar_executor_respeita_limite_de_criaturas_invocadas()
+	await _testar_invocacao_morre_com_vida_zero()
+	await _testar_invocacao_persegue_inimigo_mais_proximo()
+	await _testar_invocacao_expira_depois_da_duracao()
+	_testar_ficha_so_com_invocacao_sem_vida_conta_como_nao_entendida()
+	_testar_interpretador_reconhece_pombo()
 
 	print("")
 	if _falhas == 0:
@@ -830,3 +839,136 @@ func _testar_interpretador_reconhece_queimando_e_lento() -> void:
 	var ficha_lento := Interpretador.interpretar("um vento gelado que deixa tudo mais lento")
 	_afirmar("interpretador reconhece \"lento\"", not ficha_lento.is_empty())
 	_afirmar("interpretador devolve a ficha de vento gelado", ficha_lento.get("nome") == "Vento Gelado")
+
+
+## Componente "invocação" (proposta técnica, seção 3, exemplo do "Pombo de
+## Pedra"). O Host já tinha o controle de limite pronto (ADR-004); esta é a
+## primeira coisa que o liga de verdade.
+func _testar_validador_corta_invocacao_nos_limites_e_padroes() -> void:
+	var ficha := {
+		"componentes": [{
+			"tipo": "invocacao",
+			"corpo": "dragao",
+			"comportamento": "ignorar_tudo",
+			"escala": 999.0,
+			"vida": 999.0,
+			"duracao_s": 999.0,
+			"dano_contato": 999.0
+		}]
+	}
+	var corrigida := Validador.validar_ficha(ficha)
+	var invocacao: Dictionary = corrigida["componentes"][0]
+	_afirmar("corpo fora da lista vira um padrão seguro", invocacao["corpo"] in Validador.CORPOS_VALIDOS)
+	_afirmar("comportamento fora da lista vira um padrão seguro", invocacao["comportamento"] in Validador.COMPORTAMENTOS_VALIDOS)
+	_afirmar("escala cortada no limite máximo", invocacao["escala"] == Validador.ESCALA_INVOCACAO_MAXIMA)
+	_afirmar("vida cortada no limite máximo", invocacao["vida"] == Validador.VIDA_INVOCACAO_MAXIMA)
+	_afirmar("duração cortada no limite máximo", invocacao["duracao_s"] == Validador.DURACAO_MAXIMA_S)
+	_afirmar("dano de contato cortado no limite máximo", invocacao["dano_contato"] == Validador.DANO_CONTATO_MAXIMO)
+
+
+func _testar_validador_calcula_custo_de_mana_da_invocacao() -> void:
+	var ficha_fraca := Validador.validar_ficha({"componentes": [{"tipo": "invocacao", "vida": 5.0, "duracao_s": 2.0, "dano_contato": 2.0}]})
+	var ficha_forte := Validador.validar_ficha({"componentes": [{"tipo": "invocacao", "vida": 35.0, "duracao_s": 7.0, "dano_contato": 7.0}]})
+	var custo_fraco := Validador.calcular_custo_mana(ficha_fraca)
+	var custo_forte := Validador.calcular_custo_mana(ficha_forte)
+	_afirmar("invocação custa mana", custo_fraco > 0.0)
+	_afirmar("invocação mais forte custa mais mana", custo_forte > custo_fraco)
+
+
+## Testa o caminho completo: o Executor lê "vida", "dano_contato" e
+## "duracao_s" da ficha e aplica na criatura antes dela entrar na árvore
+## (achado implementando: lido depois do add_child, o _ready() da criatura
+## já tinha capturado os valores padrão, e a ficha seria ignorada).
+func _testar_executor_cria_invocacao_com_vida_e_duracao_da_ficha() -> void:
+	var ficha := Validador.validar_ficha({
+		"componentes": [{"tipo": "invocacao", "material": "metal", "vida": 33.0, "duracao_s": 5.0, "dano_contato": 4.0}]
+	})
+	Executor.executar_ficha(ficha, Vector3(2, 0, 2), Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+
+	var criaturas := get_tree().get_nodes_in_group("criatura_invocada")
+	_afirmar("executor criou uma criatura invocada no mundo", criaturas.size() == 1)
+	if criaturas.size() > 0:
+		var criatura = criaturas[0]
+		_afirmar("criatura nasceu com a vida da ficha, não o padrão", criatura._vida_atual == 33.0)
+		_afirmar("criatura nasceu com o dano de contato da ficha", criatura.dano_contato == 4.0)
+		Host.criaturas_invocadas.erase(criatura)
+		criatura.queue_free()
+
+
+func _testar_executor_respeita_limite_de_criaturas_invocadas() -> void:
+	var ficha := FichasPadrao.pombo_de_pedra()
+	var criadas: Array = []
+	for i in Host.LIMITE_CRIATURAS_INVOCADAS + 2:
+		Executor.executar_ficha(ficha, Vector3(i, 0, 0), Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+
+	var criaturas := get_tree().get_nodes_in_group("criatura_invocada")
+	_afirmar(
+		"invocação para de criar criaturas no limite do Host (ADR-004)",
+		criaturas.size() == Host.LIMITE_CRIATURAS_INVOCADAS
+	)
+	for criatura in criaturas:
+		Host.criaturas_invocadas.erase(criatura)
+		criatura.queue_free()
+
+
+func _testar_invocacao_morre_com_vida_zero() -> void:
+	var criatura: Node = load("res://cenas/magias/invocacao.tscn").instantiate()
+	criatura.vida = 10.0
+	add_child(criatura)
+	await get_tree().process_frame
+
+	criatura.receber_dano(15.0, Vector3.ZERO, 0.0)
+	_afirmar("criatura invocada morre com dano suficiente", not is_instance_valid(criatura) or not criatura.is_in_group("recebe_dano"))
+
+
+## Mesma lógica da galinha zumbi (mira no mago mais próximo), mas a
+## invocação mira no grupo "inimigo" em vez de "mago" — ela luta pro
+## jogador, não contra ele.
+func _testar_invocacao_persegue_inimigo_mais_proximo() -> void:
+	var criatura: Node = load("res://cenas/magias/invocacao.tscn").instantiate()
+	add_child(criatura)
+	criatura.global_position = Vector3(0, 0, 0)
+
+	var inimigo := Node3D.new()
+	add_child(inimigo)
+	inimigo.add_to_group("inimigo")
+	inimigo.global_position = Vector3(5, 0, 0)
+
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	_afirmar("invocação anda na direção do inimigo mais próximo", criatura.velocity.x > 0.0)
+
+	criatura.queue_free()
+	inimigo.queue_free()
+
+
+func _testar_invocacao_expira_depois_da_duracao() -> void:
+	var criatura: Node = load("res://cenas/magias/invocacao.tscn").instantiate()
+	criatura.duracao_s = 0.05
+	add_child(criatura)
+	await get_tree().create_timer(0.3).timeout
+	_afirmar("criatura invocada some sozinha depois da duração", not is_instance_valid(criatura))
+
+
+func _testar_ficha_so_com_invocacao_sem_vida_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	_afirmar(
+		"invocação sem vida conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "invocacao", "vida": 0.0, "duracao_s": 6.0}]})
+	)
+	_afirmar(
+		"invocação com vida e duração reais não conta como vazia",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "invocacao", "vida": 20.0, "duracao_s": 6.0}]})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_pombo() -> void:
+	var ficha := Interpretador.interpretar("quero invocar um pombo para me ajudar")
+	_afirmar("interpretador reconhece \"pombo\"", not ficha.is_empty())
+	_afirmar("interpretador devolve a ficha do pombo de pedra", ficha.get("nome") == "Pombo de Pedra")

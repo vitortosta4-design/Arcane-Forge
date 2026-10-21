@@ -175,6 +175,8 @@ func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 		return true
 	if tipo == "estado" and componente.get("duracao_s", 0.0) > 0.0:
 		return true
+	if tipo == "invocacao" and componente.get("vida", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
+		return true
 	for efeito in (componente.get("ao_impactar", []) as Array):
 		if _componente_tem_efeito_real(efeito):
 			return true
