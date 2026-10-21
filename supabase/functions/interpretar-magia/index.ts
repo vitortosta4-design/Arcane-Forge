@@ -6,11 +6,6 @@
 // Este arquivo é a fonte de verdade versionada no git. O deploy de verdade
 // acontece via MCP do Supabase (mcp__claude_ai_Supabase__deploy_edge_function);
 // depois de editar aqui, lembrar de reimplantar.
-//
-// PENDENTE (21/10/2026): o prompt abaixo já pede "cura" e "escudo" além do
-// "projetil", mas isso ainda não foi reimplantado no Supabase (ver
-// docs/decisoes.md). Até reimplantar, a IA de verdade continua respondendo
-// como se só soubesse "projetil".
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
