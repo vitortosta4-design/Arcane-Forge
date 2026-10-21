@@ -32,6 +32,9 @@ Depois abra o Godot 4.7, importe (ou abra) a pasta `jogo` e aperte **F5** para r
 2. Aparece **névoa no ar** (raios de luz, ar meio "denso")? Na nuvem eu não consigo ver isso.
 3. A tocha do canto de atmosfera **brilha e espalha luz** nas paredes?
 4. Comparando com `docs/referencias/arte-conceito-01.png`: o que mais incomoda?
+5. **Novidades desta tarde:** a arena virou uma clareira com morros, trilha, ruínas e castelo ao fundo. Ande até a borda e olhe em volta: algo parece errado, flutuando ou atravessável?
+6. Aperte **C**: o mago aparece em terceira pessoa (antes ele nunca aparecia, era um bug). Ele ficou com a cara que você imaginava?
+7. Em primeira pessoa, as magias agora saem da mão esquerda. A mira continua acertando onde você aponta?
 
 ## 4. Magias pela IA (uma frase por vez)
 
