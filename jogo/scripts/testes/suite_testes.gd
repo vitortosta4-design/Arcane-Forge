@@ -81,6 +81,10 @@ func _ready() -> void:
 	await _testar_eletricidade_em_molhado_espalha_so_perto()
 	_testar_interpretador_reconhece_agua_faisca_e_bombardeiro()
 	await _testar_ovo_do_pombo_nao_machuca_quem_invocou()
+	await _testar_estado_pinta_o_corpo_inteiro_da_galinha()
+	await _testar_cor_do_estado_some_quando_ele_acaba()
+	await _testar_choque_pisca_e_volta_para_a_cor_de_baixo()
+	await _testar_hud_mostra_estados_do_mago()
 
 	print("")
 	if _falhas == 0:
@@ -1170,3 +1174,56 @@ func _testar_ovo_do_pombo_nao_machuca_quem_invocou() -> void:
 	_afirmar("ovo do pombo continua machucando o inimigo", galinha._vida_atual < vida_galinha)
 	mago.queue_free()
 	galinha.queue_free()
+
+
+## Sinal visual dos estados (ADR-017: feedback claro). Antes deste lote
+## nada mostrava que alguém estava molhado ou queimando.
+func _testar_estado_pinta_o_corpo_inteiro_da_galinha() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	galinha.aplicar_estado("molhado", 3.0)
+	var malhas := galinha.find_children("*", "MeshInstance3D", true, false)
+	var todas_pintadas := malhas.size() > 0 and malhas.all(func(m): return m.material_overlay != null)
+	_afirmar("estado pinta todas as malhas da galinha (corpo e bico)", todas_pintadas)
+	var cor: Color = galinha.estados.camada_atual().albedo_color
+	_afirmar("molhado pinta de azul", cor.b > cor.r and cor.b > cor.g)
+	galinha.queue_free()
+
+
+func _testar_cor_do_estado_some_quando_ele_acaba() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	galinha.aplicar_estado("lento", 0.05)
+	await get_tree().create_timer(0.3).timeout
+	var malhas := galinha.find_children("*", "MeshInstance3D", true, false)
+	_afirmar("cor some quando o estado acaba", malhas.all(func(m): return m.material_overlay == null))
+	galinha.queue_free()
+
+
+func _testar_choque_pisca_e_volta_para_a_cor_de_baixo() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	galinha.global_position = Vector3(80, 0, 0)
+	await get_tree().process_frame
+	galinha.aplicar_estado("molhado", 5.0)
+	galinha.aplicar_estado("eletrizado", 1.0)
+	_afirmar("choque aparece por cima de tudo", galinha.estados.ativos()[0] == "eletrizado")
+	await get_tree().create_timer(ControladorEstados.DURACAO_PISCADA_CHOQUE_S + 0.2).timeout
+	_afirmar("depois do choque volta a cor de molhado", galinha.estados.ativos() == ["molhado"])
+	galinha.queue_free()
+
+
+## Em primeira pessoa o jogador não vê o próprio corpo, então o HUD avisa.
+func _testar_hud_mostra_estados_do_mago() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	var hud: Node = load("res://cenas/hud.tscn").instantiate()
+	add_child(mago)
+	add_child(hud)
+	await get_tree().process_frame
+	hud.configurar(mago)
+	mago.aplicar_estado("lento", 3.0)
+	_afirmar("HUD mostra quando o mago está lento", "Lento" in hud.get_node("Estados").text)
+	mago.queue_free()
+	hud.queue_free()

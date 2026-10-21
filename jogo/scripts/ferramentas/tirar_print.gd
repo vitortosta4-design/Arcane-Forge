@@ -47,7 +47,12 @@ func _process(delta: float) -> bool:
 			_mago.conjurar_por_texto(_args["frase"])
 		return false
 
-	if _etapa == 2 and _tempo >= float(_args.get("espera", "2.5")):
+	if _etapa == 2 and _args.has("frase2") and _tempo >= 0.5 + float(_args.get("intervalo", "1.0")):
+		_etapa = 3
+		_mago.conjurar_por_texto(_args["frase2"])
+		return false
+
+	if _etapa >= 2 and _tempo >= float(_args.get("espera", "2.5")):
 		var saida: String = _args.get("saida", "/tmp/print.png")
 		root.get_texture().get_image().save_png(saida)
 		print("PRINT SALVO: ", saida)

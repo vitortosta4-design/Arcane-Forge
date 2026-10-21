@@ -27,6 +27,16 @@ offset_right = 220.0
 offset_bottom = 88.0
 text = "FPS: 0"
 
+[node name="Estados" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 88.0
+offset_right = 420.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.07, 0.1, 0.75)
+theme_override_constants/outline_size = 4
+text = ""
+
 [node name="Legenda" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5
