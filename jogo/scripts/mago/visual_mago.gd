@@ -62,6 +62,12 @@ func conjurar() -> void:
 	_conjurando = DURACAO_CONJURACAO_S
 
 
+## Ponto um pouco à frente do cristal do cajado, em coordenadas do mundo.
+func ponto_da_magia() -> Vector3:
+	var cristal: Node3D = _braco_direito.get_node("Cajado/Cristal")
+	return cristal.global_position + -global_transform.basis.z * 0.3
+
+
 func _malha_corpo() -> ArrayMesh:
 	var st := GeometriaLowPoly.nova()
 	var G := GeometriaLowPoly

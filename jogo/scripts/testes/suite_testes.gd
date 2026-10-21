@@ -118,6 +118,7 @@ func _ready() -> void:
 	_testar_validador_aceita_nomes_com_acento_e_maiuscula()
 	await _testar_clareira()
 	await _testar_caixa_e_barril_de_madeira()
+	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 
 	print("")
 	if _falhas == 0:
@@ -1767,4 +1768,38 @@ func _testar_caixa_e_barril_de_madeira() -> void:
 	_afirmar("barril aceso ganha brilho laranja", malha_barril.material_overlay != null)
 	caixa.queue_free()
 	barril.queue_free()
+	await get_tree().process_frame
+
+
+## A magia sai da mão (como na referência), mas tem que chegar exatamente
+## onde o centro da tela aponta, nos dois modos de câmera.
+func _testar_magia_sai_da_mao_e_acerta_a_mira() -> void:
+	var parede := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	var caixa := BoxShape3D.new()
+	caixa.size = Vector3(20, 20, 0.5)
+	forma.shape = caixa
+	parede.add_child(forma)
+	add_child(parede)
+	parede.global_position = Vector3(0, 0, -10)
+	var mago: Node3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	for terceira in [false, true]:
+		if terceira:
+			mago._trocar_camera()
+			await get_tree().physics_frame
+			await get_tree().physics_frame
+		var camera: Camera3D = mago._camera_ativa()
+		var mira: Array = mago.ponto_de_disparo()
+		var origem: Vector3 = mira[0]
+		var direcao: Vector3 = mira[1]
+		var na_parede := origem + direcao * ((-9.75 - origem.z) / direcao.z)
+		var centro_da_tela := Vector3(camera.global_position.x, camera.global_position.y, -9.75)
+		var nome := "terceira" if terceira else "primeira"
+		_afirmar("%s pessoa: magia não sai do meio da câmera" % nome, origem.distance_to(camera.global_position) > 0.25)
+		_afirmar("%s pessoa: magia chega onde a mira aponta" % nome, na_parede.distance_to(centro_da_tela) < 0.05)
+	mago.queue_free()
+	parede.queue_free()
 	await get_tree().process_frame

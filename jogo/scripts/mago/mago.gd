@@ -16,6 +16,10 @@ const REGEN_MANA_POR_S := 5.0
 var vida_atual := vida_maxima
 var mana_atual := mana_maxima
 var modo_camera_primeira_pessoa := true
+## Até onde a mira procura o alvo, e o que ela enxerga (cenário, galinha,
+## props). Sem alvo, mira num ponto a essa distância.
+const ALCANCE_MIRA_M := 80.0
+const MASCARA_MIRA := 1 | 4 | 16
 
 var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
@@ -196,14 +200,36 @@ func _conjurar_ficha(ficha: Dictionary) -> void:
 	if not Host.gastar_mana(self, custo):
 		return
 	_cooldown_restante = COOLDOWN_CONJURACAO_S
-	var camera := _camera_ativa()
-	var origem := camera.global_position + -camera.global_transform.basis.z * 0.5
-	var direcao := -camera.global_transform.basis.z
+	var mira := ponto_de_disparo()
+	var origem: Vector3 = mira[0]
+	var direcao: Vector3 = mira[1]
 	GerenciadorSom.tocar_tiro(origem)
 	_corpo_visivel.conjurar()
 	_mao.conjurar()
 	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
 	conjurou.emit(ficha_validada.get("legenda", ""))
+
+
+## De onde a magia sai e para onde vai: sai da mão (primeira pessoa) ou do
+## cristal do cajado (terceira pessoa), como na referência, mas mira no
+## ponto exato que o centro da tela aponta, para a mira continuar honesta.
+## Se houver parede entre a câmera e a mão, sai da câmera mesmo (senão a
+## magia nasceria do outro lado da parede).
+func ponto_de_disparo() -> Array:
+	var camera := _camera_ativa()
+	var frente := -camera.global_transform.basis.z
+	var saida_camera := camera.global_position + frente * 0.5
+	var espaco := get_world_3d().direct_space_state
+	var alvo := camera.global_position + frente * ALCANCE_MIRA_M
+	var consulta := PhysicsRayQueryParameters3D.create(camera.global_position, alvo, MASCARA_MIRA, [get_rid()])
+	var acerto := espaco.intersect_ray(consulta)
+	if not acerto.is_empty():
+		alvo = acerto["position"]
+	var origem := _mao.ponto_da_magia() if modo_camera_primeira_pessoa else _corpo_visivel.ponto_da_magia()
+	var bloqueio := PhysicsRayQueryParameters3D.create(camera.global_position, origem, 1 | 16, [get_rid()])
+	if not espaco.intersect_ray(bloqueio).is_empty() or alvo.distance_to(camera.global_position) < 1.5:
+		return [saida_camera, frente]
+	return [origem, (alvo - origem).normalized()]
 
 
 func gastar_mana(custo: float) -> bool:

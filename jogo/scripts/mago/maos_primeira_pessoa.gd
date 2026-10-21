@@ -46,6 +46,11 @@ func conjurar() -> void:
 	_conjurando = DURACAO_CONJURACAO_S
 
 
+## Ponto um pouco à frente da palma da mão esquerda, em coordenadas do mundo.
+func ponto_da_magia() -> Vector3:
+	return _esquerda.global_transform * Vector3(0, 0.02, -0.3)
+
+
 ## Mão aberta apontando para a frente (-z), com manga e punho dourado.
 func _criar_mao_aberta(material: Material) -> Node3D:
 	var st := GeometriaLowPoly.nova()
