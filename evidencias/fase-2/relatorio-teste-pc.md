@@ -121,3 +121,5 @@ Vou commitar só o relatório e os 6 prints `pc_*.png`. Nenhum código do jogo f
 
 - O combate "dá gosto"? O que ficou chato ou sem graça?
 - Gostou do mago e da clareira, olhando de verdade (não só pelos prints)?
+
+**Resposta do Vitor (21/10/2026):** primeira pessoa ok, ambiente parece bom. Não gostou do formato do boneco em terceira pessoa (queria mais cabeçudo e mais baixo), sente falta de movimento de braço, de roupa com mais acabamento, e de mais refino no ambiente (mesmo sendo low poly). Resumo dele: "precisa demais, apesar de estarmos no caminho". Combate ainda não avaliado diretamente. Registrado em `docs/decisoes.md`.
