@@ -28,6 +28,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_abrir()
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
 		_fechar()
 
 

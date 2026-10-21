@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://cenas/modulos/clareira.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://cenas/menu_pausa.tscn" id="10"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
 sky_top_color = Color(0.12, 0.38, 0.92, 1)
@@ -84,3 +85,5 @@ transform = Transform3D(0.7, 0, 0.71, 0, 1, 0, -0.71, 0, 0.7, -13, 0, -13)
 [node name="HUD" parent="." instance=ExtResource("4")]
 
 [node name="CaixaConjuracao" parent="." instance=ExtResource("7")]
+
+[node name="MenuPausa" parent="." instance=ExtResource("10")]
