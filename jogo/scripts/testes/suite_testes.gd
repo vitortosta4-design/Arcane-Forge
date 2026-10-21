@@ -261,6 +261,12 @@ func _testar_mira_identica_entre_1a_e_3a_pessoa() -> void:
 	var direcao_1a := -camera_1a.global_transform.basis.z
 	var direcao_3a := -camera_3a.global_transform.basis.z
 	_afirmar("mira aponta na mesma direção nos dois modos de câmera", direcao_1a.is_equal_approx(direcao_3a))
+	# Bug antigo: o braço da câmera estava virado ao contrário e a câmera de
+	# terceira pessoa ficava na frente do mago, que nunca aparecia na tela.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var para_tras: Vector3 = camera_3a.global_position - (mago as Node3D).global_position
+	_afirmar("câmera de terceira pessoa fica atrás do mago", para_tras.dot(-(mago as Node3D).global_transform.basis.z) < -1.0)
 
 	mago.queue_free()
 

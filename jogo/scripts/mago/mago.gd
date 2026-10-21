@@ -26,8 +26,8 @@ var estados := ControladorEstados.new()
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
 @onready var _camera_terceira_pessoa: Camera3D = $PivotCabeca/BracoCameraTerceiraPessoa/CameraTerceiraPessoa
-@onready var _mao: Node3D = $PivotCabeca/CameraPrimeiraPessoa/Mao
-@onready var _corpo_visivel: Node3D = $CorpoVisivel
+@onready var _mao: MaosPrimeiraPessoa = $PivotCabeca/CameraPrimeiraPessoa/Mao
+@onready var _corpo_visivel: VisualMago = $CorpoVisivel
 
 signal vida_mudou(atual: float, maxima: float)
 signal mana_mudou(atual: float, maxima: float)
@@ -81,6 +81,9 @@ func _physics_process(delta: float) -> void:
 		velocity.z = direcao.z * velocidade
 
 	move_and_slide()
+	var velocidade_horizontal := Vector2(velocity.x, velocity.z).length()
+	_corpo_visivel.animar(delta, velocidade_horizontal, is_on_floor())
+	_mao.animar(delta, velocidade_horizontal, is_on_floor())
 
 
 func _multiplicador_velocidade() -> float:
@@ -197,6 +200,8 @@ func _conjurar_ficha(ficha: Dictionary) -> void:
 	var origem := camera.global_position + -camera.global_transform.basis.z * 0.5
 	var direcao := -camera.global_transform.basis.z
 	GerenciadorSom.tocar_tiro(origem)
+	_corpo_visivel.conjurar()
+	_mao.conjurar()
 	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
 	conjurou.emit(ficha_validada.get("legenda", ""))
 

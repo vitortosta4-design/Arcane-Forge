@@ -38,6 +38,14 @@ func _process(delta: float) -> bool:
 				_mago.look_at(_vetor(_args["olhar"]), Vector3.UP)
 			if _args.has("terceira"):
 				_mago._trocar_camera()
+			if _args.has("camera"):
+				# Câmera livre (por exemplo para ver o mago de frente).
+				var camera := Camera3D.new()
+				current_scene.add_child(camera)
+				camera.global_position = _vetor(_args["camera"])
+				camera.look_at(_vetor(_args.get("alvo-camera", "0,1,0")), Vector3.UP)
+				camera.fov = 50.0
+				camera.current = true
 		return false
 
 	if _etapa == 1 and _tempo >= 0.5:
