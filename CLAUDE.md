@@ -40,6 +40,13 @@ A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvime
 - Toda lógica de combate passa pelo "juiz" (host), mesmo jogando sozinho.
 - Respeitar os limites da seção 5 da proposta técnica.
 
+## Ferramentas (sessões na nuvem)
+O hook `.claude/hooks/session-start.sh` instala o Godot 4.7.2 e reimporta o projeto ao abrir a sessão.
+- Testes: `ferramentas/rodar_testes.sh` (sai com 0 se tudo passar).
+- Print do jogo rodando: `ferramentas/tirar_print.sh SAIDA.png [--posicao x,y,z] [--olhar x,y,z] [--frase "..."]`. Renderiza só o modo Compatibility (sem GPU): névoa volumétrica e SDFGI só aparecem no PC do Vitor. O FPS do print não vale nada.
+- Depois de criar um script com `class_name` novo, rodar `godot --headless --editor --quit --path jogo` antes dos testes.
+- A rede desta sessão não alcança o Supabase: o deploy da função funciona pela ferramenta MCP, mas a resposta da IA só é testada jogando.
+
 ## Agentes (ADR-005)
 Equipe enxuta por causa da cota do plano Pro. Acionar especialistas só quando valer a pena:
 1. revisor de segurança e multiplayer
