@@ -116,6 +116,7 @@ func _ready() -> void:
 	_testar_interpretador_reconhece_cegueira()
 	await _testar_teleporte_da_clarao_na_tela_do_mago()
 	_testar_validador_aceita_nomes_com_acento_e_maiuscula()
+	await _testar_clareira()
 
 	print("")
 	if _falhas == 0:
@@ -1685,3 +1686,59 @@ func _testar_validador_aceita_nomes_com_acento_e_maiuscula() -> void:
 	_afirmar("\"Área\" com \"Molhado\" vira área de molhar", comps[1]["tipo"] == "area" and comps[1]["nome_estado"] == "molhado")
 	_afirmar("\"Quadrúpede\" vira o corpo quadrupede", comps[2]["corpo"] == "quadrupede")
 	_afirmar("ficha com acentos tem custo de mana de verdade", Validador.calcular_custo_mana(v) > 0.0)
+
+
+## Módulo clareira (ADR-018): centro plano para lutar, chão sólido com a
+## frente virada para cima, nada plantado no meio da luta ou da trilha, e
+## dentro do orçamento de triângulos.
+func _testar_clareira() -> void:
+	var clareira: Clareira = load("res://cenas/modulos/clareira.tscn").instantiate()
+	add_child(clareira)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	var plano := true
+	for p in [Vector2(0, 0), Vector2(0, 5), Vector2(0, -4), Vector2(12, 8), Vector2(-14, -10)]:
+		if clareira.altura_em(p.x, p.y) != 0.0:
+			plano = false
+	_afirmar("clareira: centro de luta é plano (altura 0)", plano)
+	_afirmar("clareira: em volta tem morro", clareira.altura_em(0.0, 45.0) > 3.0 and clareira.altura_em(45.0, 0.0) > 3.0)
+
+	var consulta := PhysicsRayQueryParameters3D.create(Vector3(3, 20, 3), Vector3(3, -20, 3), 1)
+	var hit := clareira.get_world_3d().direct_space_state.intersect_ray(consulta)
+	_afirmar("clareira: chão do centro é sólido na camada do cenário", not hit.is_empty() and absf(hit["position"].y) < 0.05)
+	var longe := Vector3(40, 0, 10)
+	consulta = PhysicsRayQueryParameters3D.create(longe + Vector3.UP * 60, longe + Vector3.DOWN * 5, 1)
+	hit = clareira.get_world_3d().direct_space_state.intersect_ray(consulta)
+	_afirmar("clareira: colisão do morro bate com o relevo desenhado", not hit.is_empty() and absf(hit["position"].y - clareira.altura_em(40, 10)) < 0.6)
+
+	var terreno: MeshInstance3D = clareira.get_node("Terreno").get_child(0)
+	var normais: PackedVector3Array = terreno.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+	var para_cima := 0
+	for n in normais:
+		if n.y > 0.0:
+			para_cima += 1
+	_afirmar("clareira: faces do chão viradas para cima (senão some na tela)", para_cima == normais.size())
+
+	var livre := true
+	for forma in clareira.get_node("TroncosColisao").get_children():
+		var pos: Vector3 = forma.position
+		if Vector2(pos.x, pos.z).length() < Clareira.RAIO_PLANO - 3.5 or absf(pos.x - Clareira.centro_trilha(pos.z)) < 4.9:
+			livre = false
+	_afirmar("clareira: nenhuma árvore no miolo da luta nem na trilha", livre)
+
+	var triangulos := 0
+	for n in clareira.find_children("*", "GeometryInstance3D", true, false):
+		if n is MeshInstance3D:
+			triangulos += n.mesh.get_faces().size() / 3
+		elif n is MultiMeshInstance3D:
+			triangulos += n.multimesh.mesh.get_faces().size() / 3 * n.multimesh.instance_count
+	_afirmar("clareira: dentro do orçamento de 150 mil triângulos (tem %d)" % triangulos, triangulos > 0 and triangulos < 150000)
+
+	var outra: Clareira = load("res://cenas/modulos/clareira.tscn").instantiate()
+	add_child(outra)
+	_afirmar("clareira: mesma semente gera o mesmo cenário",
+		outra.get_node("Arvores").mesh.get_faces().size() == clareira.get_node("Arvores").mesh.get_faces().size())
+	outra.queue_free()
+	clareira.queue_free()
+	await get_tree().process_frame

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/testes/arena_teste.gd" id="1"]
 [ext_resource type="PackedScene" path="res://cenas/mago.tscn" id="2"]
@@ -7,27 +7,12 @@
 [ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
-[ext_resource type="Script" path="res://scripts/ambiente/decorador_terreno.gd" id="8"]
+[ext_resource type="PackedScene" path="res://cenas/modulos/clareira.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_chao"]
-size = Vector2(40, 40)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chao"]
-albedo_color = Color(0.3, 0.55, 0.3, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_chao"]
-size = Vector3(40, 0.2, 40)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obstaculo1"]
-albedo_color = Color(0.9, 0.35, 0.3, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_obstaculo2"]
-albedo_color = Color(0.3, 0.5, 0.85, 1)
-
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
-sky_top_color = Color(0.22, 0.48, 0.95, 1)
-sky_horizon_color = Color(0.75, 0.82, 0.93, 1)
+sky_top_color = Color(0.12, 0.38, 0.92, 1)
+sky_horizon_color = Color(0.62, 0.78, 0.96, 1)
 ground_bottom_color = Color(0.32, 0.28, 0.26, 1)
 ground_horizon_color = Color(0.75, 0.82, 0.93, 1)
 sun_angle_max = 25.0
@@ -40,10 +25,13 @@ background_mode = 2
 sky = SubResource("Sky_arena")
 ambient_light_source = 2
 ambient_light_color = Color(0.5, 0.62, 0.95, 1)
-ambient_light_energy = 0.6
+ambient_light_energy = 0.45
 fog_enabled = true
-fog_light_color = Color(0.62, 0.72, 0.88, 1)
-fog_density = 0.015
+fog_light_color = Color(0.58, 0.72, 0.95, 1)
+fog_density = 0.0025
+fog_sky_affect = 0.4
+tonemap_mode = 2
+tonemap_white = 6.0
 glow_enabled = true
 glow_levels/3 = 1.0
 glow_levels/5 = 1.0
@@ -57,6 +45,9 @@ volumetric_fog_density = 0.03
 volumetric_fog_albedo = Color(0.75, 0.85, 1, 1)
 volumetric_fog_ambient_inject = 0.6
 volumetric_fog_sky_affect = 0.5
+adjustment_enabled = true
+adjustment_saturation = 1.1
+adjustment_contrast = 1.08
 
 [node name="ArenaTeste" type="Node3D"]
 script = ExtResource("1")
@@ -66,42 +57,11 @@ environment = SubResource("Environment_arena")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8, -0.5, 0.35, 0, 0.6, 0.8, -0.6, -0.65, 0.47, 0, 8, 0)
-light_color = Color(1, 0.92, 0.78, 1)
-light_energy = 0.95
+light_color = Color(1, 0.88, 0.7, 1)
+light_energy = 1.35
 shadow_enabled = true
 
-[node name="Chao" type="StaticBody3D" parent="."]
-collision_layer = 1
-collision_mask = 0
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Chao"]
-mesh = SubResource("PlaneMesh_chao")
-surface_material_override/0 = SubResource("StandardMaterial3D_chao")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Chao"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
-shape = SubResource("BoxShape3D_chao")
-
-[node name="DecoradorTerreno" type="Node3D" parent="."]
-script = ExtResource("8")
-
-[node name="Rochas" type="MultiMeshInstance3D" parent="DecoradorTerreno"]
-
-[node name="Grama" type="MultiMeshInstance3D" parent="DecoradorTerreno"]
-
-[node name="Obstaculo1" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.75, -3)
-size = Vector3(1.5, 1.5, 1.5)
-use_collision = true
-collision_layer = 1
-material = SubResource("StandardMaterial3D_obstaculo1")
-
-[node name="Obstaculo2" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1, 2)
-size = Vector3(2, 2, 2)
-use_collision = true
-collision_layer = 1
-material = SubResource("StandardMaterial3D_obstaculo2")
+[node name="Clareira" parent="." instance=ExtResource("8")]
 
 [node name="Mago" parent="." instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
