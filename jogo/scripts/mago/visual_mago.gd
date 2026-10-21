@@ -205,8 +205,13 @@ func _criar_cajado(cotovelo: Node3D, material: Material) -> void:
 
 static func material_cristal() -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
+	# Sem sombra (igual à chama da tocha): a luz ambiente azulada da cena
+	## somada à emissão estava lavando o cristal para um branco-ciano em vez
+	## do azul vivo pretendido (achado em 21/10/2026 comparando com a
+	## referência). Sem luz da cena, só a própria cor emissiva aparece.
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = COR_CRISTAL
 	mat.emission_enabled = true
 	mat.emission = COR_CRISTAL
-	mat.emission_energy_multiplier = 1.3
+	mat.emission_energy_multiplier = 1.6
 	return mat

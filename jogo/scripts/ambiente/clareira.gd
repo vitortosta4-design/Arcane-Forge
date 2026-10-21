@@ -486,11 +486,14 @@ func _castelo(st: SurfaceTool, base: Vector3) -> void:
 
 
 func _nuvem(st: SurfaceTool, centro: Vector3) -> void:
-	for k in 5:
-		var desvio := Vector3(_rng.randf_range(-12.0, 12.0), _rng.randf_range(-2.0, 3.0), _rng.randf_range(-5.0, 5.0))
-		var raio := _rng.randf_range(6.0, 11.0)
+	# Mais bolhas, mais sobrepostas e com leve sombra por baixo: silhueta de
+	# cúmulo, não uma fileira reta de esferas (pedido do Vitor, "mais fofa").
+	for k in 8:
+		var desvio := Vector3(_rng.randf_range(-13.0, 13.0), _rng.randf_range(-1.5, 4.0), _rng.randf_range(-6.0, 6.0))
+		var raio := _rng.randf_range(5.0, 10.0)
+		var cor := Color(1.0, 1.0, 1.0) if desvio.y > 0.0 else Color(0.88, 0.89, 0.93)
 		GeometriaLowPoly.anexar(st, GeometriaLowPoly.esfera(raio, 7, 4),
-			Transform3D(Basis().scaled(Vector3(1.4, 0.7, 1.0)), centro + desvio), Color(1.0, 1.0, 1.0))
+			Transform3D(Basis().scaled(Vector3(1.3, 0.8, 1.1)), centro + desvio), cor)
 
 
 func _ilha_flutuante(posicao: Vector3, escala: float) -> void:
