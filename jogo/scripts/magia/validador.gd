@@ -7,9 +7,8 @@ class_name Validador
 const MATERIAIS_VALIDOS := ["pedra", "agua", "fogo", "metal", "madeira"]
 const FORMAS_VALIDAS := ["esfera", "ovo", "cubo"]
 ## Proposta técnica, seção 3: "estados (queimando, molhado, eletrizado, cego,
-## lento)". Só "queimando" e "lento" têm efeito de verdade por enquanto; os
-## outros três ficam para um próximo incremento (ver docs/decisoes.md).
-const ESTADOS_VALIDOS := ["queimando", "lento"]
+## lento)". "Cego" ainda não existe (ver docs/decisoes.md).
+const ESTADOS_VALIDOS := ["queimando", "lento", "molhado", "eletrizado"]
 ## Proposta técnica, seção 3, exemplo do "Pombo de Pedra": só
 ## "perseguir_inimigo_proximo" está implementado por enquanto.
 const CORPOS_VALIDOS := ["ave", "quadrupede", "verme", "bolha"]
@@ -26,6 +25,7 @@ const VIDA_INVOCACAO_MAXIMA := 40.0
 const ESCALA_INVOCACAO_MINIMA := 0.3
 const ESCALA_INVOCACAO_MAXIMA := 2.0
 const DANO_CONTATO_MAXIMO := 8.0 # menor que o da explosão: repete a cada ataque
+const INTERVALO_LANCADOR_MINIMO_S := 0.8 # menos que isso vira metralhadora
 
 const CUSTO_BASE_PROJETIL := 5.0
 const CUSTO_POR_VELOCIDADE := 0.3
@@ -43,6 +43,10 @@ const CUSTO_BASE_INVOCACAO := 8.0
 const CUSTO_POR_VIDA_INVOCACAO := 0.3
 const CUSTO_POR_DURACAO_INVOCACAO := 1.0
 const CUSTO_POR_DANO_CONTATO := 0.5
+const CUSTO_BASE_LANCADOR := 4.0
+## O custo do lançador é uma estimativa: o custo de um disparo vezes quantos
+## disparos caberiam em REFERENCIA_DISPAROS_S segundos. Ajustável jogando.
+const REFERENCIA_DISPAROS_S := 3.0
 
 
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
@@ -92,6 +96,19 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["vida"] = clampf(_como_numero(c.get("vida"), 10.0), 0.0, VIDA_INVOCACAO_MAXIMA)
 		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
 		c["dano_contato"] = clampf(_como_numero(c.get("dano_contato"), 0.0), 0.0, DANO_CONTATO_MAXIMO)
+	elif c.get("tipo") == "lancador":
+		c["anexado_a"] = _como_texto(c.get("anexado_a"))
+		c["intervalo_s"] = clampf(_como_numero(c.get("intervalo_s"), 1.5), INTERVALO_LANCADOR_MINIMO_S, DURACAO_MAXIMA_S)
+		# Aceita o formato da proposta técnica (ao_impactar ao lado do
+		# "projetil") e também dentro dele; vira sempre um projétil completo.
+		var projetil := {}
+		if typeof(c.get("projetil")) == TYPE_DICTIONARY:
+			projetil = (c["projetil"] as Dictionary).duplicate(true)
+		if not projetil.has("ao_impactar") and c.has("ao_impactar"):
+			projetil["ao_impactar"] = c["ao_impactar"]
+		projetil["tipo"] = "projetil"
+		c["projetil"] = _validar_componente(projetil)
+		c.erase("ao_impactar")
 	return c
 
 
@@ -183,4 +200,7 @@ static func _custo_componente(componente: Dictionary) -> float:
 		custo += componente.get("vida", 0.0) * CUSTO_POR_VIDA_INVOCACAO
 		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_INVOCACAO
 		custo += componente.get("dano_contato", 0.0) * CUSTO_POR_DANO_CONTATO
+	elif tipo == "lancador":
+		var disparos: float = REFERENCIA_DISPAROS_S / componente.get("intervalo_s", 1.5)
+		custo += CUSTO_BASE_LANCADOR + _custo_componente(componente.get("projetil", {})) * disparos
 	return custo

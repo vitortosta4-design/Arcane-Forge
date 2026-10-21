@@ -69,6 +69,18 @@ func _ready() -> void:
 	await _testar_invocacao_expira_depois_da_duracao()
 	_testar_ficha_so_com_invocacao_sem_vida_conta_como_nao_entendida()
 	_testar_interpretador_reconhece_pombo()
+	_testar_validador_monta_projetil_do_lancador()
+	_testar_validador_calcula_custo_do_lancador()
+	await _testar_executor_anexa_lancador_na_criatura_certa()
+	await _testar_criatura_com_lancador_dispara_no_inimigo()
+	await _testar_lancador_sem_criatura_nao_cria_nada()
+	await _testar_galinha_tambem_fica_lenta()
+	await _testar_molhado_apaga_queimando()
+	await _testar_alvo_molhado_nao_pega_fogo()
+	await _testar_eletrizado_da_choque()
+	await _testar_eletricidade_em_molhado_espalha_so_perto()
+	_testar_interpretador_reconhece_agua_faisca_e_bombardeiro()
+	await _testar_ovo_do_pombo_nao_machuca_quem_invocou()
 
 	print("")
 	if _falhas == 0:
@@ -793,7 +805,7 @@ func _testar_reaplicar_queimando_estende_sem_duplicar_o_tick() -> void:
 	)
 	_afirmar(
 		"reaplicar queimando estende a duração para a maior das duas",
-		mago._ticks_queimando_restantes == 5
+		mago.estados._ticks_queimando_restantes == 5
 	)
 	mago.queue_free()
 
@@ -812,7 +824,7 @@ func _testar_projetil_aplica_estado_em_quem_atingiu() -> void:
 	await get_tree().process_frame
 
 	projetil._explodir(mago)
-	_afirmar("projétil aplicou o estado em quem atingiu", mago._lentidao_restante_s > 0.0)
+	_afirmar("projétil aplicou o estado em quem atingiu", mago.estados._lento_restante_s > 0.0)
 	mago.queue_free()
 
 
@@ -972,3 +984,189 @@ func _testar_interpretador_reconhece_pombo() -> void:
 	var ficha := Interpretador.interpretar("quero invocar um pombo para me ajudar")
 	_afirmar("interpretador reconhece \"pombo\"", not ficha.is_empty())
 	_afirmar("interpretador devolve a ficha do pombo de pedra", ficha.get("nome") == "Pombo de Pedra")
+
+
+## Lançador (proposta técnica, seção 3): aceita o formato da proposta, com
+## "ao_impactar" ao lado do "projetil", e vira um projétil validado completo.
+func _testar_validador_monta_projetil_do_lancador() -> void:
+	var corrigida := Validador.validar_ficha({
+		"componentes": [{
+			"tipo": "lancador",
+			"intervalo_s": 0.01,
+			"projetil": {"forma": "ovo", "material": "queijo", "velocidade": 999.0},
+			"ao_impactar": [{"tipo": "explosao", "dano": 999.0}]
+		}]
+	})
+	var lancador: Dictionary = corrigida["componentes"][0]
+	var projetil: Dictionary = lancador["projetil"]
+	_afirmar("intervalo do lançador nunca abaixo do mínimo", lancador["intervalo_s"] == Validador.INTERVALO_LANCADOR_MINIMO_S)
+	_afirmar("projétil do lançador vira tipo projetil", projetil.get("tipo") == "projetil")
+	_afirmar("material do projétil do lançador cai na lista fechada", projetil["material"] in Validador.MATERIAIS_VALIDOS)
+	_afirmar("velocidade do projétil do lançador cortada", projetil["velocidade"] == Validador.VELOCIDADE_MAXIMA)
+	_afirmar("ao_impactar do lançador vai para dentro do projétil, já validado", projetil["ao_impactar"][0]["dano"] == Validador.DANO_MAXIMO)
+
+
+func _testar_validador_calcula_custo_do_lancador() -> void:
+	var lento := Validador.validar_ficha({"componentes": [{"tipo": "lancador", "intervalo_s": 4.0, "projetil": {}}]})
+	var rapido := Validador.validar_ficha({"componentes": [{"tipo": "lancador", "intervalo_s": 1.0, "projetil": {}}]})
+	_afirmar("lançador custa mana", Validador.calcular_custo_mana(lento) > 0.0)
+	_afirmar("lançador que dispara mais rápido custa mais", Validador.calcular_custo_mana(rapido) > Validador.calcular_custo_mana(lento))
+
+
+func _testar_executor_anexa_lancador_na_criatura_certa() -> void:
+	# Lançador listado ANTES da criatura de propósito: tem que funcionar igual.
+	var ficha := FichasPadrao.pombo_bombardeiro()
+	ficha["componentes"].reverse()
+	Executor.executar_ficha(ficha, Vector3(3, 0, 3), Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+
+	var criaturas := get_tree().get_nodes_in_group("criatura_invocada")
+	_afirmar("bombardeiro criou uma criatura", criaturas.size() == 1)
+	if criaturas.size() > 0:
+		_afirmar("lançador foi anexado à criatura", criaturas[0].lancador_intervalo_s == 1.5)
+		_afirmar("projétil do lançador tem a explosão da ficha", criaturas[0].lancador_projetil["ao_impactar"].size() == 1)
+		criaturas[0].queue_free()
+	await get_tree().process_frame
+
+
+func _testar_criatura_com_lancador_dispara_no_inimigo() -> void:
+	var criatura: Node = load("res://cenas/magias/invocacao.tscn").instantiate()
+	add_child(criatura)
+	criatura.global_position = Vector3(20, 0, 20)
+	criatura.anexar_lancador(Validador.validar_ficha({"componentes": [{"tipo": "projetil", "velocidade": 5.0}]})["componentes"][0], 0.8)
+
+	var inimigo := Node3D.new()
+	add_child(inimigo)
+	inimigo.add_to_group("inimigo")
+	inimigo.global_position = Vector3(26, 0, 20)
+
+	await get_tree().create_timer(1.1).timeout
+
+	var projeteis := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/projetil.gd"))
+	var do_pombo := projeteis.filter(func(p): return p.dono == criatura)
+	_afirmar("criatura com lançador disparou um projétil", do_pombo.size() >= 1)
+	if do_pombo.size() > 0:
+		var frente: Vector3 = -(do_pombo[0] as Node3D).global_transform.basis.z
+		_afirmar("projétil do lançador vai na direção do inimigo", frente.x > 0.5)
+	for p in projeteis:
+		p.queue_free()
+	criatura.queue_free()
+	inimigo.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_lancador_sem_criatura_nao_cria_nada() -> void:
+	var ficha := {"componentes": [{"tipo": "lancador", "intervalo_s": 1.0, "projetil": {}}]}
+	Executor.executar_ficha(ficha, Vector3.ZERO, Vector3.FORWARD, null, self)
+	await get_tree().process_frame
+	_afirmar("lançador sozinho não cria criatura nem quebra", get_tree().get_nodes_in_group("criatura_invocada").is_empty())
+
+
+## Antes deste lote, estados só funcionavam no mago: a galinha ignorava
+## "lento" e "queimando". Agora todo mundo usa o mesmo ControladorEstados.
+func _testar_galinha_tambem_fica_lenta() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	galinha.aplicar_estado("lento", 3.0)
+	_afirmar("galinha zumbi também fica lenta", galinha.estados.multiplicador_velocidade() < 1.0)
+	galinha.queue_free()
+
+
+func _testar_molhado_apaga_queimando() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	galinha.aplicar_estado("queimando", 5.0)
+	galinha.aplicar_estado("molhado", 3.0)
+	_afirmar("molhar apaga quem está queimando", not galinha.estados.esta_queimando())
+	galinha.queue_free()
+
+
+func _testar_alvo_molhado_nao_pega_fogo() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	galinha.aplicar_estado("molhado", 3.0)
+	var vida_antes: float = galinha._vida_atual
+	galinha.aplicar_estado("queimando", 5.0)
+	_afirmar("alvo molhado não pega fogo", not galinha.estados.esta_queimando())
+	_afirmar("alvo molhado não leva dano de fogo", galinha._vida_atual == vida_antes)
+	galinha.queue_free()
+
+
+func _testar_eletrizado_da_choque() -> void:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	await get_tree().process_frame
+	var vida_antes: float = galinha._vida_atual
+	galinha.aplicar_estado("eletrizado", 1.0)
+	_afirmar("eletrizado dá dano na hora", is_equal_approx(galinha._vida_atual, vida_antes - ControladorEstados.DANO_ELETRICO))
+	galinha.queue_free()
+
+
+## O exemplo de etiquetas da proposta técnica: "eletricidade em algo molhado
+## se espalha num raio". Quem está perto leva choque; quem está longe, não.
+func _testar_eletricidade_em_molhado_espalha_so_perto() -> void:
+	var cena: PackedScene = load("res://cenas/inimigos/galinha_zumbi.tscn")
+	var alvo: Node = cena.instantiate()
+	var vizinha: Node = cena.instantiate()
+	var distante: Node = cena.instantiate()
+	for g in [alvo, vizinha, distante]:
+		add_child(g)
+	alvo.global_position = Vector3(40, 0, 0)
+	vizinha.global_position = Vector3(41.5, 0, 0)
+	distante.global_position = Vector3(50, 0, 0)
+	await get_tree().process_frame
+
+	var vida_inicial: float = alvo._vida_atual
+	alvo.aplicar_estado("molhado", 5.0)
+	alvo.aplicar_estado("eletrizado", 1.0)
+
+	_afirmar(
+		"alvo molhado leva choque dobrado",
+		is_equal_approx(alvo._vida_atual, vida_inicial - ControladorEstados.DANO_ELETRICO * ControladorEstados.MULTIPLICADOR_ELETRICO_MOLHADO)
+	)
+	_afirmar("choque se espalha para quem está perto", vizinha._vida_atual < vida_inicial)
+	_afirmar("choque não chega em quem está longe", distante._vida_atual == vida_inicial)
+	for g in [alvo, vizinha, distante]:
+		g.queue_free()
+
+
+func _testar_interpretador_reconhece_agua_faisca_e_bombardeiro() -> void:
+	_afirmar("interpretador reconhece \"água\"", Interpretador.interpretar("um jato de água").get("nome") == "Jato d'Água")
+	_afirmar("interpretador reconhece \"faísca\"", Interpretador.interpretar("uma faísca elétrica").get("nome") == "Faísca")
+	_afirmar(
+		"interpretador reconhece o pombo bombardeiro",
+		Interpretador.interpretar("um pombo que solta ovos explosivos").get("nome") == "Pombo de Pedra Bombardeiro"
+	)
+	_afirmar(
+		"\"pombo\" sozinho continua sendo o pombo simples",
+		Interpretador.interpretar("invocar um pombo").get("nome") == "Pombo de Pedra"
+	)
+
+
+## Achado rodando o pombo bombardeiro quadro a quadro: o ovo explodindo na
+## galinha tirava 12 de vida do próprio mago. Pela ADR-017, só magia "má"
+## pode se voltar contra quem conjurou; o pombo é neutro.
+func _testar_ovo_do_pombo_nao_machuca_quem_invocou() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	var ovo: Node = load("res://cenas/magias/projetil.tscn").instantiate()
+	for n in [mago, galinha, ovo]:
+		add_child(n)
+	mago.global_position = Vector3(60, 0, 0)
+	galinha.global_position = Vector3(61, 0, 0)
+	ovo.global_position = Vector3(60.5, 0.5, 0)
+	ovo.aliados = [mago]
+	ovo.ao_impactar = [{"tipo": "explosao", "raio_m": 3.0, "dano": 10.0, "empurrao": 0.0}]
+	await get_tree().process_frame
+
+	# Compara só antes/depois da explosão: a galinha pode bicar o mago antes.
+	var vida_mago: float = mago.vida_atual
+	var vida_galinha: float = galinha._vida_atual
+	ovo._explodir(galinha)
+	_afirmar("ovo do pombo não machuca o mago que invocou", mago.vida_atual == vida_mago)
+	_afirmar("ovo do pombo continua machucando o inimigo", galinha._vida_atual < vida_galinha)
+	mago.queue_free()
+	galinha.queue_free()

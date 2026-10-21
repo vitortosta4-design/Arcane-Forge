@@ -12,6 +12,7 @@ const INTERVALO_ATAQUE_S := 1.0
 var _vida_atual: float
 var _cooldown_ataque := 0.0
 var _morta := false
+var estados := ControladorEstados.new()
 
 @onready var _mesh: Node3D = $CorpoVisivel
 
@@ -20,6 +21,11 @@ func _ready() -> void:
 	_vida_atual = vida
 	add_to_group("recebe_dano")
 	add_to_group("inimigo")
+	add_child(estados)
+
+
+func aplicar_estado(nome_estado: String, duracao_s: float) -> void:
+	estados.aplicar(nome_estado, duracao_s)
 
 
 func _physics_process(delta: float) -> void:
@@ -52,8 +58,8 @@ func _physics_process(delta: float) -> void:
 		var direcao := (alvo.global_position - global_position)
 		direcao.y = 0.0
 		direcao = direcao.normalized()
-		velocity.x = direcao.x * VELOCIDADE
-		velocity.z = direcao.z * VELOCIDADE
+		velocity.x = direcao.x * VELOCIDADE * estados.multiplicador_velocidade()
+		velocity.z = direcao.z * VELOCIDADE * estados.multiplicador_velocidade()
 		look_at(global_position + direcao, Vector3.UP)
 
 	move_and_slide()

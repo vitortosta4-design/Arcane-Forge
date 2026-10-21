@@ -177,3 +177,86 @@ static func pombo_de_pedra() -> Dictionary:
 		],
 		"legenda": "um pombo de pedra que persegue e bica os inimigos"
 	}
+
+
+## O exemplo completo da proposta técnica (seção 3): invocação + lançador
+## anexado a ela, soltando ovos de pedra que explodem.
+static func pombo_bombardeiro() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Pombo de Pedra Bombardeiro",
+		"frase_original": "um pombo de pedra que voa até o inimigo e solta ovos explosivos",
+		"natureza": "neutra",
+		"ingredientes": ["invocacao", "explosao"],
+		"componentes": [
+			{
+				"id": "pombo",
+				"tipo": "invocacao",
+				"corpo": "ave",
+				"material": "pedra",
+				"escala": 0.7,
+				"comportamento": "perseguir_inimigo_proximo",
+				"vida": 20.0,
+				"duracao_s": 6.0,
+				"dano_contato": 3.0
+			},
+			{
+				"tipo": "lancador",
+				"anexado_a": "pombo",
+				"intervalo_s": 1.5,
+				"projetil": {"forma": "ovo", "material": "pedra", "velocidade": 8.0},
+				"ao_impactar": [
+					{"tipo": "explosao", "raio_m": 2.0, "dano": 12.0, "empurrao": 3.0}
+				]
+			}
+		],
+		"legenda": "criatura de pedra que persegue e solta ovos explosivos"
+	}
+
+
+## Estado "molhado" (proposta técnica, seção 3): sozinho não machuca, mas
+## apaga fogo e deixa o alvo vulnerável a eletricidade.
+static func jato_d_agua() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Jato d'Água",
+		"frase_original": "jato de água",
+		"natureza": "neutra",
+		"ingredientes": ["agua"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "agua",
+				"velocidade": 16.0,
+				"ao_impactar": [
+					{"tipo": "estado", "nome_estado": "molhado", "duracao_s": 5.0}
+				]
+			}
+		],
+		"legenda": "um jato d'água que encharca quem acerta"
+	}
+
+
+## Estado "eletrizado": choque na hora; em alvo molhado, dano dobrado e
+## espalha para quem estiver perto.
+static func faisca() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Faísca",
+		"frase_original": "faísca elétrica",
+		"natureza": "neutra",
+		"ingredientes": ["eletricidade"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "metal",
+				"velocidade": 22.0,
+				"ao_impactar": [
+					{"tipo": "estado", "nome_estado": "eletrizado", "duracao_s": 1.0}
+				]
+			}
+		],
+		"legenda": "uma faísca que dá choque, e espalha se o alvo estiver molhado"
+	}

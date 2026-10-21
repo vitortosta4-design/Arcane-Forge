@@ -49,6 +49,17 @@ func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, e
 				obj3d.pegar_fogo()
 
 
+## Eletricidade em algo molhado se espalha num raio (proposta técnica,
+## seção 3). Só um salto: quem recebe o choque espalhado não espalha de novo,
+## para não virar uma corrente infinita entre dois alvos molhados.
+func espalhar_eletricidade(pos: Vector3, raio_m: float, dano: float, excluir: Array = []) -> void:
+	for alvo in get_tree().get_nodes_in_group("recebe_dano"):
+		if alvo in excluir or not is_instance_valid(alvo) or not (alvo is Node3D):
+			continue
+		if (alvo as Node3D).global_position.distance_to(pos) <= raio_m:
+			aplicar_dano(alvo, dano, pos, 0.0)
+
+
 func gastar_mana(mago: Node, custo: float) -> bool:
 	if not is_instance_valid(mago):
 		return false

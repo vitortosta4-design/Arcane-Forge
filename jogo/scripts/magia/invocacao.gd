@@ -12,9 +12,17 @@ const INTERVALO_ATAQUE_S := 1.0
 var vida := 20.0
 var dano_contato := 5.0
 var duracao_s := 6.0
+## Lançador (proposta técnica, seção 3, "Pombo de Pedra" que solta ovos):
+## o Executor preenche quando a ficha tem um componente "lancador" anexado a
+## esta criatura. Intervalo zero = sem lançador.
+var lancador_projetil: Dictionary = {}
+var lancador_intervalo_s := 0.0
+var invocador: Node = null
+var estados := ControladorEstados.new()
 
 var _vida_atual: float
 var _cooldown_ataque := 0.0
+var _tempo_ate_disparo := 0.0
 var _morta := false
 
 @onready var _mesh: MeshInstance3D = $MeshInstance3D
@@ -27,7 +35,20 @@ func _ready() -> void:
 		return
 	add_to_group("recebe_dano")
 	add_to_group("criatura_invocada")
+	add_child(estados)
 	get_tree().create_timer(maxf(duracao_s, 0.01)).timeout.connect(_expirar)
+
+
+func aplicar_estado(nome_estado: String, duracao_s_estado: float) -> void:
+	estados.aplicar(nome_estado, duracao_s_estado)
+
+
+## Ligado pelo Executor depois de criar a criatura. O primeiro disparo
+## espera um intervalo inteiro, para o ovo não sair grudado no mago.
+func anexar_lancador(projetil: Dictionary, intervalo_s: float) -> void:
+	lancador_projetil = projetil
+	lancador_intervalo_s = intervalo_s
+	_tempo_ate_disparo = intervalo_s
 
 
 ## O Executor chama isto para a criatura ficar com a cor do material da
@@ -58,6 +79,8 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	_talvez_disparar(alvo, delta)
+
 	var distancia := global_position.distance_to(alvo.global_position)
 	if distancia <= ALCANCE_ATAQUE:
 		velocity.x = 0.0
@@ -69,11 +92,24 @@ func _physics_process(delta: float) -> void:
 		var direcao := (alvo.global_position - global_position)
 		direcao.y = 0.0
 		direcao = direcao.normalized()
-		velocity.x = direcao.x * VELOCIDADE
-		velocity.z = direcao.z * VELOCIDADE
+		velocity.x = direcao.x * VELOCIDADE * estados.multiplicador_velocidade()
+		velocity.z = direcao.z * VELOCIDADE * estados.multiplicador_velocidade()
 		look_at(global_position + direcao, Vector3.UP)
 
 	move_and_slide()
+
+
+func _talvez_disparar(alvo: Node3D, delta: float) -> void:
+	if lancador_intervalo_s <= 0.0:
+		return
+	_tempo_ate_disparo -= delta
+	if _tempo_ate_disparo > 0.0:
+		return
+	_tempo_ate_disparo = lancador_intervalo_s
+	var origem := global_position + Vector3.UP * 0.8
+	var direcao := (alvo.global_position + Vector3.UP * 0.3 - origem).normalized()
+	var aliados := [invocador] if is_instance_valid(invocador) else []
+	Executor.criar_projetil(lancador_projetil, origem, direcao, self, get_parent(), aliados)
 
 
 ## Comportamento "perseguir_inimigo_proximo" (único implementado por

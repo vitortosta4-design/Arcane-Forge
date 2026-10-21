@@ -5,6 +5,10 @@ extends Area3D
 var velocidade := 10.0
 var ao_impactar: Array = []
 var dono: Node = null
+## Quem o projétil nunca atinge, nem no impacto nem na explosão: o dono e,
+## no caso de uma criatura invocada, o mago que a invocou (achado testando o
+## pombo bombardeiro: os ovos dele machucavam o próprio mago).
+var aliados: Array = []
 var tempo_de_vida_s := 5.0
 var material := "fogo"
 
@@ -50,7 +54,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node) -> void:
-	if body == dono:
+	if body == dono or body in aliados:
 		return
 	_explodir(body)
 
@@ -64,7 +68,7 @@ func _explodir(alvo: Node) -> void:
 				efeito.get("dano", 5.0),
 				efeito.get("empurrao", 0.0),
 				efeito.get("etiquetas", []),
-				[dono],
+				[dono] + aliados,
 				material
 			)
 		elif efeito.get("tipo") == "estado":

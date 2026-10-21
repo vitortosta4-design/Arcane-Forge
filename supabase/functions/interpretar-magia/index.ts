@@ -37,10 +37,12 @@ ou mais, numa lista):
     PUXAR para o centro em vez de afastar (ex.: "um buraco negro que
     atrai os inimigos" vira um projétil com "empurrao": -5 e "dano": 0).
   - "estado": aplica um efeito só em quem o projétil atingiu (não numa
-    área). Hoje só existem dois: "queimando" (dano aos poucos, por
-    "duracao_s") e "lento" (deixa quem foi atingido mais devagar, por
-    "duracao_s"). NÃO use nenhum outro nome de estado (ex.: molhado,
-    eletrizado, cego) — ainda não existem no jogo.
+    área), por "duracao_s". Existem quatro: "queimando" (dano aos
+    poucos), "lento" (anda mais devagar), "molhado" (não machuca, mas
+    apaga fogo e deixa o alvo vulnerável a eletricidade) e "eletrizado"
+    (choque na hora; em alvo molhado o choque dobra e se espalha para quem
+    estiver perto). NÃO use nenhum outro nome de estado (ex.: cego), ainda
+    não existe no jogo.
   Aproxime qualquer ideia de ataque para esse formato (por exemplo, "um
   raio congelante" pode virar um projétil de gelo com "estado": "lento").
 - "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
@@ -54,7 +56,13 @@ ou mais, numa lista):
   "dano_contato" (dano que ela causa a cada ataque). "comportamento" tem
   que ser sempre "perseguir_inimigo_proximo" — é o único que existe. Use
   para qualquer ideia de invocar, trazer ou criar uma criatura para
-  ajudar.
+  ajudar. Dê um "id" curto à criatura se ela tiver um lançador.
+- "lancador": faz uma criatura invocada atirar projéteis sozinha no
+  inimigo, a cada "intervalo_s" segundos. "anexado_a" é o "id" da
+  criatura; "projetil" tem "forma", "material" e "velocidade"; e
+  "ao_impactar" (ao lado do "projetil") diz o que cada tiro faz. Só use
+  junto com uma "invocacao" na mesma ficha (ex.: "um pombo que solta
+  ovos explosivos").
 
 Uma magia pode combinar mais de um componente na mesma lista (ex.: um
 projétil E um escudo ao mesmo tempo), mas só se a frase descrever as duas
@@ -109,6 +117,7 @@ maioria das magias usa só um dos dois):
       "duracao_s": 4
     },
     {
+      "id": "pombo",
       "tipo": "invocacao",
       "corpo": "ave",
       "material": "pedra",
@@ -117,6 +126,15 @@ maioria das magias usa só um dos dois):
       "vida": 20,
       "duracao_s": 6,
       "dano_contato": 5
+    },
+    {
+      "tipo": "lancador",
+      "anexado_a": "pombo",
+      "intervalo_s": 1.5,
+      "projetil": { "forma": "ovo", "material": "pedra", "velocidade": 8 },
+      "ao_impactar": [
+        { "tipo": "explosao", "raio_m": 2, "dano": 12, "empurrao": 3 }
+      ]
     }
   ],
   "legenda": "frase curta em português descrevendo o que foi entendido"
