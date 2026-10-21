@@ -7,8 +7,8 @@ class_name Validador
 const MATERIAIS_VALIDOS := ["pedra", "agua", "fogo", "metal", "madeira"]
 const FORMAS_VALIDAS := ["esfera", "ovo", "cubo"]
 ## Proposta técnica, seção 3: "estados (queimando, molhado, eletrizado, cego,
-## lento)". "Cego" ainda não existe (ver docs/decisoes.md).
-const ESTADOS_VALIDOS := ["queimando", "lento", "molhado", "eletrizado"]
+## lento)": todos existem.
+const ESTADOS_VALIDOS := ["queimando", "lento", "molhado", "eletrizado", "cego"]
 ## Proposta técnica, seção 3, exemplo do "Pombo de Pedra": só
 ## "perseguir_inimigo_proximo" está implementado por enquanto.
 const CORPOS_VALIDOS := ["ave", "quadrupede", "verme", "bolha"]

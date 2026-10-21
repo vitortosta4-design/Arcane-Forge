@@ -365,3 +365,8 @@ O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso
   - De propósito **não** limitei os tokens da resposta da Groq: o modelo atual "pensa" antes de responder e esse pensamento conta no limite; um teto mal calibrado cortaria respostas boas, e daqui não dá para testar.
   - Ferramenta nova `ferramentas/checar_porteiro.sh`: confere a sintaxe da função com o Node antes do deploy (conferido que ela acusa um erro plantado de propósito).
   - 4 testes novos (187 → 191/191).
+- **Lote: estado "cego" + retorno visual do teleporte** em 21/10/2026 (versão 14 do prompt). Com o cego, **todos os componentes da "primeira leva" da proposta técnica (seção 3) existem.**
+  - **Cego:** inimigo ou criatura cega para de perseguir e de atacar (fica parada); o corpo ganha a cor roxo-escura dos estados. O mago cego vê a tela quase toda escura, com o texto do HUD ainda legível por cima. A ADR-013 põe a cegueira entre os ingredientes maus, então a ficha de exemplo ("Pó Ofuscante") tem natureza "ma".
+  - **Teleporte:** ganhou um "puf" de luz na saída e na chegada (reaproveita o efeito da explosão, sem dano). Achado no print: quem se teleporta não vê os próprios "pufs" (um fica atrás, o outro em volta da cabeça, com a câmera dentro), só o parceiro veria. Para quem conjura, o HUD dá um clarão azulado de 0,3 s na tela.
+  - **Ainda não existe:** a regra da ADR-017 de magia "má" sair pela culatra. Ela precisa de decisões de design do Vitor (com que frequência, o que acontece), por isso não inventei.
+  - 10 testes novos (191 → 201/201). Prints em `evidencias/fase-1/estado_cego.png` e `teleporte_clarao.png`.

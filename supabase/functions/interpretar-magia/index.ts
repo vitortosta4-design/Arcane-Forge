@@ -43,19 +43,19 @@ ou mais, numa lista):
     PUXAR para o centro em vez de afastar (ex.: "um buraco negro que
     atrai os inimigos" vira um projétil com "empurrao": -5 e "dano": 0).
   - "estado": aplica um efeito só em quem o projétil atingiu (não numa
-    área), por "duracao_s". Existem quatro: "queimando" (dano aos
+    área), por "duracao_s". Existem cinco: "queimando" (dano aos
     poucos), "lento" (anda mais devagar), "molhado" (não machuca, mas
-    apaga fogo e deixa o alvo vulnerável a eletricidade) e "eletrizado"
+    apaga fogo e deixa o alvo vulnerável a eletricidade), "eletrizado"
     (choque na hora; em alvo molhado o choque dobra e se espalha para quem
-    estiver perto). NÃO use nenhum outro nome de estado (ex.: cego), ainda
-    não existe no jogo.
+    estiver perto) e "cego" (o alvo para de perseguir e de atacar). NÃO
+    use nenhum outro nome de estado.
   - "area": deixa uma área no chão onde o projétil caiu (mesmos campos do
     componente "area" abaixo), ex.: "uma bola que deixa uma poça de lava".
   Aproxime qualquer ideia de ataque para esse formato (por exemplo, "um
   raio congelante" pode virar um projétil de gelo com "estado": "lento").
 - "area": uma zona no chão que dura alguns segundos e, a cada segundo,
   afeta quem estiver dentro. Campos: "raio_m", "duracao_s", "dano_por_s"
-  (pode ser 0), "nome_estado" (opcional, um dos quatro estados acima) e
+  (pode ser 0), "nome_estado" (opcional, um dos cinco estados acima) e
   "material" (mesma lista do projétil). No topo da lista de componentes,
   a área nasce em volta de quem conjurou (ex.: "uma chuva ao meu redor"),
   e nunca afeta quem conjurou. Precisa de dano OU estado; sem nenhum dos

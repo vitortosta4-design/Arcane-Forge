@@ -33,6 +33,7 @@ signal vida_mudou(atual: float, maxima: float)
 signal mana_mudou(atual: float, maxima: float)
 signal conjurou(legenda: String)
 signal morreu
+signal teleportou
 
 
 func _ready() -> void:

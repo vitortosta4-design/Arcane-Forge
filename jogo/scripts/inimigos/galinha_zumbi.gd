@@ -40,6 +40,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	var alvo := _encontrar_mago_mais_proximo()
+	# Cego não acha ninguém: fica parado, sem perseguir nem atacar.
+	if estados.esta_cego():
+		alvo = null
 	if alvo == null:
 		velocity.x = 0.0
 		velocity.z = 0.0

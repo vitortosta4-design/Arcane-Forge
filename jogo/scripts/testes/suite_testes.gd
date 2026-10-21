@@ -110,6 +110,11 @@ func _ready() -> void:
 	_testar_interpretador_reconhece_muro_e_teleporte()
 	_testar_validador_descarta_projetil_dentro_de_projetil()
 	_testar_validador_limita_tamanho_das_listas()
+	await _testar_galinha_cega_nao_persegue_nem_bica()
+	await _testar_mago_cego_ve_a_tela_escura()
+	await _testar_teleporte_faz_um_puf_na_saida_e_na_chegada()
+	_testar_interpretador_reconhece_cegueira()
+	await _testar_teleporte_da_clarao_na_tela_do_mago()
 
 	print("")
 	if _falhas == 0:
@@ -761,11 +766,11 @@ func _testar_interpretador_reconhece_buraco_negro() -> void:
 ## por enquanto; os outros caem no padrão seguro, igual a qualquer valor
 ## fora de uma lista fechada.
 func _testar_validador_corta_estado_fora_da_lista_e_duracao_maxima() -> void:
-	var ficha := {"componentes": [{"tipo": "estado", "nome_estado": "cego", "duracao_s": 999.0}]}
+	var ficha := {"componentes": [{"tipo": "estado", "nome_estado": "petrificado", "duracao_s": 999.0}]}
 	var corrigida := Validador.validar_ficha(ficha)
 	var estado: Dictionary = corrigida["componentes"][0]
 	_afirmar(
-		"estado ainda não implementado vira um padrão seguro da lista",
+		"estado que não existe vira um padrão seguro da lista",
 		estado["nome_estado"] in Validador.ESTADOS_VALIDOS
 	)
 	_afirmar("duração do estado cortada no limite máximo", estado["duracao_s"] == Validador.DURACAO_MAXIMA_S)
@@ -1258,7 +1263,7 @@ func _testar_hud_mostra_estados_do_mago() -> void:
 func _testar_validador_corta_area() -> void:
 	var c: Dictionary = Validador.validar_ficha({"componentes": [{
 		"tipo": "area", "raio_m": 99.0, "duracao_s": 99.0, "dano_por_s": 99.0,
-		"nome_estado": "cego", "material": "queijo"
+		"nome_estado": "petrificado", "material": "queijo"
 	}]})["componentes"][0]
 	_afirmar("raio da área cortado no limite", c["raio_m"] == Validador.RAIO_AREA_MAXIMO)
 	_afirmar("duração da área cortada no limite", c["duracao_s"] == Validador.DURACAO_MAXIMA_S)
@@ -1440,7 +1445,7 @@ func _testar_interpretador_reconhece_lava_e_chuva() -> void:
 
 
 ## Parede e teleporte curto (proposta técnica, seção 3): fecham a primeira
-## leva de componentes (só "cego" fica de fora).
+## leva de componentes ("cego" veio logo depois).
 func _testar_validador_corta_parede_e_teleporte() -> void:
 	var fichas: Array = Validador.validar_ficha({"componentes": [
 		{"tipo": "parede", "largura_m": 99.0, "altura_m": 99.0, "duracao_s": 99.0, "distancia_m": 99.0, "material": "queijo"},
@@ -1598,3 +1603,66 @@ func _testar_validador_limita_tamanho_das_listas() -> void:
 	_afirmar("ficha com 51 componentes fica com no máximo 8", v["componentes"].size() == Validador.MAXIMO_COMPONENTES)
 	var p: Dictionary = Validador.validar_ficha({"componentes": [{"tipo": "projetil", "ao_impactar": efeitos}]})["componentes"][0]
 	_afirmar("projétil com 50 efeitos fica com no máximo 4", p["ao_impactar"].size() == Validador.MAXIMO_EFEITOS_DE_IMPACTO)
+
+
+## Estado "cego": o último que faltava da proposta técnica (seção 3).
+func _testar_galinha_cega_nao_persegue_nem_bica() -> void:
+	var chao := _chao_em(Vector3(420, 0, 0))
+	var mago := _mago_em(Vector3(420, 0, 0))
+	var galinha := _galinha_em(Vector3(421, 0, 0))
+	# Cegar antes do primeiro quadro: nascendo colada no mago, ela bicaria já.
+	galinha.aplicar_estado("cego", 3.0)
+	await get_tree().physics_frame
+	var pos_inicial: Vector3 = galinha.global_position
+	await get_tree().create_timer(1.3).timeout
+	_afirmar("galinha cega não persegue o mago", galinha.global_position.distance_to(pos_inicial) < 0.05)
+	_afirmar("galinha cega não bica nem com o mago colado nela", mago.vida_atual == mago.vida_maxima)
+	for n in [mago, galinha, chao]:
+		n.queue_free()
+
+
+func _testar_mago_cego_ve_a_tela_escura() -> void:
+	var mago := _mago_em(Vector3(440, 0, 0))
+	var hud: Node = load("res://cenas/hud.tscn").instantiate()
+	add_child(hud)
+	await get_tree().process_frame
+	hud.configurar(mago)
+	var tela: ColorRect = hud.get_node("Cegueira")
+	_afirmar("tela começa normal", not tela.visible)
+	mago.aplicar_estado("cego", 0.1)
+	_afirmar("mago cego vê a tela escura", tela.visible)
+	await get_tree().create_timer(0.4).timeout
+	_afirmar("a tela volta ao normal quando a cegueira passa", not tela.visible)
+	mago.queue_free()
+	hud.queue_free()
+
+
+func _testar_teleporte_faz_um_puf_na_saida_e_na_chegada() -> void:
+	var mago := _mago_em(Vector3(460, 0, 0))
+	await get_tree().process_frame
+	var script_efeito := load("res://scripts/magia/efeito_explosao.gd")
+	var antes := get_children().filter(func(n): return n.get_script() == script_efeito).size()
+	Executor.executar_ficha(FichasPadrao.salto_arcano(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	var depois := get_children().filter(func(n): return n.get_script() == script_efeito).size()
+	_afirmar("teleporte deixa um efeito visual na saída e outro na chegada", depois - antes == 2)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_cegueira() -> void:
+	_afirmar("interpretador reconhece \"cegar\"", Interpretador.interpretar("um pó que cega o inimigo").get("nome") == "Pó Ofuscante")
+
+
+func _testar_teleporte_da_clarao_na_tela_do_mago() -> void:
+	var mago := _mago_em(Vector3(480, 0, 0))
+	var hud: Node = load("res://cenas/hud.tscn").instantiate()
+	add_child(hud)
+	await get_tree().process_frame
+	hud.configurar(mago)
+	var clarao: ColorRect = hud.get_node("Clarao")
+	_afirmar("sem teleporte, sem clarão", clarao.color.a == 0.0)
+	Executor.executar_ficha(FichasPadrao.salto_arcano(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	_afirmar("teleporte dá um clarão na tela de quem se teleportou", clarao.color.a > 0.5)
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("o clarão some sozinho", clarao.color.a < 0.01)
+	mago.queue_free()
+	hud.queue_free()

@@ -8,6 +8,7 @@ const CenaProjetil := preload("res://cenas/magias/projetil.tscn")
 const CenaInvocacao := preload("res://cenas/magias/invocacao.tscn")
 const CenaArea := preload("res://cenas/magias/area_persistente.tscn")
 const CenaParede := preload("res://cenas/magias/parede.tscn")
+const CenaPuf := preload("res://cenas/efeitos/explosao_visual.tscn")
 ## Folga antes de um obstáculo no teleporte, para o mago não entrar na parede.
 const FOLGA_TELEPORTE_M := 0.6
 ## Camadas que barram o teleporte: cenário (1) e caixas/barris (16).
@@ -127,7 +128,22 @@ static func _teleportar(componente: Dictionary, direcao: Vector3, dono: Node) ->
 	var batida := corpo.get_world_3d().direct_space_state.intersect_ray(consulta)
 	if batida:
 		distancia = maxf(0.0, peito.distance_to(batida["position"]) - FOLGA_TELEPORTE_M)
+	_puf(corpo)
 	corpo.global_position = ponto_no_chao(corpo, corpo.global_position + frente * distancia)
+	_puf(corpo)
+	# Quem se teleporta não vê os próprios "pufs" (um fica atrás, o outro em
+	# volta da cabeça): o HUD do mago dá um clarão na tela.
+	if corpo.has_signal("teleportou"):
+		corpo.emit_signal("teleportou")
+
+
+## Sem isso o mago só "aparece" em outro lugar e parece bug (ADR-017 pede
+## feedback claro). Reaproveita o efeito da explosão, sem dano nenhum.
+static func _puf(corpo: Node3D) -> void:
+	var efeito := CenaPuf.instantiate()
+	corpo.get_parent().add_child(efeito)
+	efeito.global_position = corpo.global_position + Vector3.UP
+	efeito.iniciar(0.9, "agua")
 
 
 ## Ponto no chão logo abaixo de "ponto" (até 10 m): a área nasce no chão

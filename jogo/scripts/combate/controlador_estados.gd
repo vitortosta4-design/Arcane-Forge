@@ -9,6 +9,9 @@ class_name ControladorEstados
 ## etiquetas"):
 ## - molhado apaga quem está queimando, e quem está molhado não pega fogo;
 ## - eletricidade em quem está molhado dá dano dobrado e se espalha num raio.
+## Cego (ADR-013 lista "cegueira temporária" entre os ingredientes maus):
+## inimigo e criatura cegos param de perseguir e atacar; o mago cego vê a
+## tela quase toda escura (o HUD cuida disso).
 ##
 ## Sinal visual (ADR-017 pede feedback claro): uma camada de cor por cima do
 ## corpo inteiro do dono (material_overlay), barata e legível de longe, no
@@ -28,12 +31,14 @@ const DURACAO_PISCADA_CHOQUE_S := 0.35
 const CORES := {
 	"eletrizado": Color(1.0, 0.95, 0.2, 0.8),
 	"queimando": Color(1.0, 0.35, 0.0, 0.65),
+	"cego": Color(0.12, 0.08, 0.22, 0.75),
 	"molhado": Color(0.1, 0.4, 1.0, 0.6),
 	"lento": Color(0.55, 0.9, 1.0, 0.5),
 }
 
 var _lento_restante_s := 0.0
 var _molhado_restante_s := 0.0
+var _cego_restante_s := 0.0
 var _ticks_queimando_restantes := 0
 var _tempo_ate_proximo_tick := 0.0
 var _piscada_choque_s := 0.0
@@ -55,6 +60,8 @@ func aplicar(nome_estado: String, duracao_s: float) -> void:
 			if esta_molhado():
 				return
 			_iniciar_queimando(duracao_s)
+		"cego":
+			_cego_restante_s = maxf(_cego_restante_s, duracao_s)
 		"eletrizado":
 			_piscada_choque_s = DURACAO_PISCADA_CHOQUE_S
 			_dar_choque()
@@ -69,6 +76,10 @@ func esta_molhado() -> bool:
 	return _molhado_restante_s > 0.0
 
 
+func esta_cego() -> bool:
+	return _cego_restante_s > 0.0
+
+
 func esta_queimando() -> bool:
 	return _ticks_queimando_restantes > 0
 
@@ -80,6 +91,8 @@ func ativos() -> Array:
 		lista.append("eletrizado")
 	if esta_queimando():
 		lista.append("queimando")
+	if esta_cego():
+		lista.append("cego")
 	if esta_molhado():
 		lista.append("molhado")
 	if _lento_restante_s > 0.0:
@@ -91,6 +104,7 @@ func _physics_process(delta: float) -> void:
 	_tempo += delta
 	_lento_restante_s = maxf(0.0, _lento_restante_s - delta)
 	_molhado_restante_s = maxf(0.0, _molhado_restante_s - delta)
+	_cego_restante_s = maxf(0.0, _cego_restante_s - delta)
 	_piscada_choque_s = maxf(0.0, _piscada_choque_s - delta)
 	if _ticks_queimando_restantes > 0:
 		_tempo_ate_proximo_tick -= delta

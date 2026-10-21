@@ -330,3 +330,27 @@ static func salto_arcano() -> Dictionary:
 		],
 		"legenda": "você some e reaparece alguns metros à frente"
 	}
+
+
+## Estado "cego". ADR-013 põe a cegueira entre os ingredientes maus, por
+## isso a natureza "ma".
+static func po_ofuscante() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Pó Ofuscante",
+		"frase_original": "pó que cega o inimigo",
+		"natureza": "ma",
+		"ingredientes": ["caos"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "madeira",
+				"velocidade": 16.0,
+				"ao_impactar": [
+					{"tipo": "estado", "nome_estado": "cego", "duracao_s": 3.0}
+				]
+			}
+		],
+		"legenda": "um punhado de pó que deixa o inimigo cego e perdido"
+	}
