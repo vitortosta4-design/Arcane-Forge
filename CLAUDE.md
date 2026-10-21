@@ -6,7 +6,9 @@
 3. Confira em que fase o projeto está e trabalhe só dentro dela.
 
 ## Fase atual
-Fase 1: esqueleto jogável. Critérios de aceitação na seção 9 da proposta técnica.
+Fase 2: magia por texto com IA real (o porteiro no Supabase já está ligado em `mago.gd`, com fallback para o interpretador local).
+
+A Fase 1 (esqueleto jogável) está praticamente concluída: todos os critérios de aceitação verificáveis por teste e código passam (seção 9 da proposta técnica). Restam só dois critérios que dependem do Vitor jogar e olhar: comparar o canto de atmosfera com a referência visual, e jogar 10 minutos para avaliar se o combate "dá gosto". Não fechar a Fase 1 como concluída até o Vitor confirmar essas duas coisas.
 
 ## Quem é o Vitor
 - Dono do projeto, iniciante em programação e desenvolvimento de jogos. Nunca abriu uma engine.

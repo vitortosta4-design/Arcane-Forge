@@ -2,7 +2,7 @@
 
 Jogo cooperativo 3D (2 jogadores contra inimigos controlados por IA), em low poly engraçado, em que o jogador descreve magias com as próprias palavras e o jogo transforma a descrição em habilidade real.
 
-**Fase atual:** Fase 1, esqueleto jogável (descoberta encerrada e proposta técnica aprovada em 20/10/2026).
+**Fase atual:** Fase 2, magia por texto com IA real. A Fase 1 (esqueleto jogável) está praticamente concluída; restam só os dois critérios que dependem do Vitor jogar e avaliar (ver `docs/decisoes.md`).
 
 ## Onde está cada coisa
 - `CLAUDE.md`: instruções para o Claude Code trabalhar neste projeto.

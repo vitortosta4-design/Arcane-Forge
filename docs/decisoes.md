@@ -273,7 +273,12 @@ Arte conceitual gerada por IA a pedido do Vitor.
 ---
 
 ## Status da descoberta
-Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026. Próximo passo: Fase 1.
+Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026.
+
+## Status das fases (atualizado em 21/10/2026)
+- **Fase 1 (esqueleto jogável):** praticamente concluída. Todos os critérios de aceitação verificáveis por teste e código (seção 9 da proposta técnica) estão com o `[x]`. Restam dois critérios que só o Vitor pode confirmar: o canto de atmosfera lembrar a referência visual, e jogar 10 minutos para dizer se o combate "dá gosto". A Fase 1 só pode ser marcada como encerrada depois dessa confirmação.
+- **Fase 2 (magia por texto com IA real):** já ligada de verdade. `mago.gd` chama `Porteiro.interpretar()` (Supabase + Groq) e cai para o `Interpretador` local se a IA estiver fora do ar. README.md e CLAUDE.md foram corrigidos nesta data porque ainda diziam "Fase atual: Fase 1".
+- **Suíte de testes automáticos:** confirmada rodando de verdade em 21/10/2026, numa sessão na nuvem sem GPU (Godot 4.7.2 headless instalado só para isso). 43/43 testes passando. Dois avisos inofensivos do motor em modo headless (vazamento de 2 objetos e 1 recurso ao sair; erro de material nulo do renderizador fictício) não afetam o jogo jogável — são ruído de rodar sem tela, registrados aqui para não esconder nada.
 
 ## Requisito mínimo de hardware (referência)
 O PC do Vitor é o piso: Pentium G5400 (2 núcleos), GTX 1050 com 2 GB de VRAM, 16 GB de RAM.
