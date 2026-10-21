@@ -47,6 +47,10 @@ func _ready() -> void:
 	_testar_interpretador_reconhece_escudo()
 	await _testar_ficha_com_cura_e_escudo_juntos_aplica_os_dois()
 	_testar_custo_de_mana_soma_componentes_diferentes()
+	_testar_validador_aceita_empurrao_negativo_para_puxar()
+	await _testar_empurrao_negativo_puxa_o_mago_para_o_centro()
+	await _testar_empurrao_negativo_conta_como_efeito_real()
+	_testar_interpretador_reconhece_buraco_negro()
 
 	print("")
 	if _falhas == 0:
@@ -636,3 +640,58 @@ func _testar_custo_de_mana_soma_componentes_diferentes() -> void:
 	var custo_so_cura := Validador.calcular_custo_mana(ficha_so_cura)
 	var custo_dos_dois := Validador.calcular_custo_mana(ficha_cura_e_escudo)
 	_afirmar("custo de mana soma os dois componentes, não só o primeiro", custo_dos_dois > custo_so_cura)
+
+
+## "Empurrar/puxar" (proposta técnica, seção 3) não é um componente novo:
+## é o "empurrao" da explosão aceitando sinal negativo para puxar para o
+## centro em vez de afastar (ex.: um mini buraco negro).
+func _testar_validador_aceita_empurrao_negativo_para_puxar() -> void:
+	var ficha := {"componentes": [{"tipo": "explosao", "empurrao": -999.0}]}
+	var corrigida := Validador.validar_ficha(ficha)
+	_afirmar(
+		"empurrão muito negativo é cortado no limite, não zerado",
+		corrigida["componentes"][0]["empurrao"] == -Validador.EMPURRAO_MAXIMO
+	)
+
+
+func _testar_empurrao_negativo_puxa_o_mago_para_o_centro() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.global_position = Vector3(5, 0, 0)
+	mago.velocity = Vector3.ZERO # isola o empurrão: sem isso, a gravidade já acumulada no eixo Y atrapalha a comparação de direção
+	var origem := Vector3.ZERO
+	mago.receber_dano(0.0, origem, -3.0)
+
+	var pos_mago: Vector3 = mago.global_position
+	var direcao_esperada := (origem - pos_mago).normalized()
+	_afirmar(
+		"empurrão negativo puxa o mago na direção do centro, não para longe",
+		mago.velocity.normalized().is_equal_approx(direcao_esperada)
+	)
+	mago.queue_free()
+
+
+## Mesma regra do "projétil fantasma": um empurrão/puxão de verdade (mesmo
+## sem dano) tem que contar como magia entendida.
+func _testar_empurrao_negativo_conta_como_efeito_real() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	_afirmar(
+		"empurrão negativo (puxar) sem dano ainda conta como efeito real",
+		not mago._ficha_sem_componentes({
+			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 0.0, "empurrao": -3.0}]}]
+		})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_buraco_negro() -> void:
+	var ficha := Interpretador.interpretar("quero invocar um buraco negro que puxa tudo")
+	_afirmar("interpretador reconhece \"buraco negro\"", not ficha.is_empty())
+	_afirmar("interpretador devolve a ficha do mini buraco negro", ficha.get("nome") == "Mini Buraco Negro")

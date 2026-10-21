@@ -77,7 +77,7 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 	if _morta:
 		return
 	_vida_atual -= dano
-	if empurrao > 0.0:
+	if empurrao != 0.0:
 		var direcao := (global_position - origem_dano).normalized()
 		velocity += direcao * empurrao
 	if _vida_atual <= 0.0:

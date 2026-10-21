@@ -64,3 +64,34 @@ static func escudo_de_pedra() -> Dictionary:
 		],
 		"legenda": "uma casca de pedra que reduz o próximo dano"
 	}
+
+
+## "Empurrar/puxar" (proposta técnica, seção 3) é o mesmo componente
+## "explosao" com o sinal do empurrão invertido: em vez de um novo tipo,
+## é um projétil que, ao impactar, puxa para o centro em vez de afastar.
+static func mini_buraco_negro() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Mini Buraco Negro",
+		"frase_original": "mini buraco negro",
+		"natureza": "ma",
+		"ingredientes": ["caos"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "metal",
+				"velocidade": 12.0,
+				"ao_impactar": [
+					{
+						"tipo": "explosao",
+						"raio_m": 3.0,
+						"dano": 0.0,
+						"empurrao": -5.0,
+						"etiquetas": []
+					}
+				]
+			}
+		],
+		"legenda": "uma esfera que puxa tudo que está perto para o centro"
+	}

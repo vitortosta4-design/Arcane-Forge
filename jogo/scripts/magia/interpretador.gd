@@ -17,4 +17,6 @@ static func interpretar(frase: String) -> Dictionary:
 		return FichasPadrao.luz_curativa()
 	if "escudo" in normalizada:
 		return FichasPadrao.escudo_de_pedra()
+	if "buraco negro" in normalizada or "puxar" in normalizada or "puxa" in normalizada:
+		return FichasPadrao.mini_buraco_negro()
 	return {}

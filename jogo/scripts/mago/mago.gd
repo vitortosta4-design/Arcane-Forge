@@ -153,7 +153,7 @@ func _ficha_sem_componentes(ficha: Dictionary) -> bool:
 ## Fase 2: um componente sem efeito real também conta como "não entendi".
 func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 	var tipo = componente.get("tipo")
-	if tipo == "explosao" and (componente.get("dano", 0.0) > 0.0 or componente.get("empurrao", 0.0) > 0.0):
+	if tipo == "explosao" and (componente.get("dano", 0.0) > 0.0 or componente.get("empurrao", 0.0) != 0.0):
 		return true
 	if tipo == "cura" and componente.get("quantidade", 0.0) > 0.0:
 		return true
@@ -226,7 +226,9 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 	dano *= (1.0 - _reducao_escudo)
 	vida_atual = maxf(0.0, vida_atual - dano)
 	vida_mudou.emit(vida_atual, vida_maxima)
-	if empurrao > 0.0:
+	if empurrao != 0.0:
+		# Empurrão negativo puxa para o centro em vez de afastar: a mesma
+		# conta com o sinal invertido (proposta técnica, seção 3).
 		var direcao := (global_position - origem_dano).normalized()
 		velocity += direcao * empurrao
 	if vida_atual <= 0.0:

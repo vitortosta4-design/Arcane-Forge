@@ -34,7 +34,10 @@ ou mais, numa lista):
 - "projetil": voa até o alvo e pode causar um efeito "explosao" ao
   impactar. Aproxime qualquer ideia de ataque para esse formato (por
   exemplo, "um raio congelante" pode virar um projétil de gelo que
-  explode num raio pequeno).
+  explode num raio pequeno). O "empurrao" da explosão aceita número
+  negativo para PUXAR para o centro em vez de afastar (ex.: "um buraco
+  negro que atrai os inimigos" vira um projétil com "empurrao": -5 e
+  "dano": 0).
 - "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
   Use para qualquer ideia de curar, recuperar ou restaurar.
 - "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para

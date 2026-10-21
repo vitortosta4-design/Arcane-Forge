@@ -54,7 +54,10 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 	elif c.get("tipo") == "explosao":
 		c["raio_m"] = clampf(_como_numero(c.get("raio_m"), 2.0), 0.5, RAIO_EXPLOSAO_MAXIMO)
 		c["dano"] = clampf(_como_numero(c.get("dano"), 5.0), 0.0, DANO_MAXIMO)
-		c["empurrao"] = clampf(_como_numero(c.get("empurrao"), 0.0), 0.0, EMPURRAO_MAXIMO)
+		# Empurrão negativo puxa para o centro em vez de afastar (proposta
+		# técnica, seção 3: "empurrar/puxar" é o mesmo componente com sinais
+		# opostos, ex.: um mini buraco negro que atrai em vez de explodir).
+		c["empurrao"] = clampf(_como_numero(c.get("empurrao"), 0.0), -EMPURRAO_MAXIMO, EMPURRAO_MAXIMO)
 	elif c.get("tipo") == "cura":
 		c["quantidade"] = clampf(_como_numero(c.get("quantidade"), 0.0), 0.0, CURA_MAXIMA)
 	elif c.get("tipo") == "escudo":
