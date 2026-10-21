@@ -13,6 +13,15 @@ const ESTADOS_VALIDOS := ["queimando", "lento", "molhado", "eletrizado"]
 ## "perseguir_inimigo_proximo" está implementado por enquanto.
 const CORPOS_VALIDOS := ["ave", "quadrupede", "verme", "bolha"]
 const COMPORTAMENTOS_VALIDOS := ["perseguir_inimigo_proximo"]
+## O que pode acontecer quando um projétil bate. Projétil dentro de projétil
+## o jogo não sabe executar; aceitar abriria espaço para fichas aninhadas
+## centenas de vezes (achado em revisão de segurança: não quebrava, mas
+## enchia o log de "Max recursion reached").
+const EFEITOS_DE_IMPACTO := ["explosao", "estado", "area"]
+## Teto de tamanho das listas. A mana já impede conjurar uma ficha gigante,
+## mas validar 500 componentes à toa não serve para nada.
+const MAXIMO_COMPONENTES := 8
+const MAXIMO_EFEITOS_DE_IMPACTO := 4
 
 const DURACAO_MAXIMA_S := 8.0
 const DANO_MAXIMO := 30.0
@@ -76,7 +85,7 @@ const REFERENCIA_DISPAROS_S := 3.0
 ## leitura abaixo confere o tipo de verdade antes de confiar nele.
 static func validar_ficha(ficha: Dictionary) -> Dictionary:
 	var corrigida := ficha.duplicate(true)
-	corrigida["componentes"] = _lista_de_dicionarios(corrigida.get("componentes")).map(_validar_componente)
+	corrigida["componentes"] = _lista_de_dicionarios(corrigida.get("componentes")).slice(0, MAXIMO_COMPONENTES).map(_validar_componente)
 	return corrigida
 
 
@@ -86,7 +95,10 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
 		c["forma"] = _escolher_valido(_como_texto(c.get("forma")), FORMAS_VALIDAS, "esfera")
 		c["velocidade"] = clampf(_como_numero(c.get("velocidade"), 10.0), 1.0, VELOCIDADE_MAXIMA)
-		c["ao_impactar"] = _lista_de_dicionarios(c.get("ao_impactar")).map(_validar_componente)
+		c["ao_impactar"] = _lista_de_dicionarios(c.get("ao_impactar")) \
+			.filter(func(e): return e.get("tipo") in EFEITOS_DE_IMPACTO) \
+			.slice(0, MAXIMO_EFEITOS_DE_IMPACTO) \
+			.map(_validar_componente)
 	elif c.get("tipo") == "explosao":
 		c["raio_m"] = clampf(_como_numero(c.get("raio_m"), 2.0), 0.5, RAIO_EXPLOSAO_MAXIMO)
 		c["dano"] = clampf(_como_numero(c.get("dano"), 5.0), 0.0, DANO_MAXIMO)

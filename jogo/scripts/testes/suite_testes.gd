@@ -108,6 +108,8 @@ func _ready() -> void:
 	await _testar_teleporte_nao_vira_voo()
 	_testar_parede_e_teleporte_contam_como_magia_de_verdade()
 	_testar_interpretador_reconhece_muro_e_teleporte()
+	_testar_validador_descarta_projetil_dentro_de_projetil()
+	_testar_validador_limita_tamanho_das_listas()
 
 	print("")
 	if _falhas == 0:
@@ -1572,3 +1574,27 @@ func _testar_parede_e_teleporte_contam_como_magia_de_verdade() -> void:
 func _testar_interpretador_reconhece_muro_e_teleporte() -> void:
 	_afirmar("interpretador reconhece \"muro\"", Interpretador.interpretar("um muro de pedra").get("nome") == "Muro de Pedra")
 	_afirmar("interpretador reconhece \"teleporte\"", Interpretador.interpretar("quero me teleportar").get("nome") == "Salto Arcano")
+
+
+## Revisão de segurança: a IA pode mandar fichas absurdas de propósito ou
+## por erro. Não quebrava, mas o validador agora corta antes.
+func _testar_validador_descarta_projetil_dentro_de_projetil() -> void:
+	var ficha := {"tipo": "explosao", "dano": 5.0}
+	for i in 40:
+		ficha = {"tipo": "projetil", "ao_impactar": [ficha]}
+	var projetil: Dictionary = Validador.validar_ficha({"componentes": [ficha]})["componentes"][0]
+	_afirmar("projétil dentro de projétil é descartado no impacto", (projetil["ao_impactar"] as Array).is_empty())
+	var normal: Dictionary = Validador.validar_ficha(FichasPadrao.bola_de_fogo())["componentes"][0]
+	_afirmar("explosão no impacto continua valendo", normal["ao_impactar"].size() == 1)
+
+
+func _testar_validador_limita_tamanho_das_listas() -> void:
+	var muitos: Array = []
+	var efeitos: Array = []
+	for i in 50:
+		muitos.append({"tipo": "cura", "quantidade": 1.0})
+		efeitos.append({"tipo": "explosao", "dano": 1.0})
+	var v := Validador.validar_ficha({"componentes": muitos + [{"tipo": "projetil", "ao_impactar": efeitos}]})
+	_afirmar("ficha com 51 componentes fica com no máximo 8", v["componentes"].size() == Validador.MAXIMO_COMPONENTES)
+	var p: Dictionary = Validador.validar_ficha({"componentes": [{"tipo": "projetil", "ao_impactar": efeitos}]})["componentes"][0]
+	_afirmar("projétil com 50 efeitos fica com no máximo 4", p["ao_impactar"].size() == Validador.MAXIMO_EFEITOS_DE_IMPACTO)

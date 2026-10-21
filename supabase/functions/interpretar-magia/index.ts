@@ -14,6 +14,12 @@ const FORMAS_VALIDAS = ["esfera", "ovo", "cubo"];
 const LIMITE_FRASE = 200; // proposta técnica, seção 5
 const LIMITE_POR_MINUTO = 20; // proposta técnica, seção 5
 const VERSAO_SISTEMA = 1;
+// Proposta técnica, seção 7: o porteiro tem tempo máximo de resposta e
+// corta respostas grandes demais. O jogo desiste em 8 s (porteiro.gd), então
+// o servidor desiste antes, para conseguir registrar a falha e responder.
+const TEMPO_LIMITE_GROQ_MS = 7000;
+// Uma ficha de verdade tem menos de 2 mil caracteres.
+const TAMANHO_MAXIMO_RESPOSTA = 8000;
 
 // Escolha provisória da Fase 2 (ver docs/decisoes.md). Pode trocar sem
 // mexer em mais nada além desta constante. Conferido em 20/10/2026 contra
@@ -258,9 +264,12 @@ Deno.serve(async (req: Request) => {
 	}
 
 	let respostaBruta = "";
+	const controle = new AbortController();
+	const relogio = setTimeout(() => controle.abort(), TEMPO_LIMITE_GROQ_MS);
 	try {
 		const respostaGroq = await fetch("https://api.groq.com/openai/v1/chat/completions", {
 			method: "POST",
+			signal: controle.signal,
 			headers: {
 				"Authorization": `Bearer ${groqKey}`,
 				"Content-Type": "application/json",
@@ -285,8 +294,16 @@ Deno.serve(async (req: Request) => {
 		const dadosGroq = await respostaGroq.json();
 		respostaBruta = dadosGroq.choices?.[0]?.message?.content ?? "";
 	} catch (erro) {
-		await registrarFalha(supabase, frase, String(erro), "groq_erro_rede");
-		return jsonResponse({ erro: "interpretador instável agora" }, 502);
+		const estourouTempo = controle.signal.aborted;
+		await registrarFalha(supabase, frase, String(erro), estourouTempo ? "groq_tempo_esgotado" : "groq_erro_rede");
+		return jsonResponse({ erro: "interpretador instável agora" }, estourouTempo ? 504 : 502);
+	} finally {
+		clearTimeout(relogio);
+	}
+
+	if (respostaBruta.length > TAMANHO_MAXIMO_RESPOSTA) {
+		await registrarFalha(supabase, frase, respostaBruta, "resposta_grande_demais");
+		return jsonResponse({ erro: "não consegui entender essa magia" }, 422);
 	}
 
 	let ficha: Record<string, unknown>;
