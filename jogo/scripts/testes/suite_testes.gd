@@ -117,6 +117,7 @@ func _ready() -> void:
 	await _testar_teleporte_da_clarao_na_tela_do_mago()
 	_testar_validador_aceita_nomes_com_acento_e_maiuscula()
 	await _testar_clareira()
+	await _testar_caixa_e_barril_de_madeira()
 
 	print("")
 	if _falhas == 0:
@@ -1747,4 +1748,23 @@ func _testar_clareira() -> void:
 		outra.get_node("Arvores").mesh.get_faces().size() == clareira.get_node("Arvores").mesh.get_faces().size())
 	outra.queue_free()
 	clareira.queue_free()
+	await get_tree().process_frame
+
+
+## Caixote e barril no estilo da referência; o barril aceso ganha o brilho
+## laranja por cima da madeira.
+func _testar_caixa_e_barril_de_madeira() -> void:
+	var caixa: Node3D = load("res://cenas/caixa.tscn").instantiate()
+	var barril: Node3D = load("res://cenas/barril_inflamavel.tscn").instantiate()
+	add_child(caixa)
+	add_child(barril)
+	var malha_caixa: MeshInstance3D = caixa.get_node("MeshInstance3D")
+	var malha_barril: MeshInstance3D = barril.get_node("MeshInstance3D")
+	_afirmar("caixote tem quinas e tábuas (não é mais um cubo liso)", malha_caixa.mesh.get_faces().size() / 3 > 100)
+	_afirmar("barril tem cintas (não é mais um cilindro liso)", malha_barril.mesh.get_faces().size() / 3 > 100)
+	_afirmar("barril apagado não brilha", malha_barril.material_overlay == null)
+	barril.pegar_fogo()
+	_afirmar("barril aceso ganha brilho laranja", malha_barril.material_overlay != null)
+	caixa.queue_free()
+	barril.queue_free()
 	await get_tree().process_frame

@@ -1,15 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/combate/caixa.gd" id="1"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_caixa"]
 size = Vector3(0.6, 0.6, 0.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_caixa"]
-size = Vector3(0.6, 0.6, 0.6)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_caixa"]
-albedo_color = Color(0.65, 0.45, 0.25, 1)
 
 [node name="Caixa" type="RigidBody3D"]
 collision_layer = 16
@@ -20,5 +14,3 @@ script = ExtResource("1")
 shape = SubResource("BoxShape3D_caixa")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_caixa")
-surface_material_override/0 = SubResource("StandardMaterial3D_caixa")

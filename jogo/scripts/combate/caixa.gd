@@ -9,6 +9,9 @@ var _vida_atual: float
 
 func _ready() -> void:
 	_vida_atual = vida
+	var malha: MeshInstance3D = $MeshInstance3D
+	malha.mesh = ModelosProps.caixa(0.6)
+	malha.material_override = GeometriaLowPoly.material_toon(0.2, 3)
 	add_to_group("recebe_dano")
 
 

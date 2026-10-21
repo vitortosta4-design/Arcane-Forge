@@ -15,16 +15,23 @@ var _queimando := false
 
 func _ready() -> void:
 	add_to_group("inflamavel")
+	_mesh.mesh = ModelosProps.barril(0.35, 0.8, true)
+	_mesh.material_override = GeometriaLowPoly.material_toon(0.2, 3)
 
 
 func pegar_fogo() -> void:
 	if _queimando:
 		return
 	_queimando = true
-	if _mesh and _mesh.get_surface_override_material(0):
-		_mesh.get_surface_override_material(0).albedo_color = Color(1, 0.3, 0.05)
-		_mesh.get_surface_override_material(0).emission_enabled = true
-		_mesh.get_surface_override_material(0).emission = Color(1, 0.25, 0)
+	# Camada laranja brilhante por cima da madeira (o material toon não tem
+	# emissão, então o brilho vem por cima, como nos estados).
+	var brasa := StandardMaterial3D.new()
+	brasa.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	brasa.albedo_color = Color(1, 0.35, 0.05, 0.7)
+	brasa.emission_enabled = true
+	brasa.emission = Color(1, 0.3, 0)
+	brasa.emission_energy_multiplier = 2.0
+	_mesh.material_overlay = brasa
 	var timer := get_tree().create_timer(tempo_ate_explodir_s)
 	timer.timeout.connect(_explodir)
 
