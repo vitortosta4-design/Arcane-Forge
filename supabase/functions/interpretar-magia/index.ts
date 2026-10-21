@@ -47,6 +47,14 @@ ou mais, numa lista):
   Use para qualquer ideia de curar, recuperar ou restaurar.
 - "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para
   qualquer ideia de proteção, armadura ou barreira.
+- "invocacao": cria uma criatura que persegue e ataca o inimigo mais
+  próximo sozinha. Campos: "corpo" ("ave" | "quadrupede" | "verme" |
+  "bolha"), "material" (mesma lista do projétil), "escala" (ex.: 0.7 para
+  menor que o normal, 1.5 para maior), "vida", "duracao_s" e
+  "dano_contato" (dano que ela causa a cada ataque). "comportamento" tem
+  que ser sempre "perseguir_inimigo_proximo" — é o único que existe. Use
+  para qualquer ideia de invocar, trazer ou criar uma criatura para
+  ajudar.
 
 Uma magia pode combinar mais de um componente na mesma lista (ex.: um
 projétil E um escudo ao mesmo tempo), mas só se a frase descrever as duas
@@ -99,6 +107,16 @@ maioria das magias usa só um dos dois):
       "tipo": "escudo",
       "reducao": 0.4,
       "duracao_s": 4
+    },
+    {
+      "tipo": "invocacao",
+      "corpo": "ave",
+      "material": "pedra",
+      "escala": 0.7,
+      "comportamento": "perseguir_inimigo_proximo",
+      "vida": 20,
+      "duracao_s": 6,
+      "dano_contato": 5
     }
   ],
   "legenda": "frase curta em português descrevendo o que foi entendido"
