@@ -115,6 +115,7 @@ func _ready() -> void:
 	await _testar_teleporte_faz_um_puf_na_saida_e_na_chegada()
 	_testar_interpretador_reconhece_cegueira()
 	await _testar_teleporte_da_clarao_na_tela_do_mago()
+	_testar_validador_aceita_nomes_com_acento_e_maiuscula()
 
 	print("")
 	if _falhas == 0:
@@ -1666,3 +1667,21 @@ func _testar_teleporte_da_clarao_na_tela_do_mago() -> void:
 	_afirmar("o clarão some sozinho", clarao.color.a < 0.01)
 	mago.queue_free()
 	hud.queue_free()
+
+
+## A IA escreve em português: pode mandar "explosão", "Área", "Água".
+## Antes isso virava "não entendi" sem ninguém perceber (custo 0).
+func _testar_validador_aceita_nomes_com_acento_e_maiuscula() -> void:
+	var v := Validador.validar_ficha({"componentes": [
+		{"tipo": "Projétil", "material": "Água", "forma": " Cubo ", "ao_impactar": [{"tipo": "explosão", "dano": 10}]},
+		{"tipo": "Área", "duracao_s": 3, "nome_estado": "Molhado"},
+		{"tipo": "invocação", "corpo": "Quadrúpede", "vida": 10, "duracao_s": 3}
+	]})
+	var comps: Array = v["componentes"]
+	_afirmar("\"Projétil\" vira projetil", comps[0]["tipo"] == "projetil")
+	_afirmar("\"Água\" vira o material agua", comps[0]["material"] == "agua")
+	_afirmar("\" Cubo \" vira a forma cubo", comps[0]["forma"] == "cubo")
+	_afirmar("\"explosão\" no impacto vira explosao e continua valendo", comps[0]["ao_impactar"].size() == 1 and comps[0]["ao_impactar"][0]["tipo"] == "explosao")
+	_afirmar("\"Área\" com \"Molhado\" vira área de molhar", comps[1]["tipo"] == "area" and comps[1]["nome_estado"] == "molhado")
+	_afirmar("\"Quadrúpede\" vira o corpo quadrupede", comps[2]["corpo"] == "quadrupede")
+	_afirmar("ficha com acentos tem custo de mana de verdade", Validador.calcular_custo_mana(v) > 0.0)

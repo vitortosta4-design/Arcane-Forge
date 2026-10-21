@@ -91,12 +91,17 @@ static func validar_ficha(ficha: Dictionary) -> Dictionary:
 
 static func _validar_componente(componente: Dictionary) -> Dictionary:
 	var c := componente.duplicate(true)
+	# A IA escreve em português e pode "corrigir" o nome: "explosão",
+	# "Área", "invocação". Sem normalizar, nada disso batia com as listas e
+	# a magia virava "não entendi" (conferido de propósito).
+	if typeof(c.get("tipo")) == TYPE_STRING:
+		c["tipo"] = _normalizar(c["tipo"])
 	if c.get("tipo") == "projetil":
 		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
 		c["forma"] = _escolher_valido(_como_texto(c.get("forma")), FORMAS_VALIDAS, "esfera")
 		c["velocidade"] = clampf(_como_numero(c.get("velocidade"), 10.0), 1.0, VELOCIDADE_MAXIMA)
 		c["ao_impactar"] = _lista_de_dicionarios(c.get("ao_impactar")) \
-			.filter(func(e): return e.get("tipo") in EFEITOS_DE_IMPACTO) \
+			.filter(func(e): return _normalizar(_como_texto(e.get("tipo"))) in EFEITOS_DE_IMPACTO) \
 			.slice(0, MAXIMO_EFEITOS_DE_IMPACTO) \
 			.map(_validar_componente)
 	elif c.get("tipo") == "explosao":
@@ -128,7 +133,7 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["dano_por_s"] = clampf(_como_numero(c.get("dano_por_s"), 0.0), 0.0, DANO_AREA_POR_S_MAXIMO)
 		c["material"] = _escolher_valido(_como_texto(c.get("material")), MATERIAIS_VALIDOS, "pedra")
 		# Estado é opcional aqui: fora da lista vira "nenhum", não um padrão.
-		var estado := _como_texto(c.get("nome_estado"))
+		var estado := _normalizar(_como_texto(c.get("nome_estado")))
 		c["nome_estado"] = estado if estado in ESTADOS_VALIDOS else ""
 	elif c.get("tipo") == "parede":
 		c["largura_m"] = clampf(_como_numero(c.get("largura_m"), 3.0), 0.5, LARGURA_PAREDE_MAXIMA)
@@ -201,9 +206,24 @@ static func cor_para_material(material: String) -> Color:
 
 
 static func _escolher_valido(valor: String, lista: Array, padrao: String) -> String:
-	if valor in lista:
-		return valor
+	var normalizado := _normalizar(valor)
+	if normalizado in lista:
+		return normalizado
 	return padrao
+
+
+const _SEM_ACENTO := {
+	"á": "a", "à": "a", "â": "a", "ã": "a", "é": "e", "ê": "e", "í": "i",
+	"ó": "o", "ô": "o", "õ": "o", "ú": "u", "ü": "u", "ç": "c",
+}
+
+
+## Minúsculas, sem acento e sem espaço nas pontas: "  Água " vira "agua".
+static func _normalizar(texto: String) -> String:
+	var resultado := texto.strip_edges().to_lower()
+	for letra in _SEM_ACENTO:
+		resultado = resultado.replace(letra, _SEM_ACENTO[letra])
+	return resultado
 
 
 ## O custo de mana é sempre calculado pelo jogo a partir dos componentes já
