@@ -73,7 +73,10 @@ func _explodir(alvo: Node) -> void:
 			)
 		elif efeito.get("tipo") == "estado":
 			_aplicar_estado(efeito, alvo)
+		elif efeito.get("tipo") == "area":
+			Executor.criar_area(efeito, Executor.ponto_no_chao(self, global_position), dono, aliados, get_parent())
 	queue_free()
+
 
 
 ## Estados (proposta técnica, seção 3: queimando, molhado, eletrizado, cego,

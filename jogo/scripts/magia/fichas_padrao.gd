@@ -260,3 +260,43 @@ static func faisca() -> Dictionary:
 		],
 		"legenda": "uma faísca que dá choque, e espalha se o alvo estiver molhado"
 	}
+
+
+## Área persistente no ponto de impacto (proposta técnica, seção 3): a bola
+## cai e deixa uma poça que queima quem pisar, e acende barris por perto.
+static func poca_de_lava() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Poça de Lava",
+		"frase_original": "bola que deixa uma poça de lava",
+		"natureza": "neutra",
+		"ingredientes": ["fogo"],
+		"componentes": [
+			{
+				"tipo": "projetil",
+				"forma": "esfera",
+				"material": "fogo",
+				"velocidade": 14.0,
+				"ao_impactar": [
+					{"tipo": "area", "raio_m": 2.0, "duracao_s": 5.0, "dano_por_s": 4.0, "nome_estado": "queimando", "material": "fogo"}
+				]
+			}
+		],
+		"legenda": "uma bola que deixa uma poça de lava no chão"
+	}
+
+
+## Área persistente aos pés de quem conjurou: molha quem chegar perto,
+## preparando o terreno para a faísca.
+static func nuvem_de_chuva() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Nuvem de Chuva",
+		"frase_original": "nuvem de chuva ao meu redor",
+		"natureza": "neutra",
+		"ingredientes": ["agua"],
+		"componentes": [
+			{"tipo": "area", "raio_m": 3.0, "duracao_s": 6.0, "dano_por_s": 0.0, "nome_estado": "molhado", "material": "agua"}
+		],
+		"legenda": "uma chuva em volta de você que encharca quem chegar perto"
+	}

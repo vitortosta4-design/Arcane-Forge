@@ -85,6 +85,18 @@ func _ready() -> void:
 	await _testar_cor_do_estado_some_quando_ele_acaba()
 	await _testar_choque_pisca_e_volta_para_a_cor_de_baixo()
 	await _testar_hud_mostra_estados_do_mago()
+	_testar_validador_corta_area()
+	_testar_validador_calcula_custo_da_area()
+	await _testar_area_machuca_so_quem_esta_dentro()
+	await _testar_area_nao_machuca_quem_criou()
+	await _testar_area_aplica_estado_em_quem_esta_dentro()
+	await _testar_area_de_fogo_acende_barril()
+	await _testar_area_some_depois_da_duracao()
+	await _testar_limite_de_tres_areas_por_jogador()
+	await _testar_projetil_deixa_area_no_chao()
+	await _testar_area_no_topo_da_ficha_nasce_aos_pes_do_mago()
+	_testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida()
+	_testar_interpretador_reconhece_lava_e_chuva()
 
 	print("")
 	if _falhas == 0:
@@ -1227,3 +1239,188 @@ func _testar_hud_mostra_estados_do_mago() -> void:
 	_afirmar("HUD mostra quando o mago está lento", "Lento" in hud.get_node("Estados").text)
 	mago.queue_free()
 	hud.queue_free()
+
+
+## Área persistente (proposta técnica, seção 3).
+func _testar_validador_corta_area() -> void:
+	var c: Dictionary = Validador.validar_ficha({"componentes": [{
+		"tipo": "area", "raio_m": 99.0, "duracao_s": 99.0, "dano_por_s": 99.0,
+		"nome_estado": "cego", "material": "queijo"
+	}]})["componentes"][0]
+	_afirmar("raio da área cortado no limite", c["raio_m"] == Validador.RAIO_AREA_MAXIMO)
+	_afirmar("duração da área cortada no limite", c["duracao_s"] == Validador.DURACAO_MAXIMA_S)
+	_afirmar("dano por segundo da área cortado no limite", c["dano_por_s"] == Validador.DANO_AREA_POR_S_MAXIMO)
+	_afirmar("estado fora da lista vira nenhum (área sem estado)", c["nome_estado"] == "")
+	_afirmar("material fora da lista cai na lista fechada", c["material"] in Validador.MATERIAIS_VALIDOS)
+
+
+func _testar_validador_calcula_custo_da_area() -> void:
+	var sem_dano := Validador.validar_ficha({"componentes": [{"tipo": "area", "duracao_s": 3.0, "nome_estado": "molhado"}]})
+	var com_dano := Validador.validar_ficha({"componentes": [{"tipo": "area", "duracao_s": 3.0, "dano_por_s": 5.0, "nome_estado": "molhado"}]})
+	var longa := Validador.validar_ficha({"componentes": [{"tipo": "area", "duracao_s": 8.0, "dano_por_s": 5.0, "nome_estado": "molhado"}]})
+	_afirmar("área custa mana", Validador.calcular_custo_mana(sem_dano) > 0.0)
+	_afirmar("área com dano custa mais", Validador.calcular_custo_mana(com_dano) > Validador.calcular_custo_mana(sem_dano))
+	_afirmar("área mais longa custa mais", Validador.calcular_custo_mana(longa) > Validador.calcular_custo_mana(com_dano))
+
+
+func _criar_area_de_teste(pos: Vector3, campos: Dictionary, dono: Node = null) -> Node:
+	var componente: Dictionary = Validador.validar_ficha({"componentes": [campos.merged({"tipo": "area"})]})["componentes"][0]
+	return Executor.criar_area(componente, pos, dono, [], self)
+
+
+func _galinha_em(pos: Vector3) -> Node:
+	var galinha: Node = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	galinha.global_position = pos
+	return galinha
+
+
+func _chao_em(pos: Vector3) -> StaticBody3D:
+	var chao := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	forma.shape = BoxShape3D.new()
+	(forma.shape as BoxShape3D).size = Vector3(20, 0.2, 20)
+	chao.add_child(forma)
+	add_child(chao)
+	chao.global_position = pos + Vector3.DOWN * 0.1
+	return chao
+
+
+func _testar_area_machuca_so_quem_esta_dentro() -> void:
+	# Com chão: sem ele a galinha cai uns 8 m em 1 s e sai da altura da área.
+	var chao := _chao_em(Vector3(100, 0, 0))
+	var dentro := _galinha_em(Vector3(100, 0, 0))
+	var fora := _galinha_em(Vector3(105, 0, 0))
+	await get_tree().process_frame
+	var area := _criar_area_de_teste(Vector3(100, 0, 0), {"raio_m": 2.0, "duracao_s": 5.0, "dano_por_s": 4.0})
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_afirmar("área machuca quem está dentro logo no primeiro tick", dentro._vida_atual < dentro.vida)
+	_afirmar("área não machuca quem está fora", fora._vida_atual == fora.vida)
+	var depois_do_primeiro: float = dentro._vida_atual
+	await get_tree().create_timer(1.15).timeout
+	_afirmar("área continua machucando a cada segundo", dentro._vida_atual < depois_do_primeiro)
+	for n in [dentro, fora, area, chao]:
+		n.queue_free()
+
+
+func _testar_area_nao_machuca_quem_criou() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	mago.global_position = Vector3(110, 0, 0)
+	await get_tree().process_frame
+	var area := _criar_area_de_teste(Vector3(110, 0, 0), {"raio_m": 3.0, "duracao_s": 3.0, "dano_por_s": 8.0}, mago)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_afirmar("área não machuca quem a criou", mago.vida_atual == mago.vida_maxima)
+	mago.queue_free()
+	area.queue_free()
+
+
+func _testar_area_aplica_estado_em_quem_esta_dentro() -> void:
+	var galinha := _galinha_em(Vector3(120, 0, 0))
+	await get_tree().process_frame
+	var area := _criar_area_de_teste(Vector3(120, 0, 0), {"raio_m": 2.0, "duracao_s": 3.0, "nome_estado": "molhado", "material": "agua"})
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_afirmar("área de chuva molha quem está dentro", galinha.estados.esta_molhado())
+	galinha.queue_free()
+	area.queue_free()
+
+
+func _testar_area_de_fogo_acende_barril() -> void:
+	var barril: Node = load("res://cenas/barril_inflamavel.tscn").instantiate()
+	add_child(barril)
+	barril.global_position = Vector3(130, 0, 0)
+	await get_tree().process_frame
+	var area := _criar_area_de_teste(Vector3(130.5, 0, 0), {"raio_m": 2.0, "duracao_s": 3.0, "dano_por_s": 2.0, "material": "fogo"})
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_afirmar("área de fogo acende barril dentro dela (etiquetas)", barril._queimando)
+	area.queue_free()
+	await get_tree().process_frame
+	if is_instance_valid(barril):
+		barril.queue_free()
+
+
+func _testar_area_some_depois_da_duracao() -> void:
+	var area := _criar_area_de_teste(Vector3(140, 0, 0), {"duracao_s": 0.2, "dano_por_s": 1.0})
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("área some sozinha depois da duração", not is_instance_valid(area))
+
+
+## Proposta técnica, seção 5: no máximo 3 magias ativas por jogador.
+func _testar_limite_de_tres_areas_por_jogador() -> void:
+	var dono := Node3D.new()
+	var outro := Node3D.new()
+	add_child(dono)
+	add_child(outro)
+	var criadas: Array = []
+	for i in 5:
+		criadas.append(_criar_area_de_teste(Vector3(150 + i * 10, 0, 0), {"duracao_s": 5.0, "dano_por_s": 1.0}, dono))
+	var do_outro := _criar_area_de_teste(Vector3(150, 0, 20), {"duracao_s": 5.0, "dano_por_s": 1.0}, outro)
+	var validas := criadas.filter(func(a): return a != null)
+	_afirmar("no máximo 3 áreas ativas por jogador", validas.size() == Host.LIMITE_AREAS_POR_DONO)
+	_afirmar("o limite é por jogador: outro jogador ainda pode criar", do_outro != null)
+	for a in validas + [do_outro]:
+		a.queue_free()
+	dono.queue_free()
+	outro.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_projetil_deixa_area_no_chao() -> void:
+	var chao := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	forma.shape = BoxShape3D.new()
+	(forma.shape as BoxShape3D).size = Vector3(10, 0.2, 10)
+	chao.add_child(forma)
+	add_child(chao)
+	chao.global_position = Vector3(200, -0.1, 0)
+
+	var projetil: Node = load("res://cenas/magias/projetil.tscn").instantiate()
+	add_child(projetil)
+	projetil.global_position = Vector3(200, 1.5, 0)
+	projetil.ao_impactar = Validador.validar_ficha({"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "area", "duracao_s": 2.0, "dano_por_s": 1.0}]}]})["componentes"][0]["ao_impactar"]
+	await get_tree().physics_frame
+	projetil._explodir(null)
+
+	var areas := get_tree().get_nodes_in_group("area_persistente").filter(func(a): return a.global_position.x > 199.0 and a.global_position.x < 201.0)
+	_afirmar("projétil com área deixa uma área no impacto", areas.size() == 1)
+	if areas.size() == 1:
+		_afirmar("a área nasce no chão, não onde o projétil bateu no ar", absf(areas[0].global_position.y) < 0.05)
+		areas[0].queue_free()
+	chao.queue_free()
+
+
+func _testar_area_no_topo_da_ficha_nasce_aos_pes_do_mago() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	mago.global_position = Vector3(220, 0, 0)
+	await get_tree().process_frame
+	Executor.executar_ficha(FichasPadrao.nuvem_de_chuva(), Vector3(220, 1.6, -1), Vector3.FORWARD, mago, self)
+	var areas := get_tree().get_nodes_in_group("area_persistente").filter(func(a): return a.dono == mago)
+	# O mago já caiu uns milímetros (sem chão na cena de teste): tolerância.
+	_afirmar("área no topo da ficha nasce aos pés de quem conjurou", areas.size() == 1 and areas[0].global_position.distance_to(mago.global_position) < 0.05)
+	for a in areas:
+		a.queue_free()
+	mago.queue_free()
+
+
+func _testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida() -> void:
+	var mago: Node = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	_afirmar(
+		"área sem dano e sem estado conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "area", "duracao_s": 5.0}]})
+	)
+	_afirmar(
+		"área com estado conta como magia de verdade",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "area", "duracao_s": 5.0, "nome_estado": "molhado"}]})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_lava_e_chuva() -> void:
+	_afirmar("interpretador reconhece \"lava\"", Interpretador.interpretar("uma poça de lava").get("nome") == "Poça de Lava")
+	_afirmar("interpretador reconhece \"chuva\"", Interpretador.interpretar("uma nuvem de chuva").get("nome") == "Nuvem de Chuva")

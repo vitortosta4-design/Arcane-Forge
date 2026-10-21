@@ -43,8 +43,17 @@ ou mais, numa lista):
     (choque na hora; em alvo molhado o choque dobra e se espalha para quem
     estiver perto). NÃO use nenhum outro nome de estado (ex.: cego), ainda
     não existe no jogo.
+  - "area": deixa uma área no chão onde o projétil caiu (mesmos campos do
+    componente "area" abaixo), ex.: "uma bola que deixa uma poça de lava".
   Aproxime qualquer ideia de ataque para esse formato (por exemplo, "um
   raio congelante" pode virar um projétil de gelo com "estado": "lento").
+- "area": uma zona no chão que dura alguns segundos e, a cada segundo,
+  afeta quem estiver dentro. Campos: "raio_m", "duracao_s", "dano_por_s"
+  (pode ser 0), "nome_estado" (opcional, um dos quatro estados acima) e
+  "material" (mesma lista do projétil). No topo da lista de componentes,
+  a área nasce em volta de quem conjurou (ex.: "uma chuva ao meu redor"),
+  e nunca afeta quem conjurou. Precisa de dano OU estado; sem nenhum dos
+  dois não faz nada.
 - "cura": recupera vida de quem conjurou, na hora, sem precisar de alvo.
   Use para qualquer ideia de curar, recuperar ou restaurar.
 - "escudo": reduz o dano que quem conjurou recebe, por um tempo. Use para
@@ -115,6 +124,14 @@ maioria das magias usa só um dos dois):
       "tipo": "escudo",
       "reducao": 0.4,
       "duracao_s": 4
+    },
+    {
+      "tipo": "area",
+      "raio_m": 3,
+      "duracao_s": 6,
+      "dano_por_s": 0,
+      "nome_estado": "molhado",
+      "material": "agua"
     },
     {
       "id": "pombo",

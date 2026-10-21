@@ -172,6 +172,8 @@ func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 		return true
 	if tipo == "lancador" and _componente_tem_efeito_real(componente.get("projetil", {})):
 		return true
+	if tipo == "area" and componente.get("duracao_s", 0.0) > 0.0 and (componente.get("dano_por_s", 0.0) > 0.0 or componente.get("nome_estado", "") != ""):
+		return true
 	for efeito in (componente.get("ao_impactar", []) as Array):
 		if _componente_tem_efeito_real(efeito):
 			return true
