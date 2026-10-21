@@ -37,6 +37,14 @@ func _ready() -> void:
 	await _testar_cura_nao_passa_do_teto_de_vida()
 	await _testar_ficha_so_com_cura_zero_conta_como_nao_entendida()
 	_testar_interpretador_reconhece_cura()
+	_testar_validador_corta_escudo_acima_do_limite()
+	_testar_validador_calcula_custo_de_mana_do_escudo()
+	await _testar_executor_aplica_escudo_no_dono_da_ficha()
+	await _testar_escudo_reduz_dano_recebido()
+	await _testar_escudo_mais_forte_nao_e_substituido_por_um_mais_fraco()
+	await _testar_escudo_expira_depois_da_duracao()
+	_testar_ficha_so_com_escudo_sem_duracao_conta_como_nao_entendida()
+	_testar_interpretador_reconhece_escudo()
 
 	print("")
 	if _falhas == 0:
@@ -494,3 +502,97 @@ func _testar_interpretador_reconhece_cura() -> void:
 	var ficha := Interpretador.interpretar("quero uma luz de CURA para mim")
 	_afirmar("interpretador reconhece \"cura\"", not ficha.is_empty())
 	_afirmar("interpretador devolve a ficha de luz curativa", ficha.get("nome") == "Luz Curativa")
+
+
+## Testa o componente "escudo" (proposta técnica, seção 3, primeira leva da
+## Fase 2): mesma regra de corte das outras magias.
+func _testar_validador_corta_escudo_acima_do_limite() -> void:
+	var ficha := {"componentes": [{"tipo": "escudo", "reducao": 5.0, "duracao_s": 999.0}]}
+	var corrigida := Validador.validar_ficha(ficha)
+	var escudo: Dictionary = corrigida["componentes"][0]
+	_afirmar("redução do escudo cortada no limite máximo (nunca 100%)", escudo["reducao"] == Validador.REDUCAO_ESCUDO_MAXIMA)
+	_afirmar("duração do escudo cortada no limite máximo", escudo["duracao_s"] == Validador.DURACAO_MAXIMA_S)
+
+
+func _testar_validador_calcula_custo_de_mana_do_escudo() -> void:
+	var ficha_pequena := Validador.validar_ficha({"componentes": [{"tipo": "escudo", "reducao": 0.2, "duracao_s": 2.0}]})
+	var ficha_grande := Validador.validar_ficha({"componentes": [{"tipo": "escudo", "reducao": 0.8, "duracao_s": 6.0}]})
+	var custo_pequeno := Validador.calcular_custo_mana(ficha_pequena)
+	var custo_grande := Validador.calcular_custo_mana(ficha_grande)
+	_afirmar("escudo custa mana", custo_pequeno > 0.0)
+	_afirmar("escudo maior e mais longo custa mais mana", custo_grande > custo_pequeno)
+
+
+## Testa o caminho completo: Executor lê o componente "escudo" da ficha e
+## chama mago.aplicar_escudo(), em vez de precisar de projétil ou alvo.
+func _testar_executor_aplica_escudo_no_dono_da_ficha() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	Executor.executar_ficha(FichasPadrao.escudo_de_pedra(), Vector3.ZERO, Vector3.FORWARD, mago, self)
+	await get_tree().process_frame
+
+	_afirmar("executor aplicou o escudo no dono da ficha", mago._reducao_escudo > 0.0)
+	mago.queue_free()
+
+
+func _testar_escudo_reduz_dano_recebido() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.aplicar_escudo(0.5, 5.0)
+	mago.receber_dano(20.0, Vector3.ZERO, 0.0)
+	_afirmar("escudo de 50% reduz o dano recebido pela metade", is_equal_approx(mago.vida_atual, 90.0))
+	mago.queue_free()
+
+
+## A proposta técnica não prevê somar escudos (duas magias fracas virando
+## imunidade total). Testa que aplicar um escudo mais fraco por cima de um
+## mais forte não enfraquece a proteção que já estava ativa.
+func _testar_escudo_mais_forte_nao_e_substituido_por_um_mais_fraco() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.aplicar_escudo(0.7, 5.0)
+	mago.aplicar_escudo(0.3, 5.0)
+	_afirmar("escudo mais fraco não substitui o mais forte já ativo", is_equal_approx(mago._reducao_escudo, 0.7))
+	mago.queue_free()
+
+
+func _testar_escudo_expira_depois_da_duracao() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+
+	mago.aplicar_escudo(0.5, 0.05)
+	await get_tree().create_timer(0.2).timeout
+	_afirmar("escudo some depois da duração acabar", mago._reducao_escudo == 0.0)
+	mago.queue_free()
+
+
+func _testar_ficha_so_com_escudo_sem_duracao_conta_como_nao_entendida() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	_afirmar(
+		"escudo sem duração conta como sem componentes",
+		mago._ficha_sem_componentes({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 0.0}]})
+	)
+	_afirmar(
+		"escudo com duração real não conta como vazio",
+		not mago._ficha_sem_componentes({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 5.0}]})
+	)
+	mago.queue_free()
+
+
+func _testar_interpretador_reconhece_escudo() -> void:
+	var ficha := Interpretador.interpretar("quero um ESCUDO para me proteger")
+	_afirmar("interpretador reconhece \"escudo\"", not ficha.is_empty())
+	_afirmar("interpretador devolve a ficha de escudo de pedra", ficha.get("nome") == "Escudo de Pedra")

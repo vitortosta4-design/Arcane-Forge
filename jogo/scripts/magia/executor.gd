@@ -14,6 +14,8 @@ static func executar_ficha(ficha: Dictionary, origem: Vector3, direcao: Vector3,
 			_criar_projetil(componente, origem, direcao, dono, mundo)
 		elif componente.get("tipo") == "cura":
 			_aplicar_cura(componente, dono)
+		elif componente.get("tipo") == "escudo":
+			_aplicar_escudo(componente, dono)
 
 
 static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Vector3, dono: Node, mundo: Node) -> void:
@@ -38,3 +40,10 @@ static func _criar_projetil(componente: Dictionary, origem: Vector3, direcao: Ve
 static func _aplicar_cura(componente: Dictionary, dono: Node) -> void:
 	if dono and dono.has_method("curar"):
 		dono.curar(componente.get("quantidade", 0.0))
+
+
+## Escudo (proposta técnica, seção 3): reduz o dano recebido por quem
+## conjurou, por um tempo, igual à cura não precisa de projétil.
+static func _aplicar_escudo(componente: Dictionary, dono: Node) -> void:
+	if dono and dono.has_method("aplicar_escudo"):
+		dono.aplicar_escudo(componente.get("reducao", 0.0), componente.get("duracao_s", 0.0))

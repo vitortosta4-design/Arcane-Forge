@@ -15,4 +15,6 @@ static func interpretar(frase: String) -> Dictionary:
 		return FichasPadrao.bola_de_fogo()
 	if "cura" in normalizada or "curar" in normalizada:
 		return FichasPadrao.luz_curativa()
+	if "escudo" in normalizada:
+		return FichasPadrao.escudo_de_pedra()
 	return {}

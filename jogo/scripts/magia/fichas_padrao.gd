@@ -46,3 +46,21 @@ static func luz_curativa() -> Dictionary:
 		],
 		"legenda": "uma luz calorosa que cura quem a conjurou"
 	}
+
+
+static func escudo_de_pedra() -> Dictionary:
+	return {
+		"versao_sistema": 1,
+		"nome": "Escudo de Pedra",
+		"frase_original": "escudo de pedra",
+		"natureza": "neutra",
+		"ingredientes": ["pedra"],
+		"componentes": [
+			{
+				"tipo": "escudo",
+				"reducao": 0.5,
+				"duracao_s": 5.0
+			}
+		],
+		"legenda": "uma casca de pedra que reduz o próximo dano"
+	}

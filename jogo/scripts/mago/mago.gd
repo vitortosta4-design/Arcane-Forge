@@ -20,6 +20,7 @@ var modo_camera_primeira_pessoa := true
 var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
 var _aguardando_interpretacao := false
+var _reducao_escudo := 0.0
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -156,6 +157,8 @@ func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 		return true
 	if tipo == "cura" and componente.get("quantidade", 0.0) > 0.0:
 		return true
+	if tipo == "escudo" and componente.get("reducao", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
+		return true
 	for efeito in (componente.get("ao_impactar", []) as Array):
 		if _componente_tem_efeito_real(efeito):
 			return true
@@ -199,7 +202,28 @@ func curar(quantidade: float) -> void:
 	vida_mudou.emit(vida_atual, vida_maxima)
 
 
+## Chamado pelo Executor quando uma ficha tem um componente "escudo"
+## (proposta técnica, seção 3). Guarda só a redução mais forte entre as
+## que já estão ativas, em vez de somar (senão duas magias fracas juntas
+## virariam imunidade total, o que a proposta técnica não prevê).
+func aplicar_escudo(reducao: float, duracao_s: float) -> void:
+	if duracao_s <= 0.0 or reducao <= _reducao_escudo:
+		return
+	_reducao_escudo = reducao
+	var timer := get_tree().create_timer(duracao_s)
+	timer.timeout.connect(_remover_escudo.bind(reducao))
+
+
+## Só zera se o escudo que está expirando ainda for o mais forte: uma
+## magia de escudo mais nova e mais forte, conjurada por cima, não pode
+## ser apagada pela expiração da mais antiga e mais fraca.
+func _remover_escudo(reducao_que_expirou: float) -> void:
+	if _reducao_escudo == reducao_que_expirou:
+		_reducao_escudo = 0.0
+
+
 func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
+	dano *= (1.0 - _reducao_escudo)
 	vida_atual = maxf(0.0, vida_atual - dano)
 	vida_mudou.emit(vida_atual, vida_maxima)
 	if empurrao > 0.0:

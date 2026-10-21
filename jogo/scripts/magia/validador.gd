@@ -13,6 +13,7 @@ const RAIO_EXPLOSAO_MAXIMO := 4.0
 const EMPURRAO_MAXIMO := 6.0
 const VELOCIDADE_MAXIMA := 25.0
 const CURA_MAXIMA := 25.0
+const REDUCAO_ESCUDO_MAXIMA := 0.9 # nunca 100%: escudo reduz dano, não anula
 
 const CUSTO_BASE_PROJETIL := 5.0
 const CUSTO_POR_VELOCIDADE := 0.3
@@ -21,6 +22,9 @@ const CUSTO_POR_DANO := 0.4
 const CUSTO_POR_RAIO := 1.0
 const CUSTO_BASE_CURA := 5.0
 const CUSTO_POR_CURA := 0.5
+const CUSTO_BASE_ESCUDO := 5.0
+const CUSTO_POR_REDUCAO := 20.0
+const CUSTO_POR_DURACAO_ESCUDO := 1.0
 
 
 ## Recebe uma ficha (Dictionary) e devolve uma cópia corrigida, cortando
@@ -53,6 +57,9 @@ static func _validar_componente(componente: Dictionary) -> Dictionary:
 		c["empurrao"] = clampf(_como_numero(c.get("empurrao"), 0.0), 0.0, EMPURRAO_MAXIMO)
 	elif c.get("tipo") == "cura":
 		c["quantidade"] = clampf(_como_numero(c.get("quantidade"), 0.0), 0.0, CURA_MAXIMA)
+	elif c.get("tipo") == "escudo":
+		c["reducao"] = clampf(_como_numero(c.get("reducao"), 0.0), 0.0, REDUCAO_ESCUDO_MAXIMA)
+		c["duracao_s"] = clampf(_como_numero(c.get("duracao_s"), 0.0), 0.0, DURACAO_MAXIMA_S)
 	return c
 
 
@@ -132,4 +139,8 @@ static func _custo_componente(componente: Dictionary) -> float:
 	elif tipo == "cura":
 		custo += CUSTO_BASE_CURA
 		custo += componente.get("quantidade", 0.0) * CUSTO_POR_CURA
+	elif tipo == "escudo":
+		custo += CUSTO_BASE_ESCUDO
+		custo += componente.get("reducao", 0.0) * CUSTO_POR_REDUCAO
+		custo += componente.get("duracao_s", 0.0) * CUSTO_POR_DURACAO_ESCUDO
 	return custo
