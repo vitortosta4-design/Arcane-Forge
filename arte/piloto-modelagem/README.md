@@ -70,3 +70,14 @@ O Vitor achou a v1 sem esmero (formato de quebra-cabeça perfeito, símbolo cola
 - 8 rodadas, comparando runa por runa com recortes da referência (`renders/runas_v2/comparacao_runas_v2.png`).
 
 O que ainda separa da referência: pintura (luz e sombra pintadas na pedra, quinas claras, contorno escuro), brilho com halo (glow) e cor mais viva da pedra acesa. Cor chapada por face chegou no limite; o próximo passo é textura pintada (assar sombra e desgaste de quina) ou testar uma ferramenta de imagem para 3D.
+
+## Lote 3c: runas v3, desenho traçado e luz própria (21/10/2026)
+
+Pedido do Vitor: símbolos copiados da referência (não ícones vetoriais redesenhados) e runa acesa com luz própria.
+
+- `scripts/tracar_runas.py` (OpenCV) recorta cada runa acesa da folha do Vitor, separa os pixels do símbolo por brilho, limpa e salva os contornos com furos em `tracos/tracos.json`, junto com uma versão encolhida do traço (o miolo da brasa). Limiar ajustado por runa e conferido visualmente; pedaços soltos são descartados pela distância ao centro do símbolo.
+- A flecha (arremesso) não traçou bem (o halo grudava a ponta nos rastros); ela usa o desenho da v2.
+- Acesa: sulco na cor saturada, brasa mais clara no fundo, borda tingida e uma luz pontual na cor do elemento (vira `OmniLight3D` no Godot; `runas_v3_acesas.glb` tem 8).
+- Prévia com bloom do compositor e modo de cor "Standard" (o AgX desbotava as cores fortes). No jogo, o halo vem do glow do Godot.
+
+Ainda falta: pintura da pedra (quinas iluminadas, sombra nos cantos) e a pedra apagada tem menos relevo que a referência.

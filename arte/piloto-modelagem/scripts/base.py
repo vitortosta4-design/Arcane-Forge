@@ -151,13 +151,18 @@ def renderizar(caminho, largura=900, altura=900, amostras=48, transparente=False
     cena.render.resolution_x = largura
     cena.render.resolution_y = altura
     cena.render.film_transparent = transparente
-    cena.view_settings.view_transform = "AgX"
-    cena.view_settings.look = "AgX - Punchy"
+    import os as _os
+    if _os.environ.get("COR") == "padrao":
+        cena.view_settings.view_transform = "Standard"
+        cena.view_settings.look = "None"
+    else:
+        cena.view_settings.view_transform = "AgX"
+        cena.view_settings.look = "AgX - Punchy"
     cena.render.filepath = caminho
     bpy.ops.render.render(write_still=True)
 
 
-def exportar_glb(caminho, objs=None, animacoes=False):
+def exportar_glb(caminho, objs=None, animacoes=False, luzes=False):
     bpy.ops.object.select_all(action="DESELECT")
     alvos = objs if objs else [o for o in bpy.data.objects if o.type in ("MESH", "ARMATURE")
                                and o.name != "Chao"]
@@ -165,5 +170,29 @@ def exportar_glb(caminho, objs=None, animacoes=False):
         o.select_set(True)
         for filho in o.children_recursive:
             filho.select_set(True)
+    if luzes:
+        for o in bpy.data.objects:
+            if o.type == "LIGHT" and o.parent and o.parent.select_get():
+                o.select_set(True)
     bpy.ops.export_scene.gltf(filepath=caminho, use_selection=True,
-                              export_animations=animacoes, export_apply=True)
+                              export_animations=animacoes, export_apply=True, export_lights=luzes)
+
+
+def ativar_brilho(forca=0.6, limiar=0.9, tamanho=0.5):
+    """Bloom no compositor (so para a previa; no jogo quem faz e o glow do Godot)."""
+    cena = bpy.context.scene
+    arvore = bpy.data.node_groups.new("Composicao", "CompositorNodeTree")
+    arvore.interface.new_socket("Image", in_out="INPUT", socket_type="NodeSocketColor")
+    arvore.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    ent = arvore.nodes.new("CompositorNodeRLayers")
+    sai = arvore.nodes.new("NodeGroupOutput")
+    gl = arvore.nodes.new("CompositorNodeGlare")
+    gl.inputs["Type"].default_value = "Bloom"
+    gl.inputs["Threshold"].default_value = limiar
+    gl.inputs["Strength"].default_value = forca
+    gl.inputs["Size"].default_value = tamanho
+    arvore.links.new(ent.outputs["Image"], gl.inputs["Image"])
+    arvore.links.new(gl.outputs[0], sai.inputs[0])
+    cena.compositing_node_group = arvore
+    cena.render.compositor_device = "CPU"
+    cena.render.compositor_denoise_device = "CPU"

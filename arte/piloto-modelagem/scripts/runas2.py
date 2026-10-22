@@ -45,6 +45,8 @@ ELEMENTOS = {
     "arremesso": ("#1a8cff", "#9ae0ff", "#4b68b0"),
     "quebrar": ("#d23cff", "#ffc4ff", "#7c4aa2"),
 }
+USAR_TRACO = os.environ.get("DESENHO") != "manual"
+LUZ_W = 0.3
 ORDEM = ["fogo", "agua", "vida", "feroz", "gravitacao", "prende", "arremesso", "quebrar"]
 
 # ---------------------------------------------------------------- silhueta
@@ -252,8 +254,88 @@ def sim_quebrar():
     return pecas
 
 
+import json as _json
+TRACOS = _json.load(open(os.path.join(os.path.dirname(__file__), "..", "tracos", "tracos.json")))
+ALT_RUNA = 2.3    # escala do traco (normalizado pela altura da runa na referencia), ajustada comparando
+
+
+def area_pol(pts):
+    return abs(sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1]
+                   for i in range(len(pts)))) / 2
+
+
+TAM_SIMB = 0.8   # maior dimensao do simbolo, em unidades (a laje tem ~1 de largura)
+
+
+def _centro(pts):
+    return sum(x for x, _ in pts) / len(pts), sum(z for _, z in pts) / len(pts)
+
+
+def pecas_validas(nome):
+    """Tira pedacos soltos: fica o que e grande ou perto do centro de massa do simbolo."""
+    cheios = [p for p in TRACOS[nome]["pecas"] if not p["buraco"]]
+    areas = [area_pol(p["pts"]) for p in cheios]
+    total = sum(areas)
+    mx = sum(_centro(p["pts"])[0] * a for p, a in zip(cheios, areas)) / total
+    mz = sum(_centro(p["pts"])[1] * a for p, a in zip(cheios, areas)) / total
+    ok = []
+    for p, a in zip(cheios, areas):
+        cx, cz = _centro(p["pts"])
+        if math.hypot(cx - mx, cz - mz) < 0.2:
+            ok.append(p)
+    return ok, total
+
+
+def normalizacao(nome):
+    """Centro e escala que levam o traco ao tamanho padrao."""
+    validos, total = pecas_validas(nome)
+    xs = [x for p in validos for x, _ in p["pts"]]
+    zs = [z for p in validos for _, z in p["pts"]]
+    cx, cz = (min(xs) + max(xs)) / 2, (min(zs) + max(zs)) / 2
+    esc = TAM_SIMB / max(max(xs) - min(xs), max(zs) - min(zs))
+    return cx, cz, esc, total, (min(xs), max(xs), min(zs), max(zs))
+
+
+def escalar_peca(p, k):
+    pts = [(x * k, z * k) for x, z in p[1]]
+    if p[0] in ("cheio", "buraco"):
+        return (p[0], pts)
+    if p[0] == "contorno":
+        return ("contorno", pts, p[2] * k)
+    larg = [w * k for w in p[2]] if isinstance(p[2], (list, tuple)) else p[2] * k
+    return ("faixa", pts, larg)
+
+
+DESENHO_MANUAL = {"arremesso"}   # o traco dessa saiu ruim; usa o desenho da v2
+
+
+def sim_tracado(nome):
+    if nome in DESENHO_MANUAL:
+        return [escalar_peca(p, 1.2) for p in SIMBOLOS_V2[nome]()]
+    cx, cz, esc, total, caixa = normalizacao(nome)
+    validos = pecas_validas(nome)[0]
+    pecas = []
+    for p in TRACOS[nome]["pecas"]:
+        if not p["buraco"] and p not in validos:
+            continue
+        pts = [((x - cx) * esc, (z - cz) * esc) for x, z in p["pts"]]
+        pecas.append(("buraco" if p["buraco"] else "cheio", pts))
+    return pecas
+
+
+def miolos_tracados(nome):
+    if nome in DESENHO_MANUAL:
+        return []
+    cx, cz, esc, total, (x0, x1, z0, z1) = normalizacao(nome)
+    dentro = lambda m: all(x0 - 0.01 <= x <= x1 + 0.01 and z0 - 0.01 <= z <= z1 + 0.01 for x, z in m["pts"])  # noqa: E731
+    return [("buraco" if m["buraco"] else "cheio", [((x - cx) * esc, (z - cz) * esc) for x, z in m["pts"]])
+            for m in TRACOS[nome]["miolos"] if dentro(m) and (m["buraco"] or area_pol(m["pts"]) > total * 0.01)]
+
+
+SIMBOLOS_V2 = None  # preenchido abaixo
 SIMBOLOS = {"fogo": sim_fogo, "agua": sim_agua, "vida": sim_vida, "feroz": sim_feroz,
             "gravitacao": sim_gravitacao, "prende": sim_prende, "arremesso": sim_arremesso, "quebrar": sim_quebrar}
+SIMBOLOS_V2 = SIMBOLOS
 
 
 # ---------------------------------------------------------------- 2D -> 3D
@@ -298,23 +380,41 @@ def objeto_de_bm(nome, bm, mat):
     return o
 
 
-def cortador_simbolo(nome, pecas, centro, escala, mat):
-    """Uniao das pecas do simbolo como solidos que atravessam a face da frente."""
+def cortador_simbolo(nome, pecas, centro, escala, mat, y0=None, y1=None):
+    """Uniao das pecas do simbolo como solidos; pecas "buraco" sao tiradas do cortador."""
     y_frente = -ESP / 2
-    y0, y1 = y_frente - 0.02, y_frente + FUNDO
-    objs = []
+    y0 = y_frente - 0.02 if y0 is None else y0
+    y1 = y_frente + FUNDO if y1 is None else y1
+    objs, buracos = [], []
+    tr = lambda pts: [(centro[0] + x * escala, centro[1] + z * escala) for x, z in pts]  # noqa: E731
     for k, p in enumerate(pecas):
         bm = bmesh.new()
-        tr = lambda pts: [(centro[0] + x * escala, centro[1] + z * escala) for x, z in pts]  # noqa: E731
-        if p[0] == "cheio":
-            prisma_cheio(bm, tr(p[1]), y0, y1)
+        if p[0] in ("cheio", "buraco"):
+            if p[0] == "buraco":
+                prisma_cheio(bm, tr(p[1]), y0 - 0.005, y1 + 0.005)
+            else:
+                prisma_cheio(bm, tr(p[1]), y0, y1)
         elif p[0] == "contorno":
             prisma_anel(bm, tr(p[1]), p[2] * escala, y0, y1)
         else:
             larg = p[2]
             larg = [w * escala for w in larg] if isinstance(larg, (list, tuple)) else larg * escala
             prisma_cheio(bm, faixa(tr(p[1]), larg), y0, y1)
-        objs.append(objeto_de_bm(f"{nome}_{k}", bm, mat))
+        o = objeto_de_bm(f"{nome}_{k}", bm, mat)
+        (buracos if p[0] == "buraco" else objs).append(o)
+    if buracos and objs:
+        # junta as pecas cheias e tira os buracos
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in objs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = objs[0]
+        if len(objs) > 1:
+            bpy.ops.object.join()
+        unido = objs[0]
+        booleana(unido, buracos)
+        for h in buracos:
+            bpy.data.objects.remove(h)
+        objs = [unido]
     return objs
 
 
@@ -335,7 +435,7 @@ def booleana(alvo, cortadores, autointersecao=True):
 # ---------------------------------------------------------------- materiais
 def mats_runa(nome, acesa):
     brilho, miolo, tom = ELEMENTOS[nome]
-    tom = misturar(tom, "#736e7c", 0.4)
+    tom = misturar(misturar(tom, "#565265", 0.4), "#000000", 0.18)
     sfx = "acesa" if acesa else "apagada"
     if acesa:
         return {
@@ -345,19 +445,20 @@ def mats_runa(nome, acesa):
                                    emissao=brilho, forca=0.55),
             "lado": base.material(f"R_{nome}_{sfx}_lado", misturar(tom, "#000000", 0.45), rugosidade=0.9,
                                   emissao=brilho, forca=0.06),
-            "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#000000", rugosidade=1.0, emissao=brilho, forca=1.6),
+            "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#000000", rugosidade=1.0, emissao=brilho, forca=2.4),
             "parede": base.material(f"R_{nome}_{sfx}_parede", "#000000", rugosidade=1.0, emissao=miolo, forca=1.3),
             "aura": base.material(f"R_{nome}_{sfx}_aura", misturar(tom, brilho, 0.1), rugosidade=0.8,
                                   emissao=brilho, forca=0.05),
+            "miolo": base.material(f"R_{nome}_{sfx}_miolo", "#000000", rugosidade=1.0, emissao=misturar(miolo, brilho, 0.55), forca=2.2),
             "racha": base.material(f"R_{nome}_{sfx}_racha", misturar(tom, "#000000", 0.6), rugosidade=0.9),
         }
     return {
         "frente": [base.material(f"R_{nome}_{sfx}_frente{i}", c, rugosidade=0.88) for i, c in
-                   enumerate(("#76717f", "#6d6877", "#7c7785"))],
-        "borda": base.material(f"R_{nome}_{sfx}_borda", "#aaa4b8", rugosidade=0.65),
-        "lado": base.material(f"R_{nome}_{sfx}_lado", "#34303f", rugosidade=0.9),
-        "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#1b1a26", rugosidade=0.95),
-        "parede": base.material(f"R_{nome}_{sfx}_parede", "#2b2836", rugosidade=0.95),
+                   enumerate(("#5c586c", "#545064", "#625e72"))],
+        "borda": base.material(f"R_{nome}_{sfx}_borda", "#837d98", rugosidade=0.65),
+        "lado": base.material(f"R_{nome}_{sfx}_lado", "#262232", rugosidade=0.9),
+        "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#0f0d16", rugosidade=0.95),
+        "parede": base.material(f"R_{nome}_{sfx}_parede", "#1a1724", rugosidade=0.95),
         "racha": base.material(f"R_{nome}_{sfx}_racha", "#2a2732", rugosidade=0.9),
         "aura": base.material(f"R_{nome}_{sfx}_aura", "#6a6572", rugosidade=0.88),
     }
@@ -460,8 +561,13 @@ def criar_runa(nome, acesa, local=(0, 0, 0), seed=0, rot=(0, 0, 0)):
         pedra.data.materials.append(m)
     cx, cz = centroide(contorno)
     cz -= 0.02
-    escala = U * 1.2
-    cort = cortador_simbolo(f"Corte_{nome}_{sfx}", SIMBOLOS[nome](), (cx * U, cz * U), escala, mats["fundo"])
+    if USAR_TRACO:
+        escala = U
+        pecas_simbolo = sim_tracado(nome)
+    else:
+        escala = U * 1.2
+        pecas_simbolo = SIMBOLOS[nome]()
+    cort = cortador_simbolo(f"Corte_{nome}_{sfx}", pecas_simbolo, (cx * U, cz * U), escala, mats["fundo"])
     cort += rachaduras(f"Corte_{nome}_{sfx}", contorno, seed, mats["racha"])
     booleana(pedra, cort)
     for c in cort:
@@ -486,6 +592,22 @@ def criar_runa(nome, acesa, local=(0, 0, 0), seed=0, rot=(0, 0, 0)):
             else:
                 f.material_index = idx[mats["lado"].name]
     base.chapado(pedra)
+    if acesa and USAR_TRACO:
+        # brasa: o traco encolhido, encostado no fundo do sulco, bem mais claro
+        y_fundo = -ESP / 2 + FUNDO
+        brasa = cortador_simbolo(f"Brasa_{nome}", miolos_tracados(nome), (cx * U, cz * U), escala,
+                                 mats["miolo"], y0=y_fundo - 0.0022, y1=y_fundo - 0.0004)
+        for o in brasa:
+            base.chapado(o)
+            o.parent = pedra
+        # luz propria: ilumina a pedra em volta e o que estiver perto
+        bpy.ops.object.light_add(type="POINT", location=(cx * U, -ESP / 2 - 0.035, cz * U))
+        luz = bpy.context.active_object
+        luz.name = f"Luz_{nome}"
+        luz.data.energy = LUZ_W
+        luz.data.shadow_soft_size = 0.02
+        luz.data.color = base.cor(ELEMENTOS[nome][0])[:3]
+        luz.parent = pedra
     pedra.location = local
     pedra.rotation_euler = rot
     return pedra
@@ -516,6 +638,10 @@ def palco():
     c.data.size = 3
     c.rotation_euler = (math.radians(-45), 0, 0)
     cena.render.film_transparent = True
+    if os.environ.get("COR") == "padrao":
+        pass
+    if os.environ.get("SEM_BRILHO") != "1":
+        base.ativar_brilho(forca=0.45, limiar=1.0, tamanho=0.55)
 
 
 def camera_orto(centro, escala, largura, altura):
@@ -538,7 +664,7 @@ def principal():
             base.limpar_cena()
             objs = [criar_runa(n, acesa, local=(i * 0.4, 0, 0), seed=i) for i, n in enumerate(ORDEM)]
             print("TRIANGULOS_RUNAS" + arq, base.contar_triangulos(objs))
-            base.exportar_glb(SAIDA + arq + ".glb", objs)
+            base.exportar_glb(SAIDA + arq + ".glb", objs, luzes=acesa)
         return
     palco()
     if MODO == "comparar":
