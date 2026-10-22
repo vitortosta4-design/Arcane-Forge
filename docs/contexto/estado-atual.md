@@ -17,7 +17,7 @@ Atualizado em: 22/10/2026
 3. Quando a referência do HUD chegar: aplicar o estilo nas peças que já estão no lugar.
 
 ## Problemas conhecidos
-- Teste instável: "área continua machucando a cada segundo" às vezes falha. Não apareceu nas rodadas desta sessão.
+- Teste instável "área continua machucando a cada segundo": nunca reproduzido na nuvem (12 rodadas, 6 em paralelo, e com engasgo simulado). O teste foi deixado mais robusto (espera em quadros de física) e agora diz a distância da galinha se falhar. Se falhar no PC do Vitor, anotar essa distância.
 - Névoa volumétrica e SDFGI só aparecem no PC do Vitor (a nuvem renderiza em Compatibility).
 
 ## Pendente do Vitor

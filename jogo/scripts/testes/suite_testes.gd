@@ -1346,8 +1346,18 @@ func _testar_area_machuca_so_quem_esta_dentro() -> void:
 	_afirmar("área machuca quem está dentro logo no primeiro tick", dentro._vida_atual < dentro.vida)
 	_afirmar("área não machuca quem está fora", fora._vida_atual == fora.vida)
 	var depois_do_primeiro: float = dentro._vida_atual
-	await get_tree().create_timer(1.15).timeout
-	_afirmar("área continua machucando a cada segundo", dentro._vida_atual < depois_do_primeiro)
+	# Teste instável conhecido desde 21/10/2026, nunca reproduzido na nuvem.
+	# Agora espera em quadros de FÍSICA, o mesmo relógio da área (ela conta o
+	# tique no _physics_process), até 1,5 s, em vez de um timer de relógio. Se
+	# falhar de novo, a mensagem diz onde a galinha estava: a outra suspeita é
+	# ela sair andando atrás de algum mago vivo e deixar o disco de 2 m.
+	var quadros_por_s := Engine.physics_ticks_per_second
+	for i in roundi(quadros_por_s * 1.5):
+		await get_tree().physics_frame
+		if dentro._vida_atual < depois_do_primeiro:
+			break
+	_afirmar("área continua machucando a cada segundo (galinha a %.1f m do centro)" % dentro.global_position.distance_to(Vector3(100, 0, 0)),
+		dentro._vida_atual < depois_do_primeiro)
 	for n in [dentro, fora, area, chao]:
 		n.queue_free()
 
