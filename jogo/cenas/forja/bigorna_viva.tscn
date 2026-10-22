@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/forja/bigorna_viva.gd" id="1_bigorna"]
+[ext_resource type="PackedScene" path="res://assets/modelos/forja/bigorna_viva.glb" id="2_modelo"]
+
+[node name="BigornaViva" type="Node3D"]
+script = ExtResource("1_bigorna")
+
+[node name="Modelo" parent="." instance=ExtResource("2_modelo")]

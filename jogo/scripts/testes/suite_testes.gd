@@ -120,6 +120,10 @@ func _ready() -> void:
 	await _testar_caixa_e_barril_de_madeira()
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
+	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
+	await _testar_bigorna_troca_de_expressao_com_animacao()
+	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
+	await _testar_bigorna_ignora_pedido_invalido_ou_no_meio_da_troca()
 
 	print("")
 	if _falhas == 0:
@@ -1811,3 +1815,76 @@ func _testar_hud_tem_mira_no_centro() -> void:
 	var mira: Control = hud.get_node_or_null("Mira")
 	_afirmar("HUD tem mira presa no centro da tela", mira != null and mira.anchor_left == 0.5 and mira.anchor_top == 0.5)
 	hud.free()
+
+
+# ---------------------------------------------------------------- bigorna viva
+
+func _criar_bigorna() -> BigornaViva:
+	var b: BigornaViva = load("res://cenas/forja/bigorna_viva.tscn").instantiate()
+	add_child(b)
+	await get_tree().process_frame
+	return b
+
+
+func _rostos_visiveis(b: BigornaViva) -> Array:
+	var vis := []
+	for nome in BigornaViva.EXPRESSOES:
+		var r: Node3D = b.find_child("Rosto_" + nome, true, false)
+		if r and r.visible:
+			vis.append(nome)
+	return vis
+
+
+func _testar_bigorna_comeca_neutra_com_um_rosto_so() -> void:
+	var b := await _criar_bigorna()
+	_afirmar("bigorna começa neutra", b.expressao == "neutro")
+	_afirmar("bigorna mostra só o rosto neutro", _rostos_visiveis(b) == ["neutro"])
+	_afirmar("bigorna tem luzes próprias", b.find_children("*", "OmniLight3D", true, false).size() >= 4)
+	b.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_bigorna_troca_de_expressao_com_animacao() -> void:
+	var b := await _criar_bigorna()
+	var rosto_raiva: Node3D = b.find_child("Rosto_raiva", true, false)
+	var repouso := rosto_raiva.position
+	_afirmar("bigorna aceita trocar para raiva", b.mudar_expressao("raiva"))
+	_afirmar("a troca não é instantânea (há animação)", b.trocando and b.expressao == "neutro")
+	await get_tree().create_timer(BigornaViva.T_ANTECIPA + BigornaViva.T_SALTA * 0.5).timeout
+	_afirmar("no meio da troca o rosto novo está fora do lugar de repouso", rosto_raiva.visible and rosto_raiva.position.distance_to(repouso) > 0.01)
+	await get_tree().create_timer(BigornaViva.DURACAO_TROCA).timeout
+	_afirmar("depois da troca a bigorna está com raiva", b.expressao == "raiva" and not b.trocando)
+	_afirmar("depois da troca só o rosto de raiva aparece", _rostos_visiveis(b) == ["raiva"])
+	_afirmar("o rosto volta exatamente ao lugar", rosto_raiva.position.distance_to(repouso) < 0.001)
+	var corpo: Node3D = b.find_child("Corpo", true, false)
+	_afirmar("o corpo volta ao tamanho normal", corpo.scale.distance_to(Vector3.ONE) < 0.01)
+	b.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_bigorna_raiva_brilha_mais_e_luz_respira() -> void:
+	var b := await _criar_bigorna()
+	var luz: OmniLight3D = b.find_children("*", "OmniLight3D", true, false)[0]
+	var amostras := []
+	for i in 12:
+		await get_tree().create_timer(0.1).timeout
+		amostras.append(luz.light_energy)
+	_afirmar("a luz da bigorna neutra respira (não fica parada)", amostras.max() - amostras.min() > 0.01)
+	var neutra := b.brilho_alvo()
+	b.mudar_expressao("raiva")
+	await get_tree().create_timer(BigornaViva.DURACAO_TROCA + 0.1).timeout
+	_afirmar("com raiva a bigorna brilha mais que neutra", b.brilho_alvo() > neutra * 1.3)
+	b.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_bigorna_ignora_pedido_invalido_ou_no_meio_da_troca() -> void:
+	var b := await _criar_bigorna()
+	_afirmar("expressão desconhecida é recusada", not b.mudar_expressao("chorando"))
+	_afirmar("pedir a expressão atual não faz nada", not b.mudar_expressao("neutro"))
+	b.mudar_expressao("rindo")
+	_afirmar("outra troca no meio da animação é recusada", not b.mudar_expressao("raiva"))
+	await get_tree().create_timer(BigornaViva.DURACAO_TROCA + 0.1).timeout
+	_afirmar("a primeira troca termina normalmente", b.expressao == "rindo" and _rostos_visiveis(b) == ["rindo"])
+	b.queue_free()
+	await get_tree().process_frame
