@@ -220,7 +220,7 @@ Objetivo: chegar o quanto antes ao ciclo jogável (explorar, achar runas, chegar
 - Mapa ainda fixo: clareira, caverna e uma área nova.
 - Fecha com o segundo teste com o amigo.
 
-**Fase 5 · Acabamento visual:** texturas pintadas pelo Vitor (runa como piloto), medalhão definitivo (precisa de referência, ADR-033), caverna mística de verdade, animações expressivas do mago.
+**Fase 5 · Acabamento visual:** texturas pintadas pelo Vitor (runa como piloto), estilo do HUD (precisa da referência do HUD, ADR-039), medalhão definitivo (precisa de referência, ADR-033), caverna mística de verdade, animações expressivas do mago.
 
 **Fase 6 · Áudio:** lista de gravações para o Vitor, com duração e formato de cada uma (ADR-028).
 
