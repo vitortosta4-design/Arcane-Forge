@@ -78,3 +78,8 @@ Prints padrão (`ferramentas/tirar_print.sh ... --espera 4`):
 | Depois (3 prints) | 0,60 a 0,64 | 0,13 a 0,17 | 1 a 2% | 1% | 2/4 |
 
 Brilho e brancos estourados resolvidos. Contraste e áreas escuras **não** se resolvem só com luz: o chão plano ocupa metade da tela e recebe a mesma luz em todo lugar. Na referência, os escuros vêm de sombra de árvores sobre o caminho, moldura no primeiro plano e lados sombreados de volumes grandes, ou seja, dos itens 5 e 7. Evidências em `evidencias/fase-2/luz-paleta/`.
+
+## Tochas no muro de arcos (escolha 3c do Vitor, 22/10/2026)
+Com o sol novo, o muro de arcos fica em contraluz. Em vez de girar o sol, duas tochas em frente aos pilares 1 e 3 (`clareira.gd`, `_criar_tochas`) jogam luz quente nos pilares e estandartes, como na referência. Luz pontual **sem sombra** (custo), chama que treme por código e chama de cones com cor clara. Prints: `depois_tochas_ruinas.png` e `tocha_ruina_perto.png`.
+
+Limitação: no render da nuvem (Compatibility) a emissão da chama não aparece e não há halo de brilho; só no PC, em Forward+, dá para julgar o glow. A chama de cones é provisória; partículas ficam para a Fase 5.

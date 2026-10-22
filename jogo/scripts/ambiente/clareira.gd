@@ -38,12 +38,19 @@ const COR_TELHADO := Color(0.36, 0.3, 0.72)
 ## do chão, para o fundo "descansar" e o perto ganhar destaque.
 const COR_MONTANHA := Color(0.36, 0.46, 0.52)
 const COR_NEVE := Color(0.72, 0.74, 0.8)
+## Tochas no muro de arcos (ADR-036, escolha 3c do Vitor): com o sol vindo de
+## oeste-sudoeste o muro fica em contraluz, e a luz quente das tochas devolve
+## o foco às ruínas, como na referência.
+const COR_TOCHA := Color(1.0, 0.6, 0.28)
+const ENERGIA_TOCHA := 2.6
+const ALCANCE_TOCHA := 7.5
 
 var _ruido := FastNoiseLite.new()
 var _ruido_morros := FastNoiseLite.new()
 var _rng := RandomNumberGenerator.new()
 var _material := GeometriaLowPoly.material_toon(0.25, 3)
 var _ilhas: Array[Node3D] = []
+var _luzes_tocha: Array[OmniLight3D] = []
 var _tempo := 0.0
 
 
@@ -61,6 +68,7 @@ func _ready() -> void:
 	_criar_rochas()
 	_criar_grama()
 	_criar_ruinas()
+	_criar_tochas()
 	_criar_fundo()
 
 
@@ -69,6 +77,10 @@ func _process(delta: float) -> void:
 	for i in _ilhas.size():
 		var ilha := _ilhas[i]
 		ilha.position.y = ilha.get_meta("altura_base") + sin(_tempo * 0.4 + i * 2.1) * 1.2
+	# Chama tremulando: duas ondas fora de compasso, para não parecer pisca-pisca.
+	for i in _luzes_tocha.size():
+		var luz := _luzes_tocha[i]
+		luz.light_energy = ENERGIA_TOCHA * (1.0 + sin(_tempo * 9.0 + i * 1.7) * 0.07 + sin(_tempo * 23.0 + i) * 0.04)
 
 
 # --- Relevo ---------------------------------------------------------------
@@ -402,6 +414,82 @@ func _estandarte(st: SurfaceTool, topo: Vector3, giro: Basis) -> void:
 	GeometriaLowPoly.anexar(st, GeometriaLowPoly.cubo(Vector3(0.8, 0.08, 0.1)), Transform3D(giro, pos), COR_DOURADO)
 	var losango := Transform3D(giro * Basis(Vector3(0, 0, 1), PI / 4.0), pos + Vector3.DOWN * 0.7 + frente * 0.04)
 	GeometriaLowPoly.anexar(st, GeometriaLowPoly.cubo(Vector3(0.3, 0.3, 0.04)), losango, COR_DOURADO)
+
+
+func _criar_tochas() -> void:
+	# Em frente aos pilares 1 e 3 do muro de arcos, virado para o centro.
+	var de := Vector3(-20.0, 0, -3.0)
+	var ate := Vector3(-9.0, 0, -19.0)
+	var direcao := (ate - de).normalized()
+	var para_centro := Vector3(-direcao.z, 0, direcao.x)
+	if para_centro.dot(-(de + ate) / 2.0) < 0.0:
+		para_centro = -para_centro
+	var vao := (ate - de).length() / 4.0
+	for k in [1, 3]:
+		var p: Vector3 = de + direcao * vao * k + para_centro * 1.3
+		_tocha(_no_chao(p.x, p.z))
+
+
+func _tocha(base: Vector3) -> void:
+	var G := GeometriaLowPoly
+	var tocha := Node3D.new()
+	tocha.name = "TochaRuina"
+	tocha.position = base
+	add_child(tocha)
+
+	var st := G.nova()
+	G.anexar(st, G.cilindro(0.1, 0.07, 1.7, 6), Transform3D(Basis(), Vector3.UP * 0.85), COR_TRONCO * 0.85)
+	G.anexar(st, G.cilindro(0.1, 0.1, 0.08, 6), Transform3D(Basis(), Vector3.UP * 1.25), Color(0.28, 0.27, 0.29))
+	G.anexar(st, G.cilindro(0.3, 0.12, 0.22, 7), Transform3D(Basis(), Vector3.UP * 1.78), Color(0.28, 0.27, 0.29))
+	var suporte := MeshInstance3D.new()
+	suporte.mesh = G.finalizar(st)
+	suporte.material_override = _material
+	tocha.add_child(suporte)
+
+	# Chama: cone laranja por fora e cone amarelo por dentro, com brilho
+	# próprio acima de 1,0 (camada 4 da paleta: o glow pega só nela).
+	var chama_st := G.nova()
+	# Labareda: cone grande + duas línguas tortas dos lados + miolo amarelo.
+	G.anexar(chama_st, G.cilindro(0.24, 0.0, 0.62, 6), Transform3D(Basis(), Vector3.UP * 2.12), Color(1.0, 0.58, 0.14))
+	for lado in [-1.0, 1.0]:
+		var torto := Basis(Vector3(0, 0, 1), -lado * 0.35)
+		G.anexar(chama_st, G.cilindro(0.12, 0.0, 0.42, 5), Transform3D(torto, Vector3(lado * 0.16, 2.02, 0.03)), Color(1.0, 0.7, 0.2))
+	G.anexar(chama_st, G.cilindro(0.13, 0.0, 0.4, 6), Transform3D(Basis(Vector3.UP, 0.5), Vector3.UP * 2.02), Color(1.0, 0.97, 0.7))
+	var chama := MeshInstance3D.new()
+	chama.name = "Chama"
+	chama.mesh = G.finalizar(chama_st)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.5, 0.12)
+	mat.emission_energy_multiplier = 4.0
+	chama.material_override = mat
+	chama.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	tocha.add_child(chama)
+
+	# Sem sombra de propósito: luz pontual com sombra redesenha a cena em
+	# volta várias vezes (auditoria, seção B).
+	var luz := OmniLight3D.new()
+	luz.position = Vector3.UP * 2.2
+	luz.light_color = COR_TOCHA
+	luz.light_energy = ENERGIA_TOCHA
+	luz.omni_range = ALCANCE_TOCHA
+	luz.omni_attenuation = 1.2
+	tocha.add_child(luz)
+	_luzes_tocha.append(luz)
+
+	var corpo := StaticBody3D.new()
+	corpo.collision_layer = 1
+	corpo.collision_mask = 0
+	var forma := CylinderShape3D.new()
+	forma.radius = 0.2
+	forma.height = 1.9
+	var c := CollisionShape3D.new()
+	c.shape = forma
+	c.position = Vector3.UP * 0.95
+	corpo.add_child(c)
+	tocha.add_child(corpo)
 
 
 # --- Fundo: montanhas, castelo, cachoeira, ilhas e nuvens --------------------
