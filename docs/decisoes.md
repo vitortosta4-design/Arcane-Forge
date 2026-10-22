@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 22/10/2026 (ADR-036, notas da forja)
+Última atualização: 22/10/2026 (ADR-037)
 
 ---
 
@@ -340,6 +340,15 @@ Arte conceitual gerada por IA a pedido do Vitor.
   - Criar a skill `personagem-low-poly` (`.claude/skills/`) com o roteiro fixo de personagem.
 - **Consequências:** névoa volumétrica ficou bem mais fraca (0,03 para 0,005) para não lavar a arena quando ligar de verdade no Forward+; precisa do olho do Vitor. A meta de FPS agora se mede com `ferramentas\medir_fps.bat` no PC com a RTX 2060.
 - **Fácil de mudar?** Sim. Renderizador é uma linha; luz e paleta são números.
+
+## ADR-037 · Agente crítico com força de cliente
+**Status:** Aprovada (22/10/2026, pedido do Vitor)
+
+- **Problema:** as entregas visuais saíam "boas o bastante" pelo olho de quem fez. O Vitor quer alguém que critique sem dó, compare com as referências e diga onde estamos e para onde vamos.
+- **Escolha:** um quarto agente, o **crítico** (`.claude/agents/critico.md`), no papel do jogador chato que critica tudo na Steam. Roda depois de toda entrega visual ou de jogabilidade, dá nota de 0 a 10, lista o que está ruim (do pior para o menos pior) e as 3 mudanças que mais aproximam da referência, e termina com APROVADO ou REPROVADO.
+- **Força:** "cliente tem sempre razão". O Claude principal é o mediador: pode argumentar, mas acata, exceto quando a exigência ferir hardware mínimo (ADR-031), orçamento (ADR-006) ou decisão aprovada; nesses casos leva ao Vitor.
+- **Consequências:** amplia a equipe da ADR-005 (de 3 para 4 especialistas). Gasta cota a cada rodada; para economizar, o crítico só olha prints e medições, não roda o jogo, e é chamado uma vez por entrega, não a cada ajuste.
+- **Fácil de mudar?** Sim.
 
 ---
 
