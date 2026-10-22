@@ -135,6 +135,9 @@ func _ready() -> void:
 	await _testar_quebrar_medalhao_libera_espaco()
 	await _testar_runas_so_sao_gastas_se_o_mago_tiver_todas()
 	await _testar_preso_para_o_movimento_por_pouco_tempo()
+	await _testar_forja_martela_gasta_runas_e_anota_no_grimorio()
+	await _testar_forja_recusa_sem_runas_ou_com_barra_cheia()
+	await _testar_runa_no_mapa_vai_para_a_mochila()
 
 	print("")
 	if _falhas == 0:
@@ -2044,3 +2047,72 @@ func _testar_preso_para_o_movimento_por_pouco_tempo() -> void:
 	await get_tree().create_timer(2.7).timeout
 	_afirmar("preso dura no máximo 2,5 s por aplicação", mago._multiplicador_velocidade() == 1.0)
 	mago.queue_free()
+
+
+func _mago_e_forja_de_teste() -> Array:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	var caminho := "user://teste_grimorio_forja.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(caminho))
+	var forja := Forja.new()
+	forja.grimorio = Grimorio.abrir(caminho)
+	add_child(forja)
+	await get_tree().process_frame
+	return [mago, forja, caminho]
+
+
+func _testar_forja_martela_gasta_runas_e_anota_no_grimorio() -> void:
+	var r := await _mago_e_forja_de_teste()
+	var mago: Node = r[0]
+	var forja: Forja = r[1]
+	for runa in ["vida", "feroz", "fogo", "prende", "feroz"]:
+		mago.coletar_runa(runa)
+	var saida := forja.martelar(mago, ["fogo", "feroz", "vida"])
+	_afirmar("martelar receita especial dá certo", saida["ok"] and saida["medalhao"]["id"] == "leao_de_fogo")
+	_afirmar("é receita nova e foi para o grimório", saida["nova"] and forja.grimorio.conhece("leao_de_fogo"))
+	_afirmar("medalhão entrou no 3º espaço (2 iniciais)", saida["espaco"] == 2 and mago.barra.medalhoes[2]["id"] == "leao_de_fogo")
+	_afirmar("as 3 runas foram gastas", Array(mago.runas) == ["prende", "feroz"])
+	var basica := forja.martelar(mago, ["prende", "feroz"])
+	_afirmar("combinação sem receita também forja", basica["ok"] and not basica["medalhao"]["especial"])
+	_afirmar("mas não entra no grimório", forja.grimorio.descobertas.size() == 1)
+	await get_tree().create_timer(0.7).timeout
+	_afirmar("a bigorna reage ao resultado", forja.bigorna.expressao != "")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(r[2]))
+	mago.queue_free()
+	forja.queue_free()
+
+
+func _testar_forja_recusa_sem_runas_ou_com_barra_cheia() -> void:
+	var r := await _mago_e_forja_de_teste()
+	var mago: Node = r[0]
+	var forja: Forja = r[1]
+	_afirmar("sem runas na mochila não forja", not forja.martelar(mago, ["fogo"])["ok"])
+	mago.coletar_runa("vida")
+	_afirmar("forma sozinha não forja e não gasta a runa", not forja.martelar(mago, ["vida"])["ok"] and mago.runas.size() == 1)
+	mago.barra.equipar(mago.livro.receita_por_id("jato_d_agua"))
+	mago.barra.equipar(mago.livro.receita_por_id("jato_d_agua"))
+	mago.coletar_runa("agua")
+	var cheia := forja.martelar(mago, ["vida", "agua"])
+	_afirmar("barra cheia não forja", not cheia["ok"] and cheia["mensagem"].contains("quebre"))
+	_afirmar("e devolve as runas intactas", mago.runas.size() == 2)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(r[2]))
+	mago.queue_free()
+	forja.queue_free()
+
+
+func _testar_runa_no_mapa_vai_para_a_mochila() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	var runa := RunaColetavel.new()
+	runa.nome = "agua"
+	add_child(runa)
+	runa.global_position = Vector3(30, 0, 30)
+	mago.global_position = Vector3(30, 1.0, 30)
+	for i in 6:
+		await get_tree().physics_frame
+	_afirmar("encostar na runa põe ela na mochila", Array(mago.runas) == ["agua"])
+	mago.queue_free()
+	if is_instance_valid(runa):
+		runa.queue_free()

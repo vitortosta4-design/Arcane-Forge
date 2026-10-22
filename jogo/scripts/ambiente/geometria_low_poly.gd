@@ -26,6 +26,19 @@ static func anexar(st: SurfaceTool, primitiva: PrimitiveMesh, transformada: Tran
 		st.add_vertex(transformada * vertices[i])
 
 
+## Igual a anexar, mas com as faces viradas para dentro (para ver de dentro
+## de uma cúpula, como o teto da caverna).
+static func anexar_invertido(st: SurfaceTool, primitiva: PrimitiveMesh, transformada: Transform3D, cor: Color) -> void:
+	var arrays := primitiva.get_mesh_arrays()
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	st.set_color(cor)
+	for t in range(0, indices.size(), 3):
+		st.add_vertex(transformada * vertices[indices[t + 2]])
+		st.add_vertex(transformada * vertices[indices[t + 1]])
+		st.add_vertex(transformada * vertices[indices[t]])
+
+
 ## Triângulo solto, com a frente virada para quem vê a e b e c em sentido
 ## horário (a convenção do Godot).
 static func triangulo(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, cor: Color) -> void:

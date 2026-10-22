@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 22/10/2026 (ADR-036)
+Última atualização: 22/10/2026 (ADR-036, notas da forja)
 
 ---
 
@@ -467,3 +467,15 @@ O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso
   - **Nuvens mais fofas:** cada nuvem ganhou 3 bolhas a mais (5 → 8) e uma leve sombra cinza nas bolhas de baixo, pra parecer um cúmulo em vez de uma fileira reta de esferas. Orçamento de triângulos da clareira subiu de 91645 para 93535, dentro do limite de 150 mil.
   - **Conferido:** suíte sem regressão nova (a mesma falha de antes some e volta entre uma rodada e outra, mesmo sem eu mexer em nada daquele teste — parece um teste instável por tempo, não ligado a este refino; registrado aqui pra não esconder). Print geral com os ajustes em `evidencias/fase-2/pc_paisagem_v2.png`.
   - **Ainda não mexido:** textura/variação nas pedras e no chão (continua cor lisa por face) — item maior, fica para outra rodada se o Vitor quiser.
+
+## Notas de implementação da Fase 2 nova (ciclo da forja, 22/10/2026)
+- **Livro de receitas** em `jogo/dados/receitas.json` (legível, dá para ajustar sem mexer em código): formas arremesso, vida, prende; elementos fogo, água, feroz; 13 receitas especiais e a versão básica e engraçada para o resto. Teste confere que **todas** as combinações válidas viram magia que custa mana e que a ordem das runas não muda o resultado.
+- **Decidido pelo Claude como gestor:** teclas 1 a 4 conjuram o medalhão na hora (proposta, seção 4) e o botão esquerdo do mouse repete o último medalhão usado (mira com mouse continua natural). Recarga por medalhão vem da receita (1 s na bola de fogo, 12 s no Leão de Fogo); números para ajustar jogando.
+- **Estado novo "preso"** (runa prende): não anda, ainda ataca; no máximo 2,5 s por aplicação, para nunca virar trava eterna.
+- **Runas no mapa:** 7 pontos fixos na clareira, a runa acesa do lote 3c flutuando virada para o jogador, com luz da cor do elemento.
+- **Caverna provisória:** boca de pedra na encosta leste (perto de x 22, z 2) que leva a uma câmara embaixo do mapa, com a bigorna viva, cristais e estalactites. Escavar túnel no relevo fica para a caverna definitiva (Fase 5).
+- **Tela da bigorna (E):** escolher runas, martelar (Espaço), ver o resultado e quebrar medalhão. Não revela a magia antes de martelar, só o nome se a receita já está no grimório. A bigorna ri com receita especial, fica neutra com a básica e fica brava e treme quando não dá.
+- **Grimório** em `user://grimorio.json` (no Windows: `%APPDATA%\Godot\app_userdata\Arcane Forge\`).
+- **Caixa de texto (Q) saiu do jogo;** o código fica guardado em `scripts/ui/caixa_conjuracao.gd`.
+- Evidências: `evidencias/fase-2/forja_*.png`. Testes 292/292.
+- **Falta para fechar a Fase 2:** jogar do começo ao fim no PC (achar runas, forjar 2 medalhões, usar na galinha), FPS na RTX 2060 e ajustar números jogando.

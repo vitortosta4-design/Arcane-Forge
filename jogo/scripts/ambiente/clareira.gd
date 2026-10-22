@@ -219,6 +219,9 @@ func _criar_arvores() -> void:
 		# Ruínas e canto da tocha ficam a noroeste; não plantar em cima.
 		if Vector2(x + 15.0, z + 12.0).length() < 10.0 or Vector2(x - 16.0, z + 12.0).length() < 5.0:
 			continue
+		# Boca da caverna da forja (Caverna.BOCA).
+		if Vector2(x - 22.0, z - 2.0).length() < 7.0:
+			continue
 		var base := _no_chao(x, z)
 		var escala := _rng.randf_range(0.8, 1.5)
 		if _rng.randf() < 0.8:

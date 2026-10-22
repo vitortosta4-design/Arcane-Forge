@@ -57,7 +57,10 @@ func _draw() -> void:
 		y += 20.0
 		var cor: Color = RunaColetavel.CORES.get(nome, Color.WHITE)
 		draw_circle(Vector2(24, y - 5), 6.0, cor)
-		draw_string(_fonte, Vector2(36, y), "%s x%d" % [nome, contagem[nome]], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+		var rotulo: String = nome
+		if mago.livro:
+			rotulo = mago.livro.formas.get(nome, mago.livro.elementos.get(nome, {})).get("nome", nome)
+		draw_string(_fonte, Vector2(36, y), "%s x%d" % [rotulo, contagem[nome]], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 
 
 func _texto_centrado(texto: String, base: Vector2, tamanho: int, cor: Color) -> void:

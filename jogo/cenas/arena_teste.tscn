@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/testes/arena_teste.gd" id="1"]
 [ext_resource type="PackedScene" path="res://cenas/mago.tscn" id="2"]
@@ -6,7 +6,8 @@
 [ext_resource type="PackedScene" path="res://cenas/hud.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://cenas/caixa.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://cenas/barril_inflamavel.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://cenas/caixa_conjuracao.tscn" id="7"]
+[ext_resource type="Script" path="res://scripts/ambiente/caverna.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/ui/forja_ui.gd" id="11"]
 [ext_resource type="PackedScene" path="res://cenas/modulos/clareira.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://cenas/menu_pausa.tscn" id="10"]
@@ -88,6 +89,10 @@ transform = Transform3D(0.7, 0, 0.71, 0, 1, 0, -0.71, 0, 0.7, -13, 0, -13)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 
-[node name="CaixaConjuracao" parent="." instance=ExtResource("7")]
+[node name="Caverna" type="Node3D" parent="."]
+script = ExtResource("7")
+
+[node name="ForjaUI" type="CanvasLayer" parent="."]
+script = ExtResource("11")
 
 [node name="MenuPausa" parent="." instance=ExtResource("10")]
