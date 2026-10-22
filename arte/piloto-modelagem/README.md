@@ -81,3 +81,15 @@ Pedido do Vitor: símbolos copiados da referência (não ícones vetoriais redes
 - Prévia com bloom do compositor e modo de cor "Standard" (o AgX desbotava as cores fortes). No jogo, o halo vem do glow do Godot.
 
 Ainda falta: pintura da pedra (quinas iluminadas, sombra nos cantos) e a pedra apagada tem menos relevo que a referência.
+
+## Lote 4: bigorna refeita (v7, 22/10/2026)
+
+Pedido do Vitor: refazer a bigorna da forja com a mesma análise ponto a ponto das runas. `scripts/bigorna2.py` refaz do zero, comparando lado a lado com a folha dele (`scripts/comparar2.py`), em 10 rodadas.
+
+- Proporções medidas na folha: chifres de ponta a ponta com 4,6 unidades, base de dois degraus com 0,8 de altura, cintura 17% mais alta que a primeira medida, coluna com núcleo de lava, fuste com runas R e 8, travessa de metal e cabeças de martelo grandes. Anel de 8 pedras grossas e pontudas, raio 2,15, inclinado 30°, com caudas de fogo de cometa.
+- Rosto em blocos de pedra (mesmo desenho nas 3 expressões), com sobrancelha saltada. Olhos traçados da referência (`scripts/tracar_bigorna.py`, OpenCV). As bocas do rindo e da raiva foram desenhadas à mão sobre a grade ampliada da folha, porque o interior vermelho-escuro da boca não se separa da pedra iluminada por cor.
+- Atrás do rosto há um nicho com fundo de lava, fogo na garganta e luz pontual. Nas costas, parede de blocos com uma boca de fogo embaixo. Runas nas 4 faces da coluna.
+- Exportado em `modelos/bigorna_viva_v7.glb`: 18.857 triângulos, 4 luzes, animações `Orbita` e `Tremer`, nós `Rosto_neutro`, `Rosto_rindo` e `Rosto_raiva` (o jogo liga um). Conferido no Godot 4.7.2.
+- Comparações em `renders/bigorna_v7/comparacao_v7_vistas.png` e `comparacao_v7_rostos.png`.
+
+O que ainda separa da referência: pintura da pedra (rachaduras escuras, quinas claras, sombra nos cantos), o fogo do anel e da garganta é mais fino e menos volumoso (no jogo, glow e partículas ajudam), a vista de cima não tem o losango no topo da coluna. São 325 malhas soltas; antes de entrar no jogo, juntar por material para cortar chamadas de desenho.
