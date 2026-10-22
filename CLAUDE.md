@@ -6,9 +6,16 @@
 3. Confira em que fase o projeto está e trabalhe só dentro dela.
 
 ## Fase atual
-Fase 2: magia por texto com IA real (o porteiro no Supabase já está ligado em `mago.gd`, com fallback para o interpretador local).
+Transição para a Forja de Runas (ADR-032 a 034, 22/10/2026). A "Fase 2: magia por texto com IA" foi abandonada: não mexer mais no porteiro (Supabase + Groq) nem no `Interpretador`; o código fica guardado sem apagar até o plano novo sair.
 
-A Fase 1 (esqueleto jogável) está praticamente concluída: todos os critérios de aceitação verificáveis por teste e código passam (seção 9 da proposta técnica). Restam só dois critérios que dependem do Vitor jogar e olhar: comparar o canto de atmosfera com a referência visual, e jogar 10 minutos para avaliar se o combate "dá gosto". Não fechar a Fase 1 como concluída até o Vitor confirmar essas duas coisas.
+Prioridade definida pelo Claude como gestor (22/10/2026), nesta ordem:
+1. Reescrever o plano de fases da `docs/proposta-tecnica.md` para a Forja de Runas e levar ao Vitor para aprovar.
+2. Ciclo principal jogável com visual provisório: explorar, achar runas, chegar à bigorna, forjar o medalhão e usar a magia da barra. Meta: testar diversão com o amigo do Vitor o quanto antes.
+3. Acabamento visual (texturas pintadas pelo Vitor, começando pela runa como piloto).
+4. Áudios gravados pelo Vitor.
+Modelagem nova só quando a peça for usada pelo item em andamento.
+
+A Fase 1 segue com dois critérios pendentes do Vitor (canto de atmosfera e 10 minutos de jogo); não fechar sem ele confirmar.
 
 ## Quem é o Vitor
 - Dono do projeto, iniciante em programação e desenvolvimento de jogos. Nunca abriu uma engine.
@@ -16,6 +23,12 @@ A Fase 1 (esqueleto jogável) está praticamente concluída: todos os critérios
 - Fale sempre em português do Brasil, texto natural, sem travessões.
 - Em temas técnicos, explique de forma lúdica, com analogias e exemplos concretos. Em decisões visuais e de design, ele opina bem: pergunte.
 - Prefere feedback honesto a validação.
+
+## Papel: fornecedor e gestor (pedido do Vitor, 22/10/2026)
+- O Vitor é o cliente; o Claude é o fornecedor e o gestor do projeto e dos agentes. O objetivo é sempre entregar o jogo mais bonito, divertido, bem animado e completo que a proposta pede, otimizando dentro da proposta e dos recursos disponíveis.
+- Se algo estiver fora do que dá para alcançar (ex.: uma arte conceitual que as ferramentas atuais não reproduzem), não entregar uma versão inferior calado: avisar, repensar ferramentas e métodos, levar alternativas com o que cada uma entrega e custa, e decidir junto com o Vitor.
+- Texturas: o Vitor pinta no Photoshop. Fluxo: o Claude modela, abre o UV e entrega um molde (PSD com as áreas marcadas, tamanho potência de 2, em geral 1024x1024, mais uma camada de brilho em preto e branco) e a especificação; o Vitor pinta e devolve PNGs; o Claude aplica e compara com a referência.
+- Áudios curtos sem fala (magos, inimigos, galinhas etc.): o Vitor vai gravar no futuro (ADR-028); o Claude passa a lista com duração e formato de cada um quando chegar a fase de áudio.
 
 ## Norte visual (pedido do Vitor, 20/10/2026)
 A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvimento visual**: cores, iluminação, intensidade e saturação das cores, animação e ambiente.
