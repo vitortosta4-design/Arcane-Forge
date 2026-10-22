@@ -2158,6 +2158,7 @@ func _testar_hud_no_layout_da_adr_039() -> void:
 		and absf(aviso.get_global_rect().get_center().x - tela.x / 2.0) < 2.0)
 	hud.mostrar_aviso("")
 	_afirmar("HUD: aviso vazio some", not aviso.visible)
+	_afirmar("HUD: sem texto da magia lançada (era do plano da IA por texto)", hud.get_node_or_null("Legenda") == null)
 	_afirmar("HUD: só lê o mago (vida, mana e medalhões continuam iguais)",
 		mago.vida_atual == vida_antes and mago.mana_atual == mana_antes and mago.barra.medalhoes == medalhoes_antes)
 	mago.queue_free()
