@@ -15,7 +15,7 @@ Jogo cooperativo 3D (2 jogadores contra inimigos controlados por IA), em low pol
 
 ## Stack decidida
 - Engine: Godot 4.7 (GDScript)
-- Magias: receitas fixas de runas, sem IA no núcleo (o código antigo da IA fica guardado, sem uso)
+- Magias: receitas fixas de runas, sem IA (a magia por texto com IA foi removida, ADR-041)
 - Multiplayer: um jogador hospeda e é o juiz da partida
 - Orçamento: R$ 0/mês, teto de R$ 50/mês
 
