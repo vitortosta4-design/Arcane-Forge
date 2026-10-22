@@ -124,6 +124,17 @@ func _ready() -> void:
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
 	await _testar_bigorna_ignora_pedido_invalido_ou_no_meio_da_troca()
+	# Forja de Runas (ADR-032 a 035)
+	_testar_livro_mesma_soma_da_mesma_magia_em_qualquer_ordem()
+	_testar_livro_recusa_combinacao_fora_das_regras()
+	_testar_livro_receita_especial_e_versao_basica()
+	await _testar_toda_combinacao_valida_vira_magia_de_verdade()
+	_testar_grimorio_salva_e_sobrevive_a_reabrir()
+	await _testar_mago_comeca_com_dois_medalhoes_e_dois_espacos_vazios()
+	await _testar_medalhao_conjura_gasta_mana_e_respeita_recarga()
+	await _testar_quebrar_medalhao_libera_espaco()
+	await _testar_runas_so_sao_gastas_se_o_mago_tiver_todas()
+	await _testar_preso_para_o_movimento_por_pouco_tempo()
 
 	print("")
 	if _falhas == 0:
@@ -1888,3 +1899,148 @@ func _testar_bigorna_ignora_pedido_invalido_ou_no_meio_da_troca() -> void:
 	_afirmar("a primeira troca termina normalmente", b.expressao == "rindo" and _rostos_visiveis(b) == ["rindo"])
 	b.queue_free()
 	await get_tree().process_frame
+
+
+# --- Forja de Runas -------------------------------------------------------
+
+func _testar_livro_mesma_soma_da_mesma_magia_em_qualquer_ordem() -> void:
+	var livro := LivroReceitas.carregar()
+	var a := livro.forjar(["vida", "feroz", "fogo"])
+	var b := livro.forjar(["fogo", "vida", "feroz"])
+	var c := livro.forjar(["feroz", "fogo", "vida"])
+	_afirmar("mesma soma em ordens diferentes dá a mesma receita", a["id"] == b["id"] and b["id"] == c["id"])
+	_afirmar("e exatamente a mesma ficha", JSON.stringify(a["ficha"]) == JSON.stringify(c["ficha"]))
+	var basica_1 := livro.forjar(["prende", "feroz"])
+	var basica_2 := livro.forjar(["feroz", "prende"])
+	_afirmar("versão básica também é sempre igual", JSON.stringify(basica_1) == JSON.stringify(basica_2))
+
+
+func _testar_livro_recusa_combinacao_fora_das_regras() -> void:
+	var livro := LivroReceitas.carregar()
+	_afirmar("forma sozinha não forja", not livro.forjar(["vida"])["ok"])
+	_afirmar("e explica em poucas palavras", livro.forjar(["vida"])["motivo"] == "Falta um elemento.")
+	_afirmar("duas formas não forjam", not livro.forjar(["vida", "prende", "fogo"])["ok"])
+	_afirmar("três elementos não forjam", not livro.forjar(["fogo", "agua", "feroz"])["ok"])
+	_afirmar("quatro runas não forjam", not livro.forjar(["vida", "fogo", "agua", "feroz"])["ok"])
+	_afirmar("runa inventada não forja", not livro.forjar(["fogo", "banana"])["ok"])
+	_afirmar("bigorna vazia não forja", not livro.forjar([])["ok"])
+
+
+func _testar_livro_receita_especial_e_versao_basica() -> void:
+	var livro := LivroReceitas.carregar()
+	var leao := livro.forjar(["vida", "feroz", "fogo"])
+	_afirmar("vida + feroz + fogo é o Leão de Fogo", leao["id"] == "leao_de_fogo" and leao["especial"])
+	_afirmar("fogo sozinho é a bola de fogo", livro.forjar(["fogo"])["id"] == "bola_de_fogo")
+	var basica := livro.forjar(["prende", "feroz"])
+	_afirmar("sem receita sai a versão básica", basica["ok"] and not basica["especial"])
+	_afirmar("e ela tem nome próprio", basica["nome"].begins_with("Barbante Mágico"))
+
+
+func _testar_toda_combinacao_valida_vira_magia_de_verdade() -> void:
+	var livro := LivroReceitas.carregar()
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	var formas: Array = [""] + livro.formas.keys()
+	var elems: Array = livro.elementos.keys()
+	var combinacoes: Array = []
+	for f in formas:
+		for i in elems.size():
+			combinacoes.append([f, elems[i]])
+			for j in range(i + 1, elems.size()):
+				combinacoes.append([f, elems[i], elems[j]])
+	var ruins := 0
+	for comb in combinacoes:
+		var runas: Array = comb.filter(func(r): return r != "")
+		var m := livro.forjar(runas)
+		var validada := Validador.validar_ficha(m.get("ficha", {}))
+		if not m.get("ok", false) or mago._ficha_sem_componentes(validada) or Validador.calcular_custo_mana(validada) <= 0.0:
+			ruins += 1
+			print("  combinação sem magia real: ", runas)
+	_afirmar("todas as %d combinações válidas viram magia que custa mana" % combinacoes.size(), ruins == 0)
+	mago.queue_free()
+
+
+func _testar_grimorio_salva_e_sobrevive_a_reabrir() -> void:
+	var caminho := "user://teste_grimorio.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(caminho))
+	var g := Grimorio.abrir(caminho)
+	_afirmar("grimório novo começa vazio", g.descobertas.is_empty())
+	_afirmar("registrar receita nova devolve true", g.registrar("leao_de_fogo"))
+	_afirmar("registrar de novo devolve false", not g.registrar("leao_de_fogo"))
+	var reaberto := Grimorio.abrir(caminho)
+	_afirmar("grimório sobrevive a fechar e reabrir", reaberto.conhece("leao_de_fogo") and reaberto.descobertas.size() == 1)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(caminho))
+
+
+func _testar_mago_comeca_com_dois_medalhoes_e_dois_espacos_vazios() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	var cheios := 0
+	for i in BarraMedalhoes.ESPACOS:
+		if not mago.barra.vazio(i):
+			cheios += 1
+	_afirmar("expedição começa com 2 medalhões", cheios == 2)
+	_afirmar("o primeiro é a bola de fogo", mago.barra.medalhoes[0]["id"] == "bola_de_fogo")
+	_afirmar("começa sem runas", mago.runas.is_empty())
+	mago.queue_free()
+
+
+func _testar_medalhao_conjura_gasta_mana_e_respeita_recarga() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	_afirmar("medalhão pronto conjura", mago.usar_medalhao(0))
+	_afirmar("e gasta mana", mago.mana_atual < mago.mana_maxima)
+	mago._cooldown_restante = 0.0
+	_afirmar("logo depois, a recarga do medalhão impede outra", not mago.usar_medalhao(0))
+	_afirmar("espaço vazio não conjura", not mago.usar_medalhao(3))
+	mago.barra.avancar(5.0)
+	mago._cooldown_restante = 0.0
+	_afirmar("depois da recarga volta a conjurar", mago.usar_medalhao(0))
+	for n in get_children():
+		if n.get_script() == load("res://scripts/magia/projetil.gd"):
+			n.queue_free()
+	mago.queue_free()
+
+
+func _testar_quebrar_medalhao_libera_espaco() -> void:
+	var barra := BarraMedalhoes.new()
+	var livro := LivroReceitas.carregar()
+	for i in 4:
+		barra.equipar(livro.receita_por_id("bola_de_fogo"))
+	_afirmar("barra cheia não aceita mais medalhão", barra.equipar(livro.receita_por_id("jato_d_agua")) == -1)
+	_afirmar("quebrar um medalhão funciona", barra.quebrar(2))
+	_afirmar("o novo entra no espaço liberado", barra.equipar(livro.receita_por_id("jato_d_agua")) == 2)
+	_afirmar("não quebra espaço vazio", not BarraMedalhoes.new().quebrar(0))
+
+
+func _testar_runas_so_sao_gastas_se_o_mago_tiver_todas() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	mago.coletar_runa("fogo")
+	mago.coletar_runa("vida")
+	_afirmar("não gasta runa que não tem", not mago.gastar_runas(["vida", "feroz"]))
+	_afirmar("e não perde nenhuma na tentativa", mago.runas.size() == 2)
+	_afirmar("gasta as que tem", mago.gastar_runas(["fogo", "vida"]))
+	_afirmar("e a mochila esvazia", mago.runas.is_empty())
+	mago.queue_free()
+
+
+func _testar_preso_para_o_movimento_por_pouco_tempo() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	mago.aplicar_estado("preso", 8.0)
+	_afirmar("preso não anda", mago._multiplicador_velocidade() == 0.0)
+	_afirmar("aparece na lista de estados", "preso" in mago.estados.ativos())
+	await get_tree().create_timer(2.7).timeout
+	_afirmar("preso dura no máximo 2,5 s por aplicação", mago._multiplicador_velocidade() == 1.0)
+	mago.queue_free()

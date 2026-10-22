@@ -1,0 +1,440 @@
+{
+ "versao": 1,
+ "comentario": "Livro de receitas da Forja de Runas (ADR-032 a 035). A mesma combinação de runas sempre dá a mesma magia. 'runas' de cada receita: até 1 forma e até 2 elementos, em qualquer ordem. Mexer aqui muda o jogo sem mexer em código; o Validador continua cortando qualquer número acima dos limites.",
+ "formas": {
+  "arremesso": {
+   "nome": "Arremesso",
+   "simbolo": "↗"
+  },
+  "vida": {
+   "nome": "Vida",
+   "simbolo": "✿"
+  },
+  "prende": {
+   "nome": "Prende",
+   "simbolo": "∞"
+  }
+ },
+ "elementos": {
+  "fogo": {
+   "nome": "Fogo",
+   "cor": "#ff7a1a",
+   "material": "fogo",
+   "estado": "queimando"
+  },
+  "agua": {
+   "nome": "Água",
+   "cor": "#3aa0ff",
+   "material": "agua",
+   "estado": "molhado"
+  },
+  "feroz": {
+   "nome": "Feroz",
+   "cor": "#d8343c",
+   "material": "metal",
+   "estado": ""
+  }
+ },
+ "receitas": [
+  {
+   "id": "bola_de_fogo",
+   "runas": [
+    "fogo"
+   ],
+   "nome": "Bola de Fogo",
+   "legenda": "rápida, explode no impacto",
+   "recarga_s": 1.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "esfera",
+     "material": "fogo",
+     "velocidade": 22,
+     "ao_impactar": [
+      {
+       "tipo": "explosao",
+       "raio_m": 1.8,
+       "dano": 10,
+       "empurrao": 3,
+       "etiquetas": [
+        "fogo"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "jato_d_agua",
+   "runas": [
+    "agua"
+   ],
+   "nome": "Jato d'Água",
+   "legenda": "encharca: apaga fogo e conduz choque",
+   "recarga_s": 1.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "esfera",
+     "material": "agua",
+     "velocidade": 18,
+     "ao_impactar": [
+      {
+       "tipo": "estado",
+       "nome_estado": "molhado",
+       "duracao_s": 5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dentadura_voadora",
+   "runas": [
+    "feroz"
+   ],
+   "nome": "Dentadura Voadora",
+   "legenda": "morde forte, mas é lenta",
+   "recarga_s": 1.5,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "ovo",
+     "material": "metal",
+     "velocidade": 13,
+     "ao_impactar": [
+      {
+       "tipo": "explosao",
+       "raio_m": 1.2,
+       "dano": 14,
+       "empurrao": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bomba_de_vapor",
+   "runas": [
+    "fogo",
+    "agua"
+   ],
+   "nome": "Bomba de Vapor",
+   "legenda": "nuvem quente que encharca e cozinha",
+   "recarga_s": 4.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "esfera",
+     "material": "agua",
+     "velocidade": 14,
+     "ao_impactar": [
+      {
+       "tipo": "area",
+       "raio_m": 3,
+       "duracao_s": 4,
+       "dano_por_s": 3,
+       "material": "agua",
+       "nome_estado": "molhado"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "golem_de_fogo",
+   "runas": [
+    "vida",
+    "fogo"
+   ],
+   "nome": "Golem de Fogo",
+   "legenda": "grandão, lento e quente",
+   "recarga_s": 10.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "invocacao",
+     "corpo": "bolha",
+     "material": "fogo",
+     "escala": 1.6,
+     "comportamento": "perseguir_inimigo_proximo",
+     "vida": 40,
+     "duracao_s": 8,
+     "dano_contato": 8
+    }
+   ]
+  },
+  {
+   "id": "leao_feroz",
+   "runas": [
+    "vida",
+    "feroz"
+   ],
+   "nome": "Leão Feroz",
+   "legenda": "persegue e morde",
+   "recarga_s": 9.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "invocacao",
+     "corpo": "quadrupede",
+     "material": "madeira",
+     "escala": 1.2,
+     "comportamento": "perseguir_inimigo_proximo",
+     "vida": 30,
+     "duracao_s": 8,
+     "dano_contato": 7
+    }
+   ]
+  },
+  {
+   "id": "leao_de_fogo",
+   "runas": [
+    "vida",
+    "feroz",
+    "fogo"
+   ],
+   "nome": "Leão de Fogo",
+   "legenda": "leão que cospe brasa",
+   "recarga_s": 12.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "invocacao",
+     "corpo": "quadrupede",
+     "material": "fogo",
+     "escala": 1.3,
+     "comportamento": "perseguir_inimigo_proximo",
+     "vida": 35,
+     "duracao_s": 8,
+     "dano_contato": 8,
+     "id": "leao"
+    },
+    {
+     "tipo": "lancador",
+     "anexado_a": "leao",
+     "intervalo_s": 2.0,
+     "projetil": {
+      "forma": "esfera",
+      "material": "fogo",
+      "velocidade": 14
+     },
+     "ao_impactar": [
+      {
+       "tipo": "explosao",
+       "raio_m": 1.5,
+       "dano": 8,
+       "empurrao": 2,
+       "etiquetas": [
+        "fogo"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "molotov_arcano",
+   "runas": [
+    "arremesso",
+    "fogo"
+   ],
+   "nome": "Molotov Arcano",
+   "legenda": "garrafa que deixa o chão em chamas",
+   "recarga_s": 5.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "ovo",
+     "material": "fogo",
+     "velocidade": 12,
+     "ao_impactar": [
+      {
+       "tipo": "explosao",
+       "raio_m": 1.5,
+       "dano": 6,
+       "empurrao": 2,
+       "etiquetas": [
+        "fogo"
+       ]
+      },
+      {
+       "tipo": "area",
+       "raio_m": 2.5,
+       "duracao_s": 5,
+       "dano_por_s": 4,
+       "material": "fogo",
+       "nome_estado": "queimando"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "balao_d_agua",
+   "runas": [
+    "arremesso",
+    "agua"
+   ],
+   "nome": "Balão d'Água",
+   "legenda": "estoura e deixa uma poça que encharca",
+   "recarga_s": 3.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "ovo",
+     "material": "agua",
+     "velocidade": 12,
+     "ao_impactar": [
+      {
+       "tipo": "area",
+       "raio_m": 3,
+       "duracao_s": 4,
+       "dano_por_s": 0,
+       "material": "agua",
+       "nome_estado": "molhado"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "galinha_kamikaze",
+   "runas": [
+    "arremesso",
+    "feroz"
+   ],
+   "nome": "Galinha Kamikaze",
+   "legenda": "corre atrás e bota ovo explosivo",
+   "recarga_s": 9.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "invocacao",
+     "corpo": "ave",
+     "material": "madeira",
+     "escala": 0.6,
+     "comportamento": "perseguir_inimigo_proximo",
+     "vida": 15,
+     "duracao_s": 6,
+     "dano_contato": 3,
+     "id": "galinha"
+    },
+    {
+     "tipo": "lancador",
+     "anexado_a": "galinha",
+     "intervalo_s": 1.4,
+     "projetil": {
+      "forma": "ovo",
+      "material": "madeira",
+      "velocidade": 8
+     },
+     "ao_impactar": [
+      {
+       "tipo": "explosao",
+       "raio_m": 2,
+       "dano": 12,
+       "empurrao": 3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "correntes_em_brasa",
+   "runas": [
+    "prende",
+    "fogo"
+   ],
+   "nome": "Correntes em Brasa",
+   "legenda": "correntes saem do chão, prendem e queimam",
+   "recarga_s": 7.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "cubo",
+     "material": "metal",
+     "velocidade": 20,
+     "ao_impactar": [
+      {
+       "tipo": "estado",
+       "nome_estado": "queimando",
+       "duracao_s": 3
+      },
+      {
+       "tipo": "area",
+       "raio_m": 2.2,
+       "duracao_s": 4,
+       "dano_por_s": 3,
+       "material": "fogo",
+       "nome_estado": "preso"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bolha_prisao",
+   "runas": [
+    "prende",
+    "agua"
+   ],
+   "nome": "Bolha-Prisão",
+   "legenda": "prende quem estiver dentro, encharcado",
+   "recarga_s": 7.0,
+   "natureza": "neutra",
+   "componentes": [
+    {
+     "tipo": "projetil",
+     "forma": "esfera",
+     "material": "agua",
+     "velocidade": 16,
+     "ao_impactar": [
+      {
+       "tipo": "estado",
+       "nome_estado": "molhado",
+       "duracao_s": 4
+      },
+      {
+       "tipo": "area",
+       "raio_m": 2,
+       "duracao_s": 3,
+       "dano_por_s": 0,
+       "material": "agua",
+       "nome_estado": "preso"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fonte_curativa",
+   "runas": [
+    "vida",
+    "agua"
+   ],
+   "nome": "Fonte Curativa",
+   "legenda": "cura quem conjurou",
+   "recarga_s": 8.0,
+   "natureza": "boa",
+   "componentes": [
+    {
+     "tipo": "cura",
+     "quantidade": 20
+    }
+   ],
+   "cor": "#5fd36a"
+  }
+ ],
+ "iniciais": [
+  "bola_de_fogo",
+  "fonte_curativa"
+ ]
+}

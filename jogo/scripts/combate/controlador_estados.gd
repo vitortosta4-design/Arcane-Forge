@@ -9,6 +9,9 @@ class_name ControladorEstados
 ## etiquetas"):
 ## - molhado apaga quem está queimando, e quem está molhado não pega fogo;
 ## - eletricidade em quem está molhado dá dano dobrado e se espalha num raio.
+## Preso (Forja de Runas, runa "prende"): não anda, mas ainda ataca quem
+## estiver colado. Duração curta por aplicação (MAXIMO_PRESO_S), para nunca
+## virar trava eterna: a corrente em brasa reaplica a cada segundo.
 ## Cego (ADR-013 lista "cegueira temporária" entre os ingredientes maus):
 ## inimigo e criatura cegos param de perseguir e atacar; o mago cego vê a
 ## tela quase toda escura (o HUD cuida disso).
@@ -20,6 +23,7 @@ class_name ControladorEstados
 signal estados_mudaram(nomes: Array)
 
 const MULTIPLICADOR_LENTO := 0.5
+const MAXIMO_PRESO_S := 2.5
 const DANO_QUEIMANDO_POR_TICK := 3.0
 const INTERVALO_QUEIMANDO_S := 1.0
 const DANO_ELETRICO := 6.0
@@ -33,10 +37,12 @@ const CORES := {
 	"queimando": Color(1.0, 0.35, 0.0, 0.65),
 	"cego": Color(0.12, 0.08, 0.22, 0.75),
 	"molhado": Color(0.1, 0.4, 1.0, 0.6),
+	"preso": Color(0.62, 0.55, 0.8, 0.65),
 	"lento": Color(0.55, 0.9, 1.0, 0.5),
 }
 
 var _lento_restante_s := 0.0
+var _preso_restante_s := 0.0
 var _molhado_restante_s := 0.0
 var _cego_restante_s := 0.0
 var _ticks_queimando_restantes := 0
@@ -53,6 +59,8 @@ func aplicar(nome_estado: String, duracao_s: float) -> void:
 	match nome_estado:
 		"lento":
 			_lento_restante_s = maxf(_lento_restante_s, duracao_s)
+		"preso":
+			_preso_restante_s = maxf(_preso_restante_s, minf(duracao_s, MAXIMO_PRESO_S))
 		"molhado":
 			_molhado_restante_s = maxf(_molhado_restante_s, duracao_s)
 			_ticks_queimando_restantes = 0
@@ -69,6 +77,8 @@ func aplicar(nome_estado: String, duracao_s: float) -> void:
 
 
 func multiplicador_velocidade() -> float:
+	if _preso_restante_s > 0.0:
+		return 0.0
 	return MULTIPLICADOR_LENTO if _lento_restante_s > 0.0 else 1.0
 
 
@@ -93,6 +103,8 @@ func ativos() -> Array:
 		lista.append("queimando")
 	if esta_cego():
 		lista.append("cego")
+	if _preso_restante_s > 0.0:
+		lista.append("preso")
 	if esta_molhado():
 		lista.append("molhado")
 	if _lento_restante_s > 0.0:
@@ -103,6 +115,7 @@ func ativos() -> Array:
 func _physics_process(delta: float) -> void:
 	_tempo += delta
 	_lento_restante_s = maxf(0.0, _lento_restante_s - delta)
+	_preso_restante_s = maxf(0.0, _preso_restante_s - delta)
 	_molhado_restante_s = maxf(0.0, _molhado_restante_s - delta)
 	_cego_restante_s = maxf(0.0, _cego_restante_s - delta)
 	_piscada_choque_s = maxf(0.0, _piscada_choque_s - delta)

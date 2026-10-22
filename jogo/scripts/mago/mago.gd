@@ -26,6 +26,12 @@ var _entrada_bloqueada := false
 var _aguardando_interpretacao := false
 var _reducao_escudo := 0.0
 var estados := ControladorEstados.new()
+## Runas carregadas na expedição (recomeçam a cada uma, ADR-034).
+var runas: Array[String] = []
+var barra := BarraMedalhoes.new()
+var livro: LivroReceitas = null
+## O botão do mouse repete o último medalhão usado pelas teclas 1 a 4.
+var espaco_selecionado := 0
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -38,6 +44,9 @@ signal mana_mudou(atual: float, maxima: float)
 signal conjurou(legenda: String)
 signal morreu
 signal teleportou
+## Forja de Runas (ADR-032 a 035).
+signal runas_mudaram(runas: Array)
+signal medalhao_usado(espaco: int)
 
 
 func _ready() -> void:
@@ -47,6 +56,16 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_camera_primeira_pessoa.current = true
 	_corpo_visivel.visible = false
+	_preparar_medalhoes_iniciais()
+
+
+## A expedição começa com 2 medalhões padrão e 2 espaços vazios (ADR-035).
+func _preparar_medalhoes_iniciais() -> void:
+	livro = LivroReceitas.carregar()
+	for id in livro.iniciais:
+		var medalhao := livro.receita_por_id(str(id))
+		if not medalhao.is_empty():
+			barra.equipar(medalhao)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -59,12 +78,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("trocar_camera"):
 		_trocar_camera()
 	elif event.is_action_pressed("conjurar_bola_de_fogo"):
-		_tentar_conjurar_bola_de_fogo()
+		usar_medalhao(espaco_selecionado)
+	else:
+		for i in BarraMedalhoes.ESPACOS:
+			if event.is_action_pressed("medalhao_%d" % (i + 1)):
+				espaco_selecionado = i
+				usar_medalhao(i)
 
 
 func _physics_process(delta: float) -> void:
 	_cooldown_restante = maxf(0.0, _cooldown_restante - delta)
 	_regenerar_mana(delta)
+	barra.avancar(delta)
 
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
@@ -114,6 +139,36 @@ func _camera_ativa() -> Camera3D:
 
 func _tentar_conjurar_bola_de_fogo() -> void:
 	_conjurar_ficha(FichasPadrao.bola_de_fogo())
+
+
+## Usa o medalhão do espaço i: só se ele existir, estiver recarregado e o
+## juiz aprovar a mana. A recarga só começa se a magia saiu de verdade.
+func usar_medalhao(i: int) -> bool:
+	if not barra.pronto(i):
+		return false
+	if not _conjurar_ficha(barra.medalhoes[i]["ficha"]):
+		return false
+	barra.iniciar_recarga(i)
+	medalhao_usado.emit(i)
+	return true
+
+
+func coletar_runa(nome: String) -> void:
+	runas.append(nome)
+	runas_mudaram.emit(runas)
+
+
+## Tira da mochila as runas gastas na bigorna. Só gasta se tiver todas.
+func gastar_runas(usadas: Array) -> bool:
+	var sobra := runas.duplicate()
+	for r in usadas:
+		var i := sobra.find(str(r))
+		if i < 0:
+			return false
+		sobra.remove_at(i)
+	runas = sobra
+	runas_mudaram.emit(runas)
+	return true
 
 
 ## Chamado pela caixa de conjuração (ADR-010) quando o jogador confirma uma
@@ -192,13 +247,13 @@ func _componente_tem_efeito_real(componente: Dictionary) -> bool:
 	return false
 
 
-func _conjurar_ficha(ficha: Dictionary) -> void:
+func _conjurar_ficha(ficha: Dictionary) -> bool:
 	if _cooldown_restante > 0.0:
-		return
+		return false
 	var ficha_validada := Validador.validar_ficha(ficha)
 	var custo := Validador.calcular_custo_mana(ficha_validada)
 	if not Host.gastar_mana(self, custo):
-		return
+		return false
 	_cooldown_restante = COOLDOWN_CONJURACAO_S
 	var mira := ponto_de_disparo()
 	var origem: Vector3 = mira[0]
@@ -208,6 +263,7 @@ func _conjurar_ficha(ficha: Dictionary) -> void:
 	_mao.conjurar()
 	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
 	conjurou.emit(ficha_validada.get("legenda", ""))
+	return true
 
 
 ## De onde a magia sai e para onde vai: sai da mão (primeira pessoa) ou do

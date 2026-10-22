@@ -16,6 +16,7 @@ const NOMES_ESTADOS := {
 	"cego": "Cego",
 	"molhado": "Molhado",
 	"lento": "Lento",
+	"preso": "Preso",
 }
 
 var _tempo_legenda_s := 0.0
