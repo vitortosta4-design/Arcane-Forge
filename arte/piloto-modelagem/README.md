@@ -93,3 +93,7 @@ Pedido do Vitor: refazer a bigorna da forja com a mesma análise ponto a ponto d
 - Comparações em `renders/bigorna_v7/comparacao_v7_vistas.png` e `comparacao_v7_rostos.png`.
 
 O que ainda separa da referência: pintura da pedra (rachaduras escuras, quinas claras, sombra nos cantos), o fogo do anel e da garganta é mais fino e menos volumoso (no jogo, glow e partículas ajudam), a vista de cima não tem o losango no topo da coluna. São 325 malhas soltas; antes de entrar no jogo, juntar por material para cortar chamadas de desenho.
+
+## Para um patch futuro
+
+- **Bigorna, boca neutra (22/10/2026):** o Vitor aprovou a bigorna como está para seguir em frente, mas quer arrumar a boca do rosto neutro depois, num patch. Não mexer agora.
