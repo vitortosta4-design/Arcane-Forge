@@ -24,6 +24,6 @@ Atualizado em: 22/10/2026
 - Névoa volumétrica e SDFGI só aparecem no PC do Vitor (a nuvem renderiza em Compatibility).
 
 ## Pendente do Vitor
-- Decidir se pausa ou apaga o projeto da magia por IA no Supabase (o jogo não usa mais).
+- Apagar o projeto `arcane-forge` no painel do Supabase (já pausado pelo Claude; a ferramenta dele não apaga) e revogar a chave da Groq que ficava guardada nele.
 - **Referência visual do HUD e do medalhão, a ser gerada pelo Vitor** (o estilo do HUD espera por ela; ADR-033 pede a do medalhão antes da Fase 5).
 - Jogar o ciclo da forja e opinar.

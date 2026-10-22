@@ -392,7 +392,8 @@ Arte conceitual gerada por IA a pedido do Vitor.
 
 - **Problema:** a ADR-032 tirou a escrita do jogo e mandou guardar o código do porteiro e do `Interpretador` até o plano ser reescrito. O plano foi reescrito (ADR-035, que já tirou o Supabase), mas o jogo ainda carregava o porteiro a cada partida (com a chave pública do Supabase dentro), a tecla Q continuava cadastrada e o mago ainda tinha o caminho de conjurar por texto.
 - **Escolha:** remover do jogo a caixa de texto, o porteiro, o `Interpretador`, a tecla Q e o "conjurar por texto", com os testes deles e a ferramenta `checar_porteiro.sh`. A conferência de "a ficha faz alguma coisa de verdade" foi para o `Validador` (`sem_efeito_real`), porque as receitas de runas continuam usando.
-- **Fica:** os componentes de magia e as fichas de exemplo (usados pelas receitas e pelos testes); a pasta `supabase/` no repositório, que descreve o servidor que ainda existe no Supabase. Pausar ou apagar o projeto no Supabase é decisão do Vitor.
+- **Fica:** os componentes de magia e as fichas de exemplo (usados pelas receitas e pelos testes).
+- **Supabase (escolha do Vitor, 22/10/2026: apagar):** o projeto `arcane-forge` (só tinha as tabelas e a função da magia por IA) foi pausado pelo Claude; apagar de vez é pelo painel, porque a ferramenta do Claude não tem essa opção. A pasta `supabase/` saiu do repositório junto. Os outros projetos do Vitor no Supabase não foram tocados.
 - **Fácil de mudar?** Sim: o código removido continua no histórico do git.
 
 ---
