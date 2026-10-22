@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 20/10/2026
+Última atualização: 22/10/2026
 
 ---
 
@@ -23,7 +23,7 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 - **Fácil de mudar?** Não. Trocar de engine equivale a recomeçar.
 
 ## ADR-002 · Interpretação das magias: camada trocável, começando com IA gratuita
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - **Problema:** transformar texto livre em magia, com custo zero ou baixo.
 - **Alternativas:** modelo local no PC (fraco demais no hardware atual), API paga, API com plano gratuito.
@@ -35,7 +35,7 @@ Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 - **Fácil de mudar?** Sim.
 
 ## ADR-003 · Proteção da chave da IA: Supabase Edge Function
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - **Problema:** a chave da API não pode ficar dentro do executável.
 - **Escolha:** uma função no Supabase (plano grátis) que guarda a chave, valida o pedido, aplica limite de uso por jogador e chama a IA.
@@ -111,7 +111,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - Chat escrito para comunicação entre jogadores.
 
 ## ADR-009 · Regras base de conjuração
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - Toda magia custa mana.
 - Magias duram poucos segundos.
@@ -119,7 +119,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - Mana só é descontada se a magia for conjurada com sucesso.
 
 ## ADR-010 · Teclas de chat e de magia
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - **Enter:** abre o chat (vai para o parceiro).
 - **Q:** abre a caixa de conjuração, visualmente diferente do chat (borda e cor próprias).
@@ -136,13 +136,13 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Consequência:** a mira é sempre calculada a partir do centro da câmera, nos dois modos, para o resultado ser igual.
 
 ## ADR-012 · Aproximações de magia
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - No combate: a magia sai direto, com uma legenda curta do que foi entendido.
 - No grimório: prévia antes de salvar, com possibilidade de ajustar.
 
 ## ADR-013 · Progressão por "ingredientes de imaginação"
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - Explorar o mundo libera ingredientes que ampliam o que se pode inventar. Não se desbloqueiam feitiços prontos.
 - Ingredientes em três naturezas:
@@ -168,7 +168,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - 3 estátuas de reviver por expedição (ADR-014).
 
 ## ADR-016 · O que persiste
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-034 (22/10/2026)**
 
 - Ingredientes descobertos: ficam para sempre (progressão do mago).
 - Itens da expedição (reviver, consumíveis): perdidos se os dois jogadores caírem.
@@ -197,7 +197,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - Inimigos no mesmo tom das magias: absurdos e engraçados (ex.: galinha zumbi, cogumelo com raiva, armário possuído).
 
 ## ADR-020 · Grimório pessoal com empréstimo
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-034 (22/10/2026)**
 
 - Cada jogador tem seu próprio grimório.
 - É possível emprestar uma magia ao parceiro durante a expedição; quem empresta continua com ela.
@@ -212,14 +212,14 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - Desvantagem aceita: formatar o PC sem backup apaga o progresso. Rever se o jogo for para a Steam.
 
 ## ADR-022 · Coleta anônima de magias mal interpretadas
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - Quando a interpretação falhar ou sair muito diferente do pedido, o jogo envia ao Supabase apenas a frase, a ficha gerada e a versão do sistema. Sem nome, sem identificador pessoal.
 - Uso: melhorar o interpretador.
 - Retenção: 90 dias.
 
 ## ADR-023 · Voz na nuvem, só enquanto a tecla é segurada
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Substituída pela ADR-032 (22/10/2026)**
 
 - Transcrição via Groq (Whisper). Áudio enviado apenas enquanto V está pressionada.
 - Latência estimada de 1,5 a 3 segundos entre soltar a tecla e a magia sair, a ser medida na Fase 6.
@@ -284,6 +284,37 @@ Arte conceitual gerada por IA a pedido do Vitor.
 **Status:** Aprovada (20/10/2026)
 
 - Um canto da arena de testes recebe o tratamento visual completo (ADR-025), para medir cedo quanto o hardware mínimo aguenta.
+
+---
+
+## ADR-032 · Forja de Runas: magia feita só de runas, sem escrita e sem IA
+**Status:** Aprovada (proposta "Forja de Runas" aprovada em 21/10/2026; escrita retirada em 22/10/2026)
+
+- **Problema:** magia por texto livre gera decepção (o jogador pede um "godzilla" e vem um cilindro laranja), depende de IA e obriga a gerar modelos na hora, sem a qualidade de algo modelado à mão.
+- **Alternativas:** texto livre com IA (ADR-002), texto limitado por dicionário com IA de apoio (proposta de 21/10), só runas.
+- **Escolha:** só runas. O jogador coloca runas na bigorna da forja e martela; a combinação vira a magia. Não existe escrita, então não existe "testar se a palavra passa".
+  - Receitas fixas, estilo Dragon City: a mesma combinação dá sempre a mesma magia.
+  - Toda combinação dá alguma coisa. Combinação sem receita dá uma versão básica e engraçada; as receitas certas dão as magias especiais.
+  - Dois tipos de runa: de **forma** (decidem o modelo: arremesso, prende, gravitação, quebrar, vida) e de **elemento** (decidem material, cor e efeito: fogo, água, feroz). Assim modelamos poucas formas e o elemento troca a pele; receitas especiais (golem de fogo, galinha) têm modelo próprio.
+  - A forja é um posto avançado numa caverna mística. 4 espaços de magia por jogador; magias padrão com cara própria. A bigorna treme e reage ao resultado (magias rápidas e lentas).
+  - Tudo modelado à mão antes, nada gerado em tempo de jogo.
+- **Motivo:** decisão do Vitor em 22/10/2026 ("tirar o tipo de escrita, só trazer o resultado sob soma das runas"). Elimina a parte mais frágil (adivinhar palavras e a IA errar) e o custo e risco de IA no núcleo.
+- **Consequências:** a Fase 2 como estava escrita ("magia por texto com IA real") perde o sentido. O código do porteiro (Supabase + Groq) e do `Interpretador` fica guardado no repositório, sem apagar, até o plano de fases ser reescrito. A proposta técnica precisa ser revista. ADRs 002, 003, 009, 010, 012, 013, 022 e 023 ficam substituídas.
+- **Fácil de mudar?** Médio. O sistema de fichas e o validador continuam servindo: só muda quem gera a ficha (a receita, em vez da IA).
+
+## ADR-033 · A magia forjada vira um medalhão na barra
+**Status:** Aprovada (22/10/2026)
+
+- As runas se fundem na bigorna num **medalhão** redondo e lapidado, com o símbolo misturado no meio e aceso na cor do elemento. Ele ocupa um dos 4 espaços da barra de magias.
+- Para trocar uma magia, quebra-se um medalhão e o espaço fica livre.
+- Escolha visual do Vitor entre três opções (pedra derretida, medalhão, cristal pontudo). Precisa de imagem de referência antes de modelar.
+
+## ADR-034 · O que fica entre expedições: grimório e melhorias da forja
+**Status:** Aprovada (22/10/2026)
+
+- As runas e os medalhões recomeçam a cada expedição (substitui a ADR-016 e a ADR-020).
+- Ficam para sempre: o **grimório**, com toda receita já descoberta, e **melhorias permanentes da forja**.
+- Ainda a definir: quais melhorias a forja ganha e como se conquistam.
 
 ---
 
