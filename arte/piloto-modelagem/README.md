@@ -36,3 +36,14 @@ Primeira peça feita a partir de uma referência do Vitor (`referencias/bigorna_
 - 6 rodadas de ajuste. Na v4 o rosto era uma placa retangular colada ("parecia uma TV"); na v5 ele passou a fazer parte do corpo.
 
 Falta para o jogo: juntar as ~180 peças por material (menos chamadas de desenho), fogo animado com partículas no Godot e brilho (glow), que é efeito do Godot e não do modelo.
+
+## Lote 2: mago chibi (21/10/2026)
+
+Feito a partir de `referencias/mago_folha_vitor.png`. ~2.600 triângulos, ~1 m com o chapéu.
+
+- `scripts/mago.py`: chapéu de aba larga com ponta torta, rosto escuro com olhos laranja brilhando, cachecol, manto com capinha e acabamento bege, cinto com bolsas, luvas, botas e cajado com cristal.
+- Esqueleto com Raiz, Quadril, Tronco, Cabeca, BracoE/D, MaoE/D, PernaE/D. O cajado vai preso na MaoD.
+- Animações: `Parado` (2 s, loop), `Andar` (1 s, loop), `Conjurar` (0,8 s) e `ErguerCajado` (0,9 s). Conferido no Godot 4.7.2.
+- 7 rodadas: o rosto sumia sob a aba (v1), as mãos pareciam vassouras (v5), as poses eram tampadas pelas animações gravadas (v3) e cabeça e chapéu foram aumentados em 20% para ficar mais chibi (v7).
+
+Falta para o jogo: o brilho da magia na mão ao conjurar (efeito de partículas no Godot), o manto não balança (peças rígidas) e as ~67 peças podem ser juntadas por osso e material.
