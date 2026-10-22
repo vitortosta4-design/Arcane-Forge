@@ -6,10 +6,10 @@
 3. Confira em que fase o projeto está e trabalhe só dentro dela.
 
 ## Fase atual
-Transição para a Forja de Runas (ADR-032 a 034, 22/10/2026). A "Fase 2: magia por texto com IA" foi abandonada: não mexer mais no porteiro (Supabase + Groq) nem no `Interpretador`; o código fica guardado sem apagar até o plano novo sair.
+Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035, seção 10 da proposta técnica). Contexto: Forja de Runas (ADR-032 a 034, 22/10/2026). A "Fase 2: magia por texto com IA" foi abandonada: não mexer mais no porteiro (Supabase + Groq) nem no `Interpretador`; o código fica guardado, sem apagar.
 
 Prioridade definida pelo Claude como gestor (22/10/2026), nesta ordem:
-1. Reescrever o plano de fases da `docs/proposta-tecnica.md` para a Forja de Runas e levar ao Vitor para aprovar.
+1. ~~Reescrever o plano de fases~~ feito e aprovado em 22/10/2026 (ADR-035, seção 10 da proposta técnica).
 2. Ciclo principal jogável com visual provisório: explorar, achar runas, chegar à bigorna, forjar o medalhão e usar a magia da barra. Meta: testar diversão com o amigo do Vitor o quanto antes.
 3. Acabamento visual (texturas pintadas pelo Vitor, começando pela runa como piloto).
 4. Áudios gravados pelo Vitor.

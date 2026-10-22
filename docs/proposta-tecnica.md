@@ -1,6 +1,8 @@
 # Proposta técnica · Arcane Forge
 
-Versão 1 · 20/10/2026 · Status: **Aprovada pelo Vitor em 20/10/2026**
+Versão 2 · 22/10/2026 · Status: **Aprovada pelo Vitor** (v1 em 20/10/2026; plano de fases da Forja de Runas em 22/10/2026, ADR-035)
+
+> **Aviso de versão:** as seções 1 e 7 ainda falam da IA que interpretava texto, abandonada pela ADR-032. O motor (ficha, validador, executor, componentes) continua valendo: quem preenche a ficha agora é a receita de runas. A seção 4 e a seção 10 já estão no modelo novo.
 
 Este documento junta as decisões de `decisoes.md` num plano único: como o jogo é dividido, como uma magia funciona por dentro, como o multiplayer e a segurança se encaixam, e o que exatamente será feito na Fase 1.
 
@@ -90,22 +92,16 @@ Cada objeto tem etiquetas como `inflamavel`, `condutor`, `molhado`, `metalico` e
 
 ---
 
-## 4. O caminho de uma conjuração
+## 4. O caminho de uma magia (Forja de Runas)
 
-1. O jogador aperta Q, digita (ou segura V e fala) e confirma.
-2. O mago entra em "conjurando": pode andar, mas não correr nem se defender.
-3. O host manda a frase e a lista de ingredientes do jogador ao porteiro (Supabase).
-4. O porteiro confere o limite de uso, chama a IA e devolve a ficha.
-5. O host valida a ficha: lista fechada, limites, ingredientes, mana.
-6. Se passou, o host cria a magia e avisa o outro jogador. Se não passou, mostra o motivo em linguagem simples.
-7. A legenda do que foi entendido aparece na tela.
-8. Se a interpretação foi ruim, a frase vai anonimamente para o registro de falhas (ADR-022).
+1. O jogador explora e pega runas (quem pega leva; pode largar no chão para o parceiro).
+2. Na caverna, coloca até 3 runas na bigorna viva (uma de forma e até duas de elemento) e martela.
+3. O host procura a combinação no livro de receitas, um arquivo de dados. A mesma soma sempre dá a mesma ficha. Sem receita, sai a versão básica e engraçada.
+4. O validador confere a ficha como antes; o custo de mana é calculado pelo jogo.
+5. A ficha vira um medalhão num dos 4 espaços da barra. Receita nova entra no grimório (salvo no PC, fica para sempre).
+6. Teclas 1 a 4 usam o medalhão. Quebrar um medalhão libera o espaço.
 
-Magias do grimório (teclas 1 a 4) pulam os passos 3 e 4: saem na hora, sem internet.
-
-**Se a IA estiver fora do ar:** magias salvas continuam funcionando, e novas conjurações mostram "a magia está instável agora, use seu grimório".
-
----
+Não há internet, IA nem escrita nesse caminho.
 
 ## 5. Limites iniciais (ajustáveis com testes)
 
@@ -190,20 +186,51 @@ Pedido de "um milhão de pombos" vira "3 pombos" (o máximo), com legenda avisan
 
 ---
 
-## 10. Plano geral das fases
+## 10. Plano geral das fases (Forja de Runas, aprovado em 22/10/2026, ADR-035)
 
-1. Esqueleto jogável (acima)
-2. Magia por texto com IA real
-3. Variações visuais procedurais (o pombo começa a parecer um pombo, mais ou menos)
-4. Teste de fogo do interpretador: 50 descrições criativas, medindo acerto, tempo e falhas
-5. Multiplayer real com o seu amigo
-6. Voz
-7. Expedição completa: gerador de mapa por módulos, baús, inimigos variados, estátuas, chefe
-8. Grimório, ingredientes e save
-9. Mais conteúdo
-10. Otimização e preparação para distribuição
+Objetivo: chegar o quanto antes ao ciclo jogável (explorar, achar runas, chegar à bigorna, forjar o medalhão e usar a magia da barra) com visual provisório, e testar com o amigo do Vitor.
 
-Fases 2 e 4 são o coração do projeto: se a magia por texto não for divertida, ajustamos antes de seguir.
+**Fase 1 · Esqueleto jogável:** feita, com dois critérios pendentes do Vitor (seção 9), que serão fechados no primeiro teste com o amigo.
+
+**Fase 2 · Ciclo da forja, jogando sozinho** (grande, é o coração do jogo)
+- Livro de receitas em arquivo de dados legível. Uma runa de elemento sozinha vira projétil; forma + elemento sem receita dá a versão básica e engraçada; receitas especiais têm modelo próprio.
+- Primeira leva: 6 runas (formas: arremesso, vida, prende; elementos: fogo, água, feroz) e cerca de 8 receitas especiais, aproveitando o piloto (molotov, corrente, galinha) e os componentes existentes. Exemplos: fogo = bola de fogo rápida; vida + fogo = golem de fogo lento; vida + feroz = leão; arremesso + fogo = molotov arcano; prende + fogo = correntes em brasa saindo do chão.
+- Até 3 runas por forja: uma forma e até dois elementos.
+- Runas em pontos fixos da clareira, contador no HUD.
+- Caverna provisória ligada à clareira, com a bigorna viva aprovada.
+- Interface da bigorna: escolher runas, martelar, a bigorna reage (treme, faísca) e sai um medalhão provisório (disco na cor do elemento, com o símbolo).
+- Barra 1 a 4. A expedição começa com 2 medalhões padrão e 2 espaços vazios. Quebrar um medalhão libera o espaço.
+- Mana continua, com recarga curta por medalhão; números ajustados jogando.
+- Grimório mínimo: receitas descobertas salvas no PC, lista simples.
+- Caixa de texto (Q) sai do jogo; o código do porteiro e do `Interpretador` fica guardado, sem apagar.
+- **Pronto quando:** jogando do começo ao fim, acho 3 runas, forjo 2 medalhões diferentes e uso os dois na galinha; teste automático confirma que a mesma soma sempre dá a mesma magia; o grimório sobrevive a fechar e reabrir o jogo; FPS medido no PC do Vitor.
+
+**Fase 3 · Cooperativo** (médio)
+- O amigo hospeda, o Vitor entra pelo Radmin VPN (ou ZeroTier).
+- Os dois veem os mesmos resultados: runas coletadas, forja, medalhões, magias, dano e inimigos.
+- Runas: quem pega leva, e pode largar no chão para o parceiro.
+- O convidado não consegue forjar runa que não tem; o host revalida tudo.
+- Revisão de segurança e multiplayer (ADR-005) uma vez, nesta fase.
+
+**Marco · Primeiro teste com o amigo:** sessão de 20 minutos, roteiro curto e 5 perguntas. Fecha os critérios pendentes da Fase 1. O resultado decide se a forja é ajustada antes de seguir.
+
+**Fase 4 · Expedição mínima** (médio)
+- Começo, meio e fim: chefe simples, 3 estátuas de reviver, carregar o corpo, derrota (ADR-014, ADR-015).
+- Baús com runas (e um mímico), 2 ou 3 inimigos absurdos novos.
+- Mapa ainda fixo: clareira, caverna e uma área nova.
+- Fecha com o segundo teste com o amigo.
+
+**Fase 5 · Acabamento visual:** texturas pintadas pelo Vitor (runa como piloto), medalhão definitivo (precisa de referência, ADR-033), caverna mística de verdade, animações expressivas do mago.
+
+**Fase 6 · Áudio:** lista de gravações para o Vitor, com duração e formato de cada uma (ADR-028).
+
+**Fase 7 · Conteúdo:** gerador de mapas por módulos (ADR-018), runas de nível alto (ex.: gravitação), melhorias permanentes da forja (ADR-034), chefe com fases.
+
+**Fase 8 · Otimização e distribuição.**
+
+**Saem do plano antigo:** voz, o teste de 50 frases na IA e o uso do Supabase.
+
+**Regra:** nada das Fases 5 a 7 antes de o teste com o amigo provar que forjar é divertido. Modelagem nova só quando a peça for usada pelo item em andamento.
 
 ---
 
@@ -211,11 +238,11 @@ Fases 2 e 4 são o coração do projeto: se a magia por texto não for divertida
 
 | Risco | O que fazemos |
 |---|---|
-| IA gratuita interpretar mal frases criativas | Fase 4 mede isso cedo; se necessário, plano pago dentro do teto de R$ 50 |
+| Forjar não ser divertido | Marco de teste com o amigo logo após o cooperativo; ajustar receitas antes de criar conteúdo |
 | Cota do Claude Pro acabar no meio do trabalho | Equipe enxuta, tarefas pequenas, trabalho dividido em sessões curtas |
 | Seu PC não aguentar | Limites rígidos e medição de FPS desde o primeiro dia |
 | Conexão entre as casas falhar | Rede virtual no começo; noray depois |
-| Escopo crescer demais | Nada de conteúdo novo antes de as Fases 2 e 5 estarem provadas |
+| Escopo crescer demais | Nada das Fases 5 a 7 antes do primeiro teste com o amigo |
 
 ---
 
