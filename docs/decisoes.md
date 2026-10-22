@@ -374,6 +374,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
   - Logo acima da barra: aviso de interação (ex.: "E · forjar").
   - Canto inferior direito: espaço reservado para o minimapa (círculo com o N); o minimapa de verdade entra quando houver mapa para mostrar.
 - **Decidido pelo Claude como gestor:** tamanhos, margens e o visual provisório. O Vitor julga pelo print.
+- **Escolhas do Vitor (22/10/2026, depois do primeiro print):** sem selo de nível no retrato (o jogo não tem nível); medalhão continua redondo (ADR-033), dentro de uma moldura em losango como na referência; mãos em primeira pessoa mais baixas e afastadas para não encostar na barra. Estilo do HUD 100% provisório (formas lisas) até o Vitor aprovar uma referência visual do HUD.
 - **Fácil de mudar?** Sim, é camada de interface.
 
 ## ADR-040 · Arte feita no próprio projeto, sem pacotes prontos

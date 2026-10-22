@@ -2141,7 +2141,7 @@ func _testar_hud_no_layout_da_adr_039() -> void:
 	_afirmar("HUD: minimapa reservado no canto inferior direito",
 		minimapa.get_global_rect().end.x > tela.x - 40 and minimapa.get_global_rect().end.y > tela.y - 40)
 	hud.mostrar_aviso("E: usar a bigorna")
-	var topo_barra: float = tela.y - BarraHud.TAMANHO - BarraHud.MARGEM_BAIXO
+	var topo_barra: float = tela.y - BarraHud.TAMANHO - BarraHud.MARGEM_BAIXO - BarraHud.MOLDURA_LOSANGO
 	_afirmar("HUD: aviso de interação aparece logo acima da barra, no centro",
 		aviso.visible and aviso.text == "E: usar a bigorna" and aviso.get_global_rect().end.y <= topo_barra
 		and absf(aviso.get_global_rect().get_center().x - tela.x / 2.0) < 2.0)

@@ -12,8 +12,10 @@ var _direita: Node3D
 var _brilho: MeshInstance3D
 var _fase_passo := 0.0
 var _conjurando := 0.0
-var _base_esquerda := Vector3(-0.27, -0.27, -0.42)
-var _base_direita := Vector3(0.3, -0.36, -0.5)
+## Afastadas para os lados e um pouco mais baixas, para não encostar nos
+## medalhões 1 e 4 da barra (escolha 1a do Vitor, 22/10/2026).
+var _base_esquerda := Vector3(-0.37, -0.3, -0.42)
+var _base_direita := Vector3(0.41, -0.39, -0.5)
 
 
 func _ready() -> void:

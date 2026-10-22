@@ -8,13 +8,16 @@ extends Control
 ## número da tecla e uma "sombra de relógio" enquanto recarrega.
 
 const TAMANHO := 64.0
-const ESPACO := 14.0
+const ESPACO := 26.0
 
 ## Distância do pé da tela até a base dos medalhões (o número da tecla fica
 ## embaixo deles). O aviso de interação do HUD fica logo acima disto.
-const MARGEM_BAIXO := 36.0
+const MARGEM_BAIXO := 46.0
 const COR_LIVRE := Color(0.2, 0.2, 0.22, 0.85)
 const COR_PLACA := Color(0.15, 0.15, 0.17, 0.8)
+const COR_MOLDURA := Color(0.22, 0.22, 0.25, 0.85)
+## Quanto a ponta do losango passa do medalhão.
+const MOLDURA_LOSANGO := 11.0
 
 var mago: Node = null
 var _fonte: Font = null
@@ -48,9 +51,15 @@ func _draw() -> void:
 		var centro := inicio + Vector2(i * (TAMANHO + ESPACO) + TAMANHO / 2.0, TAMANHO / 2.0)
 		var raio := TAMANHO / 2.0
 		var selecionado: bool = i == mago.espaco_selecionado
-		# Selecionado: só um contorno branco liso, para ler qual está na mão.
+		# Medalhão redondo dentro de uma moldura em losango lisa (escolha 3b do
+		# Vitor: forma da referência sem contrariar o medalhão redondo da
+		# ADR-033). O selecionado ganha contorno branco no losango.
+		var losango := _losango(centro, raio + MOLDURA_LOSANGO)
+		draw_colored_polygon(losango, COR_MOLDURA)
 		if selecionado:
-			draw_arc(centro, raio + 4.0, 0.0, TAU, 48, Color.WHITE, 3.0)
+			var contorno := losango.duplicate()
+			contorno.append(losango[0])
+			draw_polyline(contorno, Color.WHITE, 3.0)
 		var medalhao = barra.medalhoes[i]
 		if medalhao == null:
 			# Espaço livre: cinza translúcido, mais claro que o fundo do jogo.
@@ -73,8 +82,13 @@ func _draw() -> void:
 				var segundos := ceili(fracao * float(medalhao.get("recarga_s", 1.0)))
 				_texto_centrado(str(segundos), centro + Vector2(0, 11), 30, Color.WHITE)
 		# Número da tecla logo abaixo.
-		draw_rect(Rect2(centro + Vector2(-11, raio + 7.0), Vector2(22, 20)), COR_PLACA)
-		_texto_centrado(str(i + 1), centro + Vector2(0, raio + 22.0), 14, Color.WHITE)
+		draw_rect(Rect2(centro + Vector2(-11, raio + MOLDURA_LOSANGO + 4.0), Vector2(22, 20)), COR_PLACA)
+		_texto_centrado(str(i + 1), centro + Vector2(0, raio + MOLDURA_LOSANGO + 19.0), 14, Color.WHITE)
+
+
+func _losango(centro: Vector2, meia_diagonal: float) -> PackedVector2Array:
+	return PackedVector2Array([centro + Vector2(0, -meia_diagonal), centro + Vector2(meia_diagonal, 0),
+		centro + Vector2(0, meia_diagonal), centro + Vector2(-meia_diagonal, 0)])
 
 
 ## Fatia de pizza a partir do topo, no sentido horário, cobrindo a fração dada.
