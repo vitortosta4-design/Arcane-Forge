@@ -14,7 +14,7 @@ Atualizado em: 22/10/2026
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
 
 ## Próximo passo
-1. Vitor joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
+1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
 2. Ajustar números (mana, recarga) a partir do que ele disser.
 3. Quando a referência do HUD chegar: aplicar o estilo nas peças que já estão no lugar.
 

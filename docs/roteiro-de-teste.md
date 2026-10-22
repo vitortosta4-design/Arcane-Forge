@@ -1,72 +1,57 @@
-# Roteiro de teste no PC do Vitor (21/10/2026)
+# Roteiro de teste no PC do Vitor: ciclo da forja (Fase 2)
 
-Tempo estimado: 20 a 30 minutos. Pode anotar as respostas direto no chat, do jeito que sair.
+Atualizado em 22/10/2026. Tempo estimado: 25 minutos. Pode responder no chat do jeito que sair, sem formatar.
 
-## 1. Baixar a versão nova
+## 1. Baixar a versão nova (1 minuto)
 
 No terminal (Git Bash ou PowerShell), dentro da pasta do projeto:
 
 ```
-git fetch origin
-git checkout claude/arcane-forge-continuation-4rfd9u
-git pull origin claude/arcane-forge-continuation-4rfd9u
+git checkout main
+git pull origin main
 ```
 
-Depois abra o Godot 4.7, importe (ou abra) a pasta `jogo` e aperte **F5** para rodar.
+## 2. Medir o FPS (2 minutos, antes de jogar)
 
-## 2. Controles
+Dê dois cliques em `ferramentas\medir_fps.bat`. Ele roda sozinho por uns 70 segundos; não mexa no mouse nem troque de janela. No fim, copie o texto que aparecer e me mande.
+
+## 3. Abrir o jogo
+
+Abra o Godot 4.7, abra a pasta `jogo` e aperte **F5**.
 
 | Tecla | O que faz |
 |---|---|
-| W A S D | andar |
-| Espaço | pular |
-| Mouse | olhar |
-| Clique esquerdo | bola de fogo rápida (sem IA) |
-| C | trocar primeira/terceira pessoa |
-| Q | abrir a caixa de magia; escreva a frase e aperte Enter |
-| Esc | fechar a caixa de magia |
+| W A S D / Espaço | andar / pular |
+| Mouse | olhar e mirar |
+| 1, 2, 3, 4 | usar o medalhão daquele espaço |
+| Clique esquerdo | repetir o último medalhão usado |
+| E | usar a bigorna (perto dela) e fechar a tela dela |
+| C | primeira / terceira pessoa |
+| F3 | liga e desliga o contador de FPS |
+| Esc | pausa (continuar, reiniciar, sair) |
 
-## 3. Primeiro olhar (2 minutos, sem conjurar nada)
+Na tela da bigorna: clique nas runas para colocar (até 3: uma de forma e até duas de elemento), **Espaço** martela. O botão "Quebrar" ao lado de um medalhão libera o espaço.
 
-1. Qual o **FPS** no canto da tela, parado e andando?
-2. Aparece **névoa no ar** (raios de luz, ar meio "denso")? Na nuvem eu não consigo ver isso.
-3. A tocha do canto de atmosfera **brilha e espalha luz** nas paredes?
-4. Comparando com `docs/referencias/arte-conceito-01.png`: o que mais incomoda?
-5. **Novidades desta tarde:** a arena virou uma clareira com morros, trilha, ruínas e castelo ao fundo. Ande até a borda e olhe em volta: algo parece errado, flutuando ou atravessável?
-6. Aperte **C**: o mago aparece em terceira pessoa (antes ele nunca aparecia, era um bug). Ele ficou com a cara que você imaginava?
-7. Em primeira pessoa, as magias agora saem da mão esquerda. A mira continua acertando onde você aponta?
+## 4. O ciclo (o critério da Fase 2, uns 10 minutos)
 
-## 4. Magias pela IA (uma frase por vez)
+1. Você começa com 2 medalhões (espaços 1 e 2) e 2 espaços vazios.
+2. **Ache 3 runas** na clareira: são 7 espalhadas, flutuando com a luz da cor delas. Encoste para pegar; elas aparecem embaixo da vida e da mana.
+3. **Ache a caverna:** a boca fica na encosta à direita de onde você nasce (leste). Entre nela.
+4. **Forje 2 medalhões diferentes** na bigorna. Não vou contar todas as receitas (descobrir faz parte), mas três para começar: fogo sozinho, vida + fogo, arremesso + água. Combinação sem receita também dá alguma coisa.
+5. **Saia e use os dois medalhões na galinha zumbi.**
+6. Feche o jogo, abra de novo e veja se as receitas que você descobriu continuam no grimório (na tela da bigorna).
 
-Para cada frase, anote: **a IA entendeu?** (fez algo parecido com o pedido), **a legenda** que apareceu embaixo, e **quanto tempo** demorou.
+Para zerar o grimório e descobrir tudo de novo: apague `%APPDATA%\Godot\app_userdata\Arcane Forge\grimorio.json`.
 
-1. "bola de fogo que explode"
-2. "me cure"
-3. "escudo de pedra no meu corpo"
-4. "levante um muro de pedra na minha frente"
-5. "teleporte para frente"
-6. "chuva ao meu redor que deixa todo mundo molhado"
-7. "faísca elétrica" (de preferência logo depois da chuva, na galinha molhada)
-8. "bola de lava que deixa uma poça de fogo no chão"
-9. "pó que cega a galinha"
-10. "invoque um pombo de pedra"
-11. "pombo de pedra que bombardeia com ovos explosivos"
-12. Uma frase **livre e absurda**, do jeito que você imagina o jogo (ex.: "vaca de água que solta bolhas")
+## 5. Perguntas (é isto que eu preciso de você)
 
-Se aparecer "não entendi" ou nada acontecer, anote a frase exata.
+1. **Forjar é divertido?** O que deu vontade de fazer de novo e o que foi chato?
+2. Alguma magia **forte ou fraca demais**? A **mana** acabou rápido ou sobrou? A **recarga** dos medalhões incomodou?
+3. Achar runas e a caverna foi **fácil, difícil ou confuso**?
+4. O **HUD** dá para ler no meio da ação (vida, mana, runas, qual medalhão está recarregando)?
+5. Apareceu algum **erro vermelho** no painel "Saída" do Godot, ou algo que travou, atravessou parede ou sumiu? Se sim, print e o texto.
 
-## 5. Sensação do combate (10 minutos)
+## 6. Bônus: fechar a Fase 1 (5 minutos, se der)
 
-Esse é um dos dois critérios da Fase 1 que só você pode fechar. Jogue livremente contra a galinha e responda:
-- O combate **dá gosto**? O que ficou chato ou sem graça?
-- Alguma magia ficou forte ou fraca demais? Mana acabando rápido ou devagar?
-
-## 6. Decisões visuais que esperam você
-
-- **"Queimando"** ainda puxa para salmão. Vale gastar desempenho com partículas de chama?
-- A **parede** é um bloco cinza liso. Deixar assim por enquanto ou caprichar já?
-- A regra de magia "má" **sair pela culatra** (ADR-017) ainda não existe: com que frequência e o que deveria acontecer?
-
-## 7. Se der erro
-
-Tire um print da tela e copie o texto vermelho do painel "Saída" (Output) do Godot.
+1. Vá até o canto com a tocha e o arco (noroeste da clareira) e compare com `docs/referencias/arte-conceito-01.png`: o clima lembra a referência?
+2. O combate "dá gosto" depois de uns 10 minutos jogando?
