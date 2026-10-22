@@ -12,10 +12,10 @@
 [ext_resource type="PackedScene" path="res://cenas/menu_pausa.tscn" id="10"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
-sky_top_color = Color(0.12, 0.38, 0.92, 1)
-sky_horizon_color = Color(0.62, 0.78, 0.96, 1)
-ground_bottom_color = Color(0.32, 0.28, 0.26, 1)
-ground_horizon_color = Color(0.75, 0.82, 0.93, 1)
+sky_top_color = Color(0.22, 0.45, 0.85, 1)
+sky_horizon_color = Color(0.66, 0.78, 0.92, 1)
+ground_bottom_color = Color(0.3, 0.28, 0.27, 1)
+ground_horizon_color = Color(0.66, 0.76, 0.88, 1)
 sun_angle_max = 25.0
 
 [sub_resource type="Sky" id="Sky_arena"]
@@ -24,31 +24,34 @@ sky_material = SubResource("ProceduralSkyMaterial_arena")
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 2
 sky = SubResource("Sky_arena")
-ambient_light_source = 2
-ambient_light_color = Color(0.46, 0.58, 0.98, 1)
-ambient_light_energy = 0.55
-fog_enabled = true
-fog_light_color = Color(0.58, 0.72, 0.95, 1)
-fog_density = 0.0025
-fog_sky_affect = 0.4
+ambient_light_source = 3
+ambient_light_sky_contribution = 1.0
+ambient_light_energy = 0.28
 tonemap_mode = 2
-tonemap_white = 8.0
+tonemap_exposure = 0.95
+tonemap_white = 6.0
 glow_enabled = true
 glow_levels/3 = 1.0
 glow_levels/5 = 1.0
 glow_levels/7 = 1.0
-glow_intensity = 1.4
-glow_strength = 1.3
-glow_bloom = 0.2
-glow_hdr_threshold = 0.85
+glow_intensity = 1.2
+glow_strength = 1.2
+glow_bloom = 0.0
+glow_hdr_threshold = 1.0
+fog_enabled = true
+fog_light_color = Color(0.56, 0.68, 0.88, 1)
+fog_sun_scatter = 0.12
+fog_density = 0.006
+fog_aerial_perspective = 0.4
+fog_sky_affect = 0.25
 volumetric_fog_enabled = true
-volumetric_fog_density = 0.03
+volumetric_fog_density = 0.005
 volumetric_fog_albedo = Color(0.75, 0.85, 1, 1)
-volumetric_fog_ambient_inject = 0.6
+volumetric_fog_ambient_inject = 0.3
 volumetric_fog_sky_affect = 0.5
 adjustment_enabled = true
-adjustment_saturation = 1.1
-adjustment_contrast = 1.08
+adjustment_saturation = 1.0
+adjustment_contrast = 1.05
 
 [node name="ArenaTeste" type="Node3D"]
 script = ExtResource("1")
@@ -57,10 +60,11 @@ script = ExtResource("1")
 environment = SubResource("Environment_arena")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.8, -0.5, 0.35, 0, 0.6, 0.8, -0.6, -0.65, 0.47, 0, 8, 0)
-light_color = Color(1, 0.88, 0.7, 1)
-light_energy = 1.35
+transform = Transform3D(0.34202015, 0.5785326, -0.74048793, 0, 0.7880108, 0.6156615, 0.9396926, -0.21056864, 0.26951557, 0, 8, 0)
+light_color = Color(1, 0.86, 0.64, 1)
+light_energy = 1.3
 shadow_enabled = true
+directional_shadow_max_distance = 70.0
 
 [node name="Clareira" parent="." instance=ExtResource("8")]
 

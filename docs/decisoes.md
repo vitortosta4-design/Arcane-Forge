@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 22/10/2026 (ADR-035)
+Última atualização: 22/10/2026 (ADR-036)
 
 ---
 
@@ -329,6 +329,17 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Decidido pelo Claude como gestor:** mana continua, com recarga curta por medalhão (números ajustados jogando); caverna e medalhão provisórios até a Fase 5; receitas num arquivo de dados legível.
 - **Saem:** voz, teste de 50 frases na IA, Supabase (o projeto pode ser pausado).
 - **Fácil de mudar?** Sim, é a ordem do trabalho.
+
+## ADR-036 · Renderizador Forward+ e passe de luz e paleta antes do teste com o amigo
+**Status:** Aprovada (22/10/2026)
+
+- **Problema:** a auditoria visual (`docs/auditoria-visual-ambiente.md`) achou o projeto travado no renderizador Compatibility, apesar de a proposta técnica e a ADR-031 contarem com Forward+. Névoa volumétrica e SDFGI nunca funcionaram em nenhum PC. A mesma auditoria mediu que o cenário estava claro demais, não saturado demais.
+- **Escolhas do Vitor:**
+  - Renderizador passa para **Forward+** (`project.godot`). As sessões na nuvem continuam renderizando em Compatibility (sem GPU), então o print da nuvem é só aproximado.
+  - Fazer agora só os itens baratos da auditoria (medição de FPS e de cor, renderizador, luz e exposição, paleta por camadas). Terreno, composição, peças no Blender e céu pintado ficam para a Fase 5, como manda a ADR-035.
+  - Criar a skill `personagem-low-poly` (`.claude/skills/`) com o roteiro fixo de personagem.
+- **Consequências:** névoa volumétrica ficou bem mais fraca (0,03 para 0,005) para não lavar a arena quando ligar de verdade no Forward+; precisa do olho do Vitor. A meta de FPS agora se mede com `ferramentas\medir_fps.bat` no PC com a RTX 2060.
+- **Fácil de mudar?** Sim. Renderizador é uma linha; luz e paleta são números.
 
 ---
 

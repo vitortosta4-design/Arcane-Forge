@@ -21,19 +21,23 @@ const LARGURA_TRILHA := 2.2
 ## Até onde os pinheiros ganham colisão (mais longe ninguém chega).
 const RAIO_COLISAO_ARVORES := 34.0
 
-const COR_GRAMA := Color(0.38, 0.56, 0.15)
-const COR_GRAMA_ESCURA := Color(0.22, 0.42, 0.13)
-const COR_TERRA := Color(0.74, 0.48, 0.27)
-const COR_TERRA_ESCURA := Color(0.62, 0.38, 0.21)
-const COR_ROCHA := Color(0.5, 0.47, 0.43)
+const COR_GRAMA := Color(0.35, 0.5, 0.2)
+const COR_GRAMA_ESCURA := Color(0.2, 0.36, 0.15)
+const COR_TERRA := Color(0.66, 0.46, 0.29)
+const COR_TERRA_ESCURA := Color(0.5, 0.35, 0.24)
+const COR_ROCHA := Color(0.46, 0.44, 0.42)
 const COR_PEDRA_RUINA := Color(0.58, 0.54, 0.48)
-const COR_MUSGO := Color(0.36, 0.55, 0.18)
+const COR_MUSGO := Color(0.33, 0.47, 0.2)
 const COR_TRONCO := Color(0.42, 0.27, 0.16)
-const COR_PINHEIRO := Color(0.16, 0.42, 0.24)
-const COR_COPA := Color(0.36, 0.6, 0.18)
+const COR_PINHEIRO := Color(0.14, 0.34, 0.22)
+const COR_COPA := Color(0.32, 0.5, 0.2)
 const COR_ESTANDARTE := Color(0.16, 0.26, 0.7)
 const COR_DOURADO := Color(0.95, 0.72, 0.25)
 const COR_TELHADO := Color(0.36, 0.3, 0.72)
+## Fundo (camada 0 da paleta): puxa para o azul da névoa, não para o verde
+## do chão, para o fundo "descansar" e o perto ganhar destaque.
+const COR_MONTANHA := Color(0.36, 0.46, 0.52)
+const COR_NEVE := Color(0.72, 0.74, 0.8)
 
 var _ruido := FastNoiseLite.new()
 var _ruido_morros := FastNoiseLite.new()
@@ -295,7 +299,7 @@ func _criar_grama() -> void:
 			continue
 		# Touceira: 3 lâminas inclinadas saindo do mesmo ponto.
 		var base := _no_chao(x, z)
-		var cor := COR_GRAMA.lerp(Color(0.6, 0.78, 0.25), _rng.randf()) if _rng.randf() < 0.7 else COR_GRAMA_ESCURA
+		var cor := COR_GRAMA.lerp(Color(0.48, 0.6, 0.27), _rng.randf()) if _rng.randf() < 0.7 else COR_GRAMA_ESCURA
 		for k in 3:
 			var giro := Basis(Vector3.UP, _rng.randf_range(0.0, TAU)) * Basis(Vector3.RIGHT, _rng.randf_range(0.1, 0.35))
 			var escala := _rng.randf_range(0.6, 1.2)
@@ -415,9 +419,9 @@ func _criar_fundo() -> void:
 		var raio := _rng.randf_range(35.0, 60.0)
 		var giro := Basis(Vector3.UP, _rng.randf_range(0.0, TAU))
 		GeometriaLowPoly.anexar(st, GeometriaLowPoly.cilindro(raio, raio * 0.12, altura, 7),
-			Transform3D(giro, centro + Vector3.UP * altura / 2.0), GeometriaLowPoly.variar(Color(0.3, 0.46, 0.34), _rng))
+			Transform3D(giro, centro + Vector3.UP * altura / 2.0), GeometriaLowPoly.variar(COR_MONTANHA, _rng))
 		GeometriaLowPoly.anexar(st, GeometriaLowPoly.cilindro(raio * 0.3, 0.0, altura * 0.25, 7),
-			Transform3D(giro, centro + Vector3.UP * altura * 0.95), Color(0.55, 0.52, 0.5))
+			Transform3D(giro, centro + Vector3.UP * altura * 0.95), COR_NEVE)
 	_castelo(st, Vector3(-8.0, 0.0, -175.0))
 	for i in 9:
 		var angulo := _rng.randf_range(0.0, TAU)

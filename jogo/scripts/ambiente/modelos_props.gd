@@ -5,8 +5,8 @@ extends RefCounted
 ## madeira bojudo com cintas de metal. O barril inflamável tem uma faixa
 ## vermelha, para o jogador saber de longe que ele pega fogo.
 
-const COR_MADEIRA := Color(0.6, 0.4, 0.22)
-const COR_MADEIRA_ESCURA := Color(0.46, 0.29, 0.16)
+const COR_MADEIRA := Color(0.52, 0.39, 0.27)
+const COR_MADEIRA_ESCURA := Color(0.4, 0.28, 0.19)
 const COR_METAL := Color(0.32, 0.31, 0.33)
 const COR_PERIGO := Color(0.78, 0.16, 0.1)
 
