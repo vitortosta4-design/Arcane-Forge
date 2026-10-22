@@ -14,13 +14,14 @@
 #   --espera s        segundos até o print (padrão 2.5)
 #   --camera x,y,z    câmera livre nesse ponto (ex.: ver o mago de frente)
 #   --alvo-camera x,y,z  para onde a câmera livre olha (padrão 0,1,0)
+#   --interagir       aperta E aos 0,5 s (abrir baú, usar bigorna)
 #
 # Exemplo (canto de atmosfera):
 #   ferramentas/tirar_print.sh /tmp/canto.png --posicao -13,1.6,-9 --olhar -13,1.6,-13
 set -uo pipefail
 
 if [ $# -lt 1 ]; then
-  sed -n '2,19p' "$0"
+  sed -n '2,20p' "$0"
   exit 1
 fi
 

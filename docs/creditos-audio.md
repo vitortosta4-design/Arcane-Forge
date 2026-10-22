@@ -9,6 +9,8 @@ Registro de origem e licença de cada som do jogo, como pede a ADR-026.
 | `jogo/assets/som/tiro.wav` | Gerado por script (síntese própria, sem amostra de terceiro) | Nenhuma: autoria do projeto |
 | `jogo/assets/som/explosao.wav` | Gerado por script (síntese própria, sem amostra de terceiro) | Nenhuma: autoria do projeto |
 | `jogo/assets/som/galinha_zumbi.wav` | Gerado por script (síntese própria, sem amostra de terceiro) | Nenhuma: autoria do projeto |
+| `jogo/assets/som/bau_brilho.wav` | Gerado por script em 22/10/2026 (zumbido senoidal e sininhos, Python puro) | Nenhuma: autoria do projeto |
+| `jogo/assets/som/bau_abrir.wav` | Gerado por script em 22/10/2026 (rangido de ruído filtrado e arpejo) | Nenhuma: autoria do projeto |
 
 Script gerador (não faz parte do jogo, só histórico): síntese por onda quadrada e ruído filtrado em Python puro (`wave`, `math`, `random`), sem bibliotecas externas.
 

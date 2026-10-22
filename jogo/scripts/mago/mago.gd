@@ -28,6 +28,8 @@ var _reducao_escudo := 0.0
 var estados := ControladorEstados.new()
 ## Runas que o mago carrega (Forja de Runas). Só o Host mexe aqui.
 var runas: Array[String] = []
+## Objeto perto com que o mago pode interagir (baú, bigorna...).
+var _interacao: Node = null
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -41,6 +43,8 @@ signal conjurou(legenda: String)
 signal morreu
 signal teleportou
 signal runas_mudaram(runas: Array)
+## Texto do que dá para fazer com E agora ("Abrir baú"); vazio quando nada.
+signal interacao_mudou(texto: String)
 
 
 func _ready() -> void:
@@ -59,6 +63,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		rotate_y(-event.relative.x * SENSIBILIDADE_MOUSE)
 		_pivot_cabeca.rotate_x(-event.relative.y * SENSIBILIDADE_MOUSE)
 		_pivot_cabeca.rotation.x = clampf(_pivot_cabeca.rotation.x, -LIMITE_OLHAR_CIMA_BAIXO, LIMITE_OLHAR_CIMA_BAIXO)
+	elif event.is_action_pressed("interagir"):
+		interagir()
 	elif event.is_action_pressed("trocar_camera"):
 		_trocar_camera()
 	elif event.is_action_pressed("conjurar_bola_de_fogo"):
@@ -296,3 +302,20 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 func adicionar_runa(nome: String) -> void:
 	runas.append(nome)
 	runas_mudaram.emit(runas.duplicate())
+
+
+func definir_interacao(alvo: Node, texto: String) -> void:
+	_interacao = alvo
+	interacao_mudou.emit(texto)
+
+
+func limpar_interacao(alvo: Node) -> void:
+	if _interacao == alvo:
+		_interacao = null
+		interacao_mudou.emit("")
+
+
+## Tecla E: age sobre o objeto que está perto (abrir baú, usar a bigorna).
+func interagir() -> void:
+	if is_instance_valid(_interacao) and _interacao.has_method("interagir"):
+		_interacao.interagir(self)

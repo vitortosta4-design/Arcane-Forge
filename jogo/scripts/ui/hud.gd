@@ -10,6 +10,7 @@ extends CanvasLayer
 @onready var _cegueira: ColorRect = $Cegueira
 @onready var _clarao: ColorRect = $Clarao
 @onready var _label_runas: RichTextLabel = $Runas
+@onready var _label_interacao: Label = $Interacao
 
 const NOMES_ESTADOS := {
 	"eletrizado": "Eletrizado!",
@@ -34,6 +35,7 @@ func configurar(mago: Node) -> void:
 	mago.estados.estados_mudaram.connect(_ao_estados_mudarem)
 	mago.teleportou.connect(_ao_teleportar)
 	mago.runas_mudaram.connect(_ao_runas_mudarem)
+	mago.interacao_mudou.connect(_ao_interacao_mudar)
 	_ao_runas_mudarem(mago.runas)
 	_ao_vida_mudar(mago.vida_atual, mago.vida_maxima)
 	_ao_mana_mudar(mago.mana_atual, mago.mana_maxima)
@@ -86,3 +88,7 @@ func _ao_runas_mudarem(runas: Array) -> void:
 		var nova: Dictionary = LivroDeReceitas.runa(runas[-1])
 		_ao_conjurar("Você pegou a runa %s!" % nova.get("nome", runas[-1]))
 	_qtd_runas = runas.size()
+
+
+func _ao_interacao_mudar(texto: String) -> void:
+	_label_interacao.text = "[E] %s" % texto if texto != "" else ""

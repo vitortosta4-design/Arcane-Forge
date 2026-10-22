@@ -50,6 +50,8 @@ func _process(delta: float) -> bool:
 
 	if _etapa == 1 and _tempo >= 0.5:
 		_etapa = 2
+		if _mago and _args.has("interagir"):
+			_mago.interagir()
 		if _mago and _args.has("frase"):
 			root.get_node("/root/Porteiro").ativo = false
 			_mago.conjurar_por_texto(_args["frase"])

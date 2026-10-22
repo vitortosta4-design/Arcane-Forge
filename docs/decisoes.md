@@ -471,3 +471,9 @@ O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB, 16GB RAM) deixa de ser o piso
   - HUD: "Runas (n): ..." com o nome de cada uma na cor dela, e aviso na legenda ("Você pegou a runa Água!").
   - **Achados nos prints:** (1) de longe a runa sumia na grama: ficou maior e ganhou o feixe; (2) girando sem parar, metade do tempo mostrava a costa lisa (o símbolo só existe na frente): agora fica de frente para a câmera.
   - 7 testes novos (257 → 264/264), entre eles a coleta pela física de verdade (o mago encosta na runa). Prints em `evidencias/fase-2/etapa2_*.png`.
+- **Etapa 2b: runas escondidas em baús** em 22/10/2026, a pedido do Vitor ("iluminação muito intensa, prefiro algo mais discreto, tipo um som de baú do Fortnite; não queria a runa simplesmente flutuando, talvez escondida num baú").
+  - Saíram o feixe de luz e o disco brilhante. As 7 runas da clareira agora ficam dentro de **baús** (visual provisório feito em código), virados para o centro. O baú fechado só tem um brilho fraco pela fresta, na cor da runa, e um **som mágico baixinho em loop** que se ouve a até uns 14 m (gerado por script, ver `docs/creditos-audio.md`; o definitivo vem das gravações da ADR-028).
+  - Perto do baú aparece "[E] Abrir baú" (tecla nova **E = interagir**, que a bigorna também vai usar). Abrir passa pelo Host (`abrir_bau`: fechado, runa conhecida, mago a até 3 m). A tampa abre com um rangido e um arpejo, a runa sobe de dentro, para um instante girando e voa até o mago.
+  - **Escopo:** baús eram da Fase 4 (ADR-018, "baús com runas e um mímico"). Adiantei só o baú simples, por pedido direto do Vitor; o mímico continua na Fase 4. A runa solta no chão continua existindo, mais discreta, para quando um jogador largar uma para o parceiro (Fase 3).
+  - Ferramenta de print ganhou `--interagir` (aperta E aos 0,5 s).
+  - 9 testes novos (264 → 273/273). Prints em `evidencias/fase-2/etapa2b_*.png`.

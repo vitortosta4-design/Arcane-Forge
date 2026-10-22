@@ -9,6 +9,7 @@ const LIMITE_MAGIAS_ATIVAS_POR_DONO := 3
 ## Até onde o mago pode estar da runa para a coleta valer (proteção para o
 ## cooperativo: o convidado não pega runa do outro lado do mapa).
 const DISTANCIA_COLETA_RUNA_M := 2.5
+const DISTANCIA_ABRIR_BAU_M := 3.0
 const CenaEfeitoExplosao := preload("res://cenas/efeitos/explosao_visual.tscn")
 
 var projeteis_ativos: Array[Node] = []
@@ -137,4 +138,21 @@ func coletar_runa(mago: Node, runa: Node) -> bool:
 		return false
 	mago.adicionar_runa(runa.nome_runa)
 	runa.ao_ser_coletada()
+	return true
+
+
+## Abrir baú de runa (Fase 2): o juiz confere que o baú ainda está fechado,
+## guarda uma runa conhecida e que o mago está perto. A runa vai direto
+## para o inventário; o voo da runa até o mago é só visual.
+func abrir_bau(mago: Node, bau: Node) -> bool:
+	if not is_instance_valid(bau) or not is_instance_valid(mago) or bau.aberto:
+		return false
+	if LivroDeReceitas.runa(bau.nome_runa).is_empty():
+		return false
+	if (mago as Node3D).global_position.distance_to((bau as Node3D).global_position) > DISTANCIA_ABRIR_BAU_M:
+		return false
+	mago.adicionar_runa(bau.nome_runa)
+	bau.abrir(mago)
+	if mago.has_method("limpar_interacao"):
+		mago.limpar_interacao(bau)
 	return true

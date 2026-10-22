@@ -82,6 +82,23 @@ theme_override_colors/font_outline_color = Color(0.08, 0.07, 0.1, 0.8)
 theme_override_constants/outline_size = 4
 text = "Runas: nenhuma"
 
+[node name="Interacao" type="Label" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = 40.0
+offset_right = 150.0
+offset_bottom = 70.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.07, 0.1, 0.8)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+text = ""
+
 [node name="Legenda" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5

@@ -122,6 +122,7 @@ func _ready() -> void:
 	_testar_hud_tem_mira_no_centro()
 	_testar_livro_de_receitas()
 	await _testar_coleta_de_runas()
+	await _testar_bau_de_runa()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -2009,5 +2010,50 @@ func _testar_coleta_de_runas() -> void:
 	_afirmar("runa: encostar nela coleta", mago.runas == ["agua", "fogo"])
 	mago.queue_free()
 	hud.queue_free()
+	chao.queue_free()
+	await get_tree().process_frame
+
+
+## Baú de runa (pedido do Vitor, 22/10/2026): chegando perto aparece
+## "[E] Abrir baú"; apertar E abre pelo juiz, a runa vai para o inventário,
+## a tampa abre e o baú não abre de novo.
+func _testar_bau_de_runa() -> void:
+	var chao := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	var caixa := BoxShape3D.new()
+	caixa.size = Vector3(20, 1, 20)
+	forma.shape = caixa
+	chao.add_child(forma)
+	add_child(chao)
+	chao.global_position = Vector3(60, -0.5, 0)
+	var mago: Node3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	var hud: CanvasLayer = load("res://cenas/hud.tscn").instantiate()
+	add_child(hud)
+	hud.configurar(mago)
+	var bau: BauDeRuna = load("res://cenas/forja/bau_de_runa.tscn").instantiate()
+	bau.nome_runa = "vida"
+	add_child(bau)
+	bau.global_position = Vector3(60, 0, 0)
+	mago.global_position = Vector3(60, 0.05, 8)
+	await get_tree().physics_frame
+	_afirmar("baú: longe o juiz não deixa abrir", not Host.abrir_bau(mago, bau) and not bau.aberto)
+	_afirmar("baú: sem nada perto, E não faz nada", hud.get_node("Interacao").text == "")
+	mago.global_position = Vector3(60, 0.05, 1.6)
+	for i in 6:
+		await get_tree().physics_frame
+	_afirmar("baú: perto aparece \"[E] Abrir baú\"", hud.get_node("Interacao").text == "[E] Abrir baú")
+	_afirmar("baú: faz som baixinho enquanto fechado", bau.get_node("SomBrilho").playing)
+	mago.interagir()
+	_afirmar("baú: apertar E abre e a runa vai para o inventário", bau.aberto and mago.runas == ["vida"])
+	_afirmar("baú: aviso de E some depois de aberto", hud.get_node("Interacao").text == "")
+	_afirmar("baú: som para quando abre", not bau.get_node("SomBrilho").playing)
+	mago.interagir()
+	_afirmar("baú: não abre duas vezes", not Host.abrir_bau(mago, bau) and mago.runas.size() == 1)
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("baú: tampa abriu", bau.get_node("Tampa").rotation.x > deg_to_rad(80))
+	mago.queue_free()
+	hud.queue_free()
+	bau.queue_free()
 	chao.queue_free()
 	await get_tree().process_frame

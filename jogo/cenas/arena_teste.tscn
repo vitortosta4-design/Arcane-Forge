@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://cenas/menu_pausa.tscn" id="10"]
 
-[ext_resource type="PackedScene" path="res://cenas/forja/runa_coletavel.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://cenas/forja/bau_de_runa.tscn" id="11"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
 sky_top_color = Color(0.12, 0.38, 0.92, 1)
@@ -86,32 +86,32 @@ transform = Transform3D(0.7, 0, 0.71, 0, 1, 0, -0.71, 0, 0.7, -13, 0, -13)
 
 [node name="Runas" type="Node3D" parent="."]
 
-[node name="Runa1_fogo" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -8)
+[node name="Bau1_fogo" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(-0.800, 0, 0.600, 0, 1, 0, -0.600, 0, -0.800, 6, 0, -8)
 nome_runa = "fogo"
 
-[node name="Runa2_agua" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 8)
+[node name="Bau2_agua" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(0.753, 0, -0.659, 0, 1, 0, 0.659, 0, 0.753, -7, 0, 8)
 nome_runa = "agua"
 
-[node name="Runa3_feroz" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 1)
+[node name="Bau3_feroz" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(0.091, 0, 0.996, 0, 1, 0, -0.996, 0, 0.091, 11, 0, 1)
 nome_runa = "feroz"
 
-[node name="Runa4_arremesso" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -12)
+[node name="Bau4_arremesso" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(-0.970, 0, -0.243, 0, 1, 0, 0.243, 0, -0.970, -3, 0, -12)
 nome_runa = "arremesso"
 
-[node name="Runa5_vida" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -4)
+[node name="Bau5_vida" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(-0.316, 0, -0.949, 0, 1, 0, 0.949, 0, -0.316, -12, 0, -4)
 nome_runa = "vida"
 
-[node name="Runa6_prende" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 10)
+[node name="Bau6_prende" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(0.781, 0, 0.625, 0, 1, 0, -0.625, 0, 0.781, 8, 0, 10)
 nome_runa = "prende"
 
-[node name="Runa7_fogo" parent="Runas" instance=ExtResource("11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, 9)
+[node name="Bau7_fogo" parent="Runas" instance=ExtResource("11")]
+transform = Transform3D(0.569, 0, -0.822, 0, 1, 0, 0.822, 0, 0.569, -13, 0, 9)
 nome_runa = "fogo"
 
 [node name="HUD" parent="." instance=ExtResource("4")]
