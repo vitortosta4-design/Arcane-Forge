@@ -23,7 +23,6 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 [autoload]
 
 Host="*res://scripts/rede/host.gd"
-Porteiro="*res://scripts/rede/porteiro.gd"
 GerenciadorSom="*res://scripts/som/gerenciador_som.gd"
 
 [input]
@@ -55,10 +54,6 @@ trocar_camera={
 conjurar_bola_de_fogo={
 "deadzone": 0.5,
 "events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":1,"canceled":false,"pressed":false,"double_click":false,"script":null)]
-}
-abrir_conjuracao={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"key_label":0,"physical_keycode":81,"unicode":0,"echo":false,"script":null)]
 }
 
 medalhao_1={

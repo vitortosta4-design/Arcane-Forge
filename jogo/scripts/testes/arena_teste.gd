@@ -11,7 +11,5 @@ extends Node3D
 
 func _ready() -> void:
 	_hud.configurar(_mago)
-	# Forja de Runas (ADR-032): a caixa de texto (Q) saiu do jogo; o código
-	# dela fica guardado em scripts/ui/caixa_conjuracao.gd.
 	_forja_ui.configurar(_mago, _caverna.forja, _hud)
 	_menu_pausa.configurar(_mago, _forja_ui)

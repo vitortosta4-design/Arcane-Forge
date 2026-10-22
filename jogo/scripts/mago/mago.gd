@@ -23,7 +23,6 @@ const MASCARA_MIRA := 1 | 4 | 16
 
 var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
-var _aguardando_interpretacao := false
 var _reducao_escudo := 0.0
 var estados := ControladorEstados.new()
 ## Runas carregadas na expedição (recomeçam a cada uma, ADR-034).
@@ -169,82 +168,6 @@ func gastar_runas(usadas: Array) -> bool:
 	runas = sobra
 	runas_mudaram.emit(runas)
 	return true
-
-
-## Chamado pela caixa de conjuração (ADR-010) quando o jogador confirma uma
-## frase. Primeiro tenta o porteiro de verdade (Supabase + Groq); se a IA
-## estiver fora do ar, cai para o Interpretador local, que só reconhece
-## algumas palavras-chave sem precisar de internet (ADR-002). Se nenhum
-## dos dois entender, avisa o jogador.
-func conjurar_por_texto(frase: String) -> void:
-	if _cooldown_restante > 0.0 or _aguardando_interpretacao:
-		return
-	_aguardando_interpretacao = true
-	var ficha := await Porteiro.interpretar(frase)
-	if _ficha_sem_componentes(ficha):
-		ficha = Interpretador.interpretar(frase)
-	_aguardando_interpretacao = false
-	if _ficha_sem_componentes(ficha):
-		conjurou.emit("a magia está instável agora, use seu grimório")
-		return
-	_conjurar_ficha(ficha)
-
-
-## A IA às vezes pode devolver uma ficha "educada" (com nome e legenda) mas
-## sem nenhum componente de verdade, ou um componente "fantasma" com dano e
-## empurrão zerados (aconteceu de verdade testando com o Vitor: frase sem
-## sentido virou uma bola de fogo que não fazia nada). As duas coisas fariam
-## o jogador gastar a tentativa e não ver nada acontecer, então contam como
-## "não entendi" (ADR-002).
-##
-## Passa a ficha pelo Validador antes de olhar os campos: achado numa
-## revisão de segurança que ler "componentes" direto da ficha crua (ex.: a
-## IA manda "componentes": null) quebra o tipo fixo de Array no meio e faz
-## esta função devolver `false` (o padrão do tipo de retorno) sem avisar
-## ninguém — ou seja, o exato "passar sem ser entendido" que ela existe
-## para barrar. O Validador já sabe devolver sempre uma Array de verdade,
-## não importa o que a IA mande.
-func _ficha_sem_componentes(ficha: Dictionary) -> bool:
-	if ficha.is_empty():
-		return true
-	var componentes: Array = Validador.validar_ficha(ficha).get("componentes", [])
-	if componentes.is_empty():
-		return true
-	for componente in componentes:
-		if _componente_tem_efeito_real(componente):
-			return false
-	return true
-
-
-## Confere se um componente (ou algum efeito dentro do seu "ao_impactar")
-## faz alguma coisa de verdade, independente do tipo. Generalizado para
-## incluir "cura" (proposta técnica, seção 3) sem repetir a regra de
-## "projétil fantasma" (dano/empurrão zerados) achada com o Vitor na
-## Fase 2: um componente sem efeito real também conta como "não entendi".
-func _componente_tem_efeito_real(componente: Dictionary) -> bool:
-	var tipo = componente.get("tipo")
-	if tipo == "explosao" and (componente.get("dano", 0.0) > 0.0 or componente.get("empurrao", 0.0) != 0.0):
-		return true
-	if tipo == "cura" and componente.get("quantidade", 0.0) > 0.0:
-		return true
-	if tipo == "escudo" and componente.get("reducao", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
-		return true
-	if tipo == "estado" and componente.get("duracao_s", 0.0) > 0.0:
-		return true
-	if tipo == "invocacao" and componente.get("vida", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
-		return true
-	if tipo == "lancador" and _componente_tem_efeito_real(componente.get("projetil", {})):
-		return true
-	if tipo == "parede" and componente.get("duracao_s", 0.0) > 0.0:
-		return true
-	if tipo == "teleporte" and componente.get("distancia_m", 0.0) > 0.0:
-		return true
-	if tipo == "area" and componente.get("duracao_s", 0.0) > 0.0 and (componente.get("dano_por_s", 0.0) > 0.0 or componente.get("nome_estado", "") != ""):
-		return true
-	for efeito in (componente.get("ao_impactar", []) as Array):
-		if _componente_tem_efeito_real(efeito):
-			return true
-	return false
 
 
 func _conjurar_ficha(ficha: Dictionary) -> bool:

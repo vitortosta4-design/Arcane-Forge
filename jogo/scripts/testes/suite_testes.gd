@@ -23,20 +23,14 @@ func _ready() -> void:
 	await _testar_executor_cria_projetil_a_partir_da_ficha()
 	await _testar_projetil_usa_a_cor_do_material_da_ficha()
 	await _testar_projetil_usa_a_forma_da_ficha()
-	await _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio()
 	await _testar_gerenciador_som_respeita_limite_simultaneo()
-	_testar_interpretador_reconhece_bola_de_fogo()
-	_testar_interpretador_nao_entende_frase_desconhecida()
 	_testar_validador_calcula_custo_de_mana_pelos_componentes()
-	await _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil()
-	await _testar_conjurar_por_texto_desconhecido_nao_gasta_mana()
 	await _testar_ficha_sem_componentes_conta_como_nao_entendida()
 	_testar_validador_corta_cura_acima_do_limite()
 	_testar_validador_calcula_custo_de_mana_da_cura()
 	await _testar_executor_aplica_cura_no_dono_da_ficha()
 	await _testar_cura_nao_passa_do_teto_de_vida()
 	await _testar_ficha_so_com_cura_zero_conta_como_nao_entendida()
-	_testar_interpretador_reconhece_cura()
 	_testar_validador_corta_escudo_acima_do_limite()
 	_testar_validador_calcula_custo_de_mana_do_escudo()
 	await _testar_executor_aplica_escudo_no_dono_da_ficha()
@@ -44,13 +38,11 @@ func _ready() -> void:
 	await _testar_escudo_mais_forte_nao_e_substituido_por_um_mais_fraco()
 	await _testar_escudo_expira_depois_da_duracao()
 	_testar_ficha_so_com_escudo_sem_duracao_conta_como_nao_entendida()
-	_testar_interpretador_reconhece_escudo()
 	await _testar_ficha_com_cura_e_escudo_juntos_aplica_os_dois()
 	_testar_custo_de_mana_soma_componentes_diferentes()
 	_testar_validador_aceita_empurrao_negativo_para_puxar()
 	await _testar_empurrao_negativo_puxa_o_mago_para_o_centro()
 	await _testar_empurrao_negativo_conta_como_efeito_real()
-	_testar_interpretador_reconhece_buraco_negro()
 	_testar_validador_corta_estado_fora_da_lista_e_duracao_maxima()
 	_testar_validador_calcula_custo_de_mana_do_estado()
 	await _testar_lento_reduz_multiplicador_de_velocidade()
@@ -59,7 +51,6 @@ func _ready() -> void:
 	await _testar_reaplicar_queimando_estende_sem_duplicar_o_tick()
 	await _testar_projetil_aplica_estado_em_quem_atingiu()
 	_testar_ficha_so_com_estado_sem_duracao_conta_como_nao_entendida()
-	_testar_interpretador_reconhece_queimando_e_lento()
 	_testar_validador_corta_invocacao_nos_limites_e_padroes()
 	_testar_validador_calcula_custo_de_mana_da_invocacao()
 	await _testar_executor_cria_invocacao_com_vida_e_duracao_da_ficha()
@@ -68,7 +59,6 @@ func _ready() -> void:
 	await _testar_invocacao_persegue_inimigo_mais_proximo()
 	await _testar_invocacao_expira_depois_da_duracao()
 	_testar_ficha_so_com_invocacao_sem_vida_conta_como_nao_entendida()
-	_testar_interpretador_reconhece_pombo()
 	_testar_validador_monta_projetil_do_lancador()
 	_testar_validador_calcula_custo_do_lancador()
 	await _testar_executor_anexa_lancador_na_criatura_certa()
@@ -79,7 +69,6 @@ func _ready() -> void:
 	await _testar_alvo_molhado_nao_pega_fogo()
 	await _testar_eletrizado_da_choque()
 	await _testar_eletricidade_em_molhado_espalha_so_perto()
-	_testar_interpretador_reconhece_agua_faisca_e_bombardeiro()
 	await _testar_ovo_do_pombo_nao_machuca_quem_invocou()
 	await _testar_estado_pinta_o_corpo_inteiro_da_galinha()
 	await _testar_cor_do_estado_some_quando_ele_acaba()
@@ -96,7 +85,6 @@ func _ready() -> void:
 	await _testar_projetil_deixa_area_no_chao()
 	await _testar_area_no_topo_da_ficha_nasce_aos_pes_do_mago()
 	_testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida()
-	_testar_interpretador_reconhece_lava_e_chuva()
 	_testar_validador_corta_parede_e_teleporte()
 	_testar_validador_calcula_custo_de_parede_e_teleporte()
 	await _testar_parede_nasce_na_frente_do_mago()
@@ -107,13 +95,11 @@ func _ready() -> void:
 	await _testar_teleporte_para_antes_da_parede()
 	await _testar_teleporte_nao_vira_voo()
 	_testar_parede_e_teleporte_contam_como_magia_de_verdade()
-	_testar_interpretador_reconhece_muro_e_teleporte()
 	_testar_validador_descarta_projetil_dentro_de_projetil()
 	_testar_validador_limita_tamanho_das_listas()
 	await _testar_galinha_cega_nao_persegue_nem_bica()
 	await _testar_mago_cego_ve_a_tela_escura()
 	await _testar_teleporte_faz_um_puf_na_saida_e_na_chegada()
-	_testar_interpretador_reconhece_cegueira()
 	await _testar_teleporte_da_clarao_na_tela_do_mago()
 	_testar_validador_aceita_nomes_com_acento_e_maiuscula()
 	await _testar_clareira()
@@ -248,7 +234,7 @@ func _testar_ficha_com_componentes_null_conta_como_nao_entendida() -> void:
 
 	_afirmar(
 		"ficha com componentes:null conta como sem componentes (não passa sem ser percebida)",
-		mago._ficha_sem_componentes({"nome": "Mistério", "componentes": null, "legenda": "..."})
+		Validador.sem_efeito_real({"nome": "Mistério", "componentes": null, "legenda": "..."})
 	)
 
 	mago.queue_free()
@@ -416,27 +402,6 @@ func _testar_gerenciador_som_respeita_limite_simultaneo() -> void:
 	await get_tree().process_frame
 
 
-## Testa o desligador do porteiro (usado pelos próprios testes para não
-## gastar cota nem depender de internet, e que também serve ao jogador se
-## quiser forçar o modo offline).
-func _testar_porteiro_desligado_nao_faz_pedido_e_devolve_vazio() -> void:
-	Porteiro.ativo = false
-	var ficha: Dictionary = await Porteiro.interpretar("qualquer coisa")
-	_afirmar("porteiro desligado devolve ficha vazia sem tentar a rede", ficha.is_empty())
-
-
-## Testa a camada trocável da ADR-002: hoje sem IA, só palavras-chave.
-func _testar_interpretador_reconhece_bola_de_fogo() -> void:
-	var ficha := Interpretador.interpretar("quero conjurar uma BOLA de FOGO enorme")
-	_afirmar("interpretador reconhece \"bola de fogo\" (sem diferenciar maiúsculas)", not ficha.is_empty())
-	_afirmar("interpretador devolve a ficha certa", ficha.get("nome") == "Bola de Fogo")
-
-
-func _testar_interpretador_nao_entende_frase_desconhecida() -> void:
-	var ficha := Interpretador.interpretar("um dragão de cristal que canta ópera")
-	_afirmar("interpretador devolve ficha vazia para frase desconhecida", ficha.is_empty())
-
-
 ## Testa a regra de que o custo de mana vem sempre do jogo, calculado a
 ## partir dos componentes já validados (proposta técnica, seção 3), nunca
 ## de um número sugerido pela ficha.
@@ -459,27 +424,6 @@ func _testar_validador_calcula_custo_de_mana_pelos_componentes() -> void:
 	_afirmar("magia maior custa mais mana que uma pequena", custo_grande > custo_pequeno)
 
 
-## Testa o caminho completo da Fase 2: texto -> Interpretador -> Validador
-## -> Executor, sem precisar de internet nem de IA de verdade ainda.
-func _testar_conjurar_por_texto_reconhecido_gasta_mana_e_cria_projetil() -> void:
-	Porteiro.ativo = false
-	var cena: PackedScene = load("res://cenas/mago.tscn")
-	var mago := cena.instantiate()
-	add_child(mago)
-	await get_tree().process_frame
-
-	var mana_antes: float = mago.mana_atual
-	mago.conjurar_por_texto("uma bola de fogo")
-	await get_tree().process_frame
-
-	_afirmar("conjurar por texto reconhecido gasta mana", mago.mana_atual < mana_antes)
-	var projeteis := get_children().filter(func(n): return n.get_script() == load("res://scripts/magia/projetil.gd"))
-	_afirmar("conjurar por texto reconhecido cria um projétil no mundo", projeteis.size() == 1)
-	for p in projeteis:
-		p.queue_free()
-	mago.queue_free()
-
-
 ## Achado ao revisar a Fase 2: a IA às vezes pode devolver uma ficha
 ## "educada" (com nome e legenda) mas sem nenhum componente de verdade.
 ## Isso tem que contar como "não entendi", senão o jogador gasta a tentativa
@@ -490,43 +434,28 @@ func _testar_ficha_sem_componentes_conta_como_nao_entendida() -> void:
 	add_child(mago)
 	await get_tree().process_frame
 
-	_afirmar("dicionário vazio conta como sem componentes", mago._ficha_sem_componentes({}))
+	_afirmar("dicionário vazio conta como sem componentes", Validador.sem_efeito_real({}))
 	_afirmar(
 		"ficha com lista de componentes vazia conta como sem componentes",
-		mago._ficha_sem_componentes({"nome": "Nada", "componentes": []})
+		Validador.sem_efeito_real({"nome": "Nada", "componentes": []})
 	)
 	_afirmar(
 		"componente sem nenhum ao_impactar conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "projetil"}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "projetil"}]})
 	)
 	_afirmar(
 		"componente com dano e empurrão zerados conta como sem componentes (achado com o Vitor)",
-		mago._ficha_sem_componentes({
+		Validador.sem_efeito_real({
 			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 0.0, "empurrao": 0.0}]}]
 		})
 	)
 	_afirmar(
 		"componente com dano de verdade não conta como vazia",
-		not mago._ficha_sem_componentes({
+		not Validador.sem_efeito_real({
 			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 10.0, "empurrao": 0.0}]}]
 		})
 	)
 
-	mago.queue_free()
-
-
-func _testar_conjurar_por_texto_desconhecido_nao_gasta_mana() -> void:
-	Porteiro.ativo = false
-	var cena: PackedScene = load("res://cenas/mago.tscn")
-	var mago := cena.instantiate()
-	add_child(mago)
-	await get_tree().process_frame
-
-	var mana_antes: float = mago.mana_atual
-	mago.conjurar_por_texto("um dragão de cristal que canta ópera")
-	await get_tree().process_frame
-
-	_afirmar("conjurar por texto desconhecido não gasta mana", mago.mana_atual == mana_antes)
 	mago.queue_free()
 
 
@@ -590,19 +519,13 @@ func _testar_ficha_so_com_cura_zero_conta_como_nao_entendida() -> void:
 
 	_afirmar(
 		"cura de quantidade zero conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "cura", "quantidade": 0.0}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "cura", "quantidade": 0.0}]})
 	)
 	_afirmar(
 		"cura de quantidade real não conta como vazia",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "cura", "quantidade": 15.0}]})
+		not Validador.sem_efeito_real({"componentes": [{"tipo": "cura", "quantidade": 15.0}]})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_cura() -> void:
-	var ficha := Interpretador.interpretar("quero uma luz de CURA para mim")
-	_afirmar("interpretador reconhece \"cura\"", not ficha.is_empty())
-	_afirmar("interpretador devolve a ficha de luz curativa", ficha.get("nome") == "Luz Curativa")
 
 
 ## Testa o componente "escudo" (proposta técnica, seção 3, primeira leva da
@@ -684,19 +607,13 @@ func _testar_ficha_so_com_escudo_sem_duracao_conta_como_nao_entendida() -> void:
 	add_child(mago)
 	_afirmar(
 		"escudo sem duração conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 0.0}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 0.0}]})
 	)
 	_afirmar(
 		"escudo com duração real não conta como vazio",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 5.0}]})
+		not Validador.sem_efeito_real({"componentes": [{"tipo": "escudo", "reducao": 0.5, "duracao_s": 5.0}]})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_escudo() -> void:
-	var ficha := Interpretador.interpretar("quero um ESCUDO para me proteger")
-	_afirmar("interpretador reconhece \"escudo\"", not ficha.is_empty())
-	_afirmar("interpretador devolve a ficha de escudo de pedra", ficha.get("nome") == "Escudo de Pedra")
 
 
 ## O prompt da IA (supabase/functions/interpretar-magia/index.ts) agora avisa
@@ -779,17 +696,11 @@ func _testar_empurrao_negativo_conta_como_efeito_real() -> void:
 
 	_afirmar(
 		"empurrão negativo (puxar) sem dano ainda conta como efeito real",
-		not mago._ficha_sem_componentes({
+		not Validador.sem_efeito_real({
 			"componentes": [{"tipo": "projetil", "ao_impactar": [{"tipo": "explosao", "dano": 0.0, "empurrao": -3.0}]}]
 		})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_buraco_negro() -> void:
-	var ficha := Interpretador.interpretar("quero invocar um buraco negro que puxa tudo")
-	_afirmar("interpretador reconhece \"buraco negro\"", not ficha.is_empty())
-	_afirmar("interpretador devolve a ficha do mini buraco negro", ficha.get("nome") == "Mini Buraco Negro")
 
 
 ## Componente "estado" (proposta técnica, seção 3: queimando, molhado,
@@ -899,23 +810,13 @@ func _testar_ficha_so_com_estado_sem_duracao_conta_como_nao_entendida() -> void:
 	add_child(mago)
 	_afirmar(
 		"estado sem duração conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 0.0}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 0.0}]})
 	)
 	_afirmar(
 		"estado com duração real não conta como vazio",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 3.0}]})
+		not Validador.sem_efeito_real({"componentes": [{"tipo": "estado", "nome_estado": "lento", "duracao_s": 3.0}]})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_queimando_e_lento() -> void:
-	var ficha_queimando := Interpretador.interpretar("quero uma chama que fica queimando")
-	_afirmar("interpretador reconhece \"queimando\"", not ficha_queimando.is_empty())
-	_afirmar("interpretador devolve a ficha de chama persistente", ficha_queimando.get("nome") == "Chama Persistente")
-
-	var ficha_lento := Interpretador.interpretar("um vento gelado que deixa tudo mais lento")
-	_afirmar("interpretador reconhece \"lento\"", not ficha_lento.is_empty())
-	_afirmar("interpretador devolve a ficha de vento gelado", ficha_lento.get("nome") == "Vento Gelado")
 
 
 ## Componente "invocação" (proposta técnica, seção 3, exemplo do "Pombo de
@@ -1036,19 +937,13 @@ func _testar_ficha_so_com_invocacao_sem_vida_conta_como_nao_entendida() -> void:
 	add_child(mago)
 	_afirmar(
 		"invocação sem vida conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "invocacao", "vida": 0.0, "duracao_s": 6.0}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "invocacao", "vida": 0.0, "duracao_s": 6.0}]})
 	)
 	_afirmar(
 		"invocação com vida e duração reais não conta como vazia",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "invocacao", "vida": 20.0, "duracao_s": 6.0}]})
+		not Validador.sem_efeito_real({"componentes": [{"tipo": "invocacao", "vida": 20.0, "duracao_s": 6.0}]})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_pombo() -> void:
-	var ficha := Interpretador.interpretar("quero invocar um pombo para me ajudar")
-	_afirmar("interpretador reconhece \"pombo\"", not ficha.is_empty())
-	_afirmar("interpretador devolve a ficha do pombo de pedra", ficha.get("nome") == "Pombo de Pedra")
 
 
 ## Lançador (proposta técnica, seção 3): aceita o formato da proposta, com
@@ -1196,19 +1091,6 @@ func _testar_eletricidade_em_molhado_espalha_so_perto() -> void:
 	_afirmar("choque não chega em quem está longe", distante._vida_atual == vida_inicial)
 	for g in [alvo, vizinha, distante]:
 		g.queue_free()
-
-
-func _testar_interpretador_reconhece_agua_faisca_e_bombardeiro() -> void:
-	_afirmar("interpretador reconhece \"água\"", Interpretador.interpretar("um jato de água").get("nome") == "Jato d'Água")
-	_afirmar("interpretador reconhece \"faísca\"", Interpretador.interpretar("uma faísca elétrica").get("nome") == "Faísca")
-	_afirmar(
-		"interpretador reconhece o pombo bombardeiro",
-		Interpretador.interpretar("um pombo que solta ovos explosivos").get("nome") == "Pombo de Pedra Bombardeiro"
-	)
-	_afirmar(
-		"\"pombo\" sozinho continua sendo o pombo simples",
-		Interpretador.interpretar("invocar um pombo").get("nome") == "Pombo de Pedra"
-	)
 
 
 ## Achado rodando o pombo bombardeiro quadro a quadro: o ovo explodindo na
@@ -1471,18 +1353,13 @@ func _testar_ficha_so_com_area_sem_efeito_conta_como_nao_entendida() -> void:
 	add_child(mago)
 	_afirmar(
 		"área sem dano e sem estado conta como sem componentes",
-		mago._ficha_sem_componentes({"componentes": [{"tipo": "area", "duracao_s": 5.0}]})
+		Validador.sem_efeito_real({"componentes": [{"tipo": "area", "duracao_s": 5.0}]})
 	)
 	_afirmar(
 		"área com estado conta como magia de verdade",
-		not mago._ficha_sem_componentes({"componentes": [{"tipo": "area", "duracao_s": 5.0, "nome_estado": "molhado"}]})
+		not Validador.sem_efeito_real({"componentes": [{"tipo": "area", "duracao_s": 5.0, "nome_estado": "molhado"}]})
 	)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_lava_e_chuva() -> void:
-	_afirmar("interpretador reconhece \"lava\"", Interpretador.interpretar("uma poça de lava").get("nome") == "Poça de Lava")
-	_afirmar("interpretador reconhece \"chuva\"", Interpretador.interpretar("uma nuvem de chuva").get("nome") == "Nuvem de Chuva")
 
 
 ## Parede e teleporte curto (proposta técnica, seção 3): fecham a primeira
@@ -1611,15 +1488,10 @@ func _testar_teleporte_nao_vira_voo() -> void:
 func _testar_parede_e_teleporte_contam_como_magia_de_verdade() -> void:
 	var mago: Node = load("res://cenas/mago.tscn").instantiate()
 	add_child(mago)
-	_afirmar("parede com duração conta como magia", not mago._ficha_sem_componentes(FichasPadrao.muro_de_pedra()))
-	_afirmar("teleporte com distância conta como magia", not mago._ficha_sem_componentes(FichasPadrao.salto_arcano()))
-	_afirmar("teleporte de distância zero não conta", mago._ficha_sem_componentes({"componentes": [{"tipo": "teleporte", "distancia_m": 0.0}]}))
+	_afirmar("parede com duração conta como magia", not Validador.sem_efeito_real(FichasPadrao.muro_de_pedra()))
+	_afirmar("teleporte com distância conta como magia", not Validador.sem_efeito_real(FichasPadrao.salto_arcano()))
+	_afirmar("teleporte de distância zero não conta", Validador.sem_efeito_real({"componentes": [{"tipo": "teleporte", "distancia_m": 0.0}]}))
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_muro_e_teleporte() -> void:
-	_afirmar("interpretador reconhece \"muro\"", Interpretador.interpretar("um muro de pedra").get("nome") == "Muro de Pedra")
-	_afirmar("interpretador reconhece \"teleporte\"", Interpretador.interpretar("quero me teleportar").get("nome") == "Salto Arcano")
 
 
 ## Revisão de segurança: a IA pode mandar fichas absurdas de propósito ou
@@ -1687,10 +1559,6 @@ func _testar_teleporte_faz_um_puf_na_saida_e_na_chegada() -> void:
 	var depois := get_children().filter(func(n): return n.get_script() == script_efeito).size()
 	_afirmar("teleporte deixa um efeito visual na saída e outro na chegada", depois - antes == 2)
 	mago.queue_free()
-
-
-func _testar_interpretador_reconhece_cegueira() -> void:
-	_afirmar("interpretador reconhece \"cegar\"", Interpretador.interpretar("um pó que cega o inimigo").get("nome") == "Pó Ofuscante")
 
 
 func _testar_teleporte_da_clarao_na_tela_do_mago() -> void:
@@ -1970,7 +1838,7 @@ func _testar_toda_combinacao_valida_vira_magia_de_verdade() -> void:
 		var runas: Array = comb.filter(func(r): return r != "")
 		var m := livro.forjar(runas)
 		var validada := Validador.validar_ficha(m.get("ficha", {}))
-		if not m.get("ok", false) or mago._ficha_sem_componentes(validada) or Validador.calcular_custo_mana(validada) <= 0.0:
+		if not m.get("ok", false) or Validador.sem_efeito_real(validada) or Validador.calcular_custo_mana(validada) <= 0.0:
 			ruins += 1
 			print("  combinação sem magia real: ", runas)
 	_afirmar("todas as %d combinações válidas viram magia que custa mana" % combinacoes.size(), ruins == 0)

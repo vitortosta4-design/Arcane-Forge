@@ -8,8 +8,6 @@
 # Opções:
 #   --posicao x,y,z   onde colocar o mago
 #   --olhar x,y,z     para onde o mago olha
-#   --frase "texto"   conjura essa frase (interpretador local, sem internet)
-#   --frase2 "texto"  conjura uma segunda frase --intervalo s depois (padrão 1)
 #   --terceira        troca para a câmera em terceira pessoa
 #   --espera s        segundos até o print (padrão 2.5)
 #   --runas a,b,c     dá essas runas ao mago
@@ -23,7 +21,7 @@
 set -uo pipefail
 
 if [ $# -lt 1 ]; then
-  sed -n '2,22p' "$0"
+  sed -n '2,20p' "$0"
   exit 1
 fi
 

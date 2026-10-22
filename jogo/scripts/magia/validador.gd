@@ -280,3 +280,49 @@ static func _custo_componente(componente: Dictionary) -> float:
 		var disparos: float = REFERENCIA_DISPAROS_S / componente.get("intervalo_s", 1.5)
 		custo += CUSTO_BASE_LANCADOR + _custo_componente(componente.get("projetil", {})) * disparos
 	return custo
+
+
+## Verdadeiro se a ficha não faz nada de verdade: vazia, sem componentes, ou
+## só com componentes "fantasma" (dano, duração ou quantidade zerados). Era a
+## regra do "não entendi" da magia por texto; agora confere que toda receita
+## de runas vira uma magia que faz alguma coisa. Valida antes de olhar os
+## campos, para "componentes": null não passar despercebido.
+static func sem_efeito_real(ficha: Dictionary) -> bool:
+	if ficha.is_empty():
+		return true
+	var componentes: Array = validar_ficha(ficha).get("componentes", [])
+	for componente in componentes:
+		if _componente_tem_efeito_real(componente):
+			return false
+	return true
+
+
+## Confere se um componente (ou algum efeito dentro do seu "ao_impactar")
+## faz alguma coisa de verdade, independente do tipo. Generalizado para
+## incluir "cura" (proposta técnica, seção 3) sem repetir a regra de
+## "projétil fantasma" (dano/empurrão zerados) achada com o Vitor na
+## Fase 2: um componente sem efeito real também conta como "não entendi".
+static func _componente_tem_efeito_real(componente: Dictionary) -> bool:
+	var tipo = componente.get("tipo")
+	if tipo == "explosao" and (componente.get("dano", 0.0) > 0.0 or componente.get("empurrao", 0.0) != 0.0):
+		return true
+	if tipo == "cura" and componente.get("quantidade", 0.0) > 0.0:
+		return true
+	if tipo == "escudo" and componente.get("reducao", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
+		return true
+	if tipo == "estado" and componente.get("duracao_s", 0.0) > 0.0:
+		return true
+	if tipo == "invocacao" and componente.get("vida", 0.0) > 0.0 and componente.get("duracao_s", 0.0) > 0.0:
+		return true
+	if tipo == "lancador" and _componente_tem_efeito_real(componente.get("projetil", {})):
+		return true
+	if tipo == "parede" and componente.get("duracao_s", 0.0) > 0.0:
+		return true
+	if tipo == "teleporte" and componente.get("distancia_m", 0.0) > 0.0:
+		return true
+	if tipo == "area" and componente.get("duracao_s", 0.0) > 0.0 and (componente.get("dano_por_s", 0.0) > 0.0 or componente.get("nome_estado", "") != ""):
+		return true
+	for efeito in (componente.get("ao_impactar", []) as Array):
+		if _componente_tem_efeito_real(efeito):
+			return true
+	return false

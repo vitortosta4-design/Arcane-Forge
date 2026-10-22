@@ -1,11 +1,11 @@
 extends SceneTree
 ## Ferramenta de desenvolvimento, não faz parte do jogo: abre a arena, posiciona
-## o mago, conjura uma frase (opcional) e salva um print. Chamada por
+## o mago e salva um print. Chamada por
 ## ferramentas/tirar_print.sh, que explica os argumentos.
 ##
 ## Armadilhas já encontradas (não repetir):
 ## - Não citar classes globais (Executor, FichasPadrao...) nem autoloads
-##   (Host, Porteiro...) pelo nome aqui: rodando com --script, isso quebra a
+##   (Host, GerenciadorSom...) pelo nome aqui: rodando com --script, isso quebra a
 ##   compilação em cascata ("Identifier not found: Host"). Usar get_node.
 ## - Definir current_scene, senão o Executor recebe mundo nulo ao conjurar.
 ## - look_at só funciona depois que o nó está na árvore: posicionar no
@@ -64,14 +64,6 @@ func _process(delta: float) -> bool:
 		_etapa = 2
 		if _mago and _args.has("usar"):
 			_mago.usar_medalhao(int(_args["usar"]) - 1)
-		if _mago and _args.has("frase"):
-			root.get_node("/root/Porteiro").ativo = false
-			_mago.conjurar_por_texto(_args["frase"])
-		return false
-
-	if _etapa == 2 and _args.has("frase2") and _tempo >= 0.5 + float(_args.get("intervalo", "1.0")):
-		_etapa = 3
-		_mago.conjurar_por_texto(_args["frase2"])
 		return false
 
 	if _etapa >= 2 and _tempo >= float(_args.get("espera", "2.5")):

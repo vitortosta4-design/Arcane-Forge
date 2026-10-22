@@ -4,7 +4,9 @@ extends CanvasLayer
 ## simples de propósito, não precisa ser a UI final do jogo.
 
 var _mago: Node = null
-var _caixa_conjuracao: CanvasLayer = null
+## Tela que já usa o Esc para fechar (a da bigorna): com ela aberta, o Esc
+## fecha ela e não abre o menu por cima.
+var _tela_por_cima: CanvasLayer = null
 
 
 func _ready() -> void:
@@ -15,18 +17,17 @@ func _ready() -> void:
 	$Painel/Botoes/Sair.pressed.connect(_sair)
 
 
-## Mesmo padrão do HUD/caixa de conjuração: liga ao mago (pra travar a
-## entrada dele enquanto o menu está aberto) e à caixa de conjuração (pra
-## Esc não abrir o menu por cima dela, só fechar a caixa primeiro).
-func configurar(mago: Node, caixa_conjuracao: CanvasLayer) -> void:
+## Liga ao mago (pra travar a entrada dele enquanto o menu está aberto) e à
+## tela da bigorna (pra Esc fechar ela primeiro, sem abrir o menu por cima).
+func configurar(mago: Node, tela_por_cima: CanvasLayer) -> void:
 	_mago = mago
-	_caixa_conjuracao = caixa_conjuracao
+	_tela_por_cima = tela_por_cima
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 		return
-	if _caixa_conjuracao and _caixa_conjuracao.visible:
+	if _tela_por_cima and _tela_por_cima.visible:
 		return
 	get_viewport().set_input_as_handled()
 	if visible:

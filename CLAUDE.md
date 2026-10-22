@@ -13,7 +13,7 @@
 - Decisão nova vai para `docs/decisoes.md` como ADR. Nada de diário dentro dele.
 
 ## Fase atual
-Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035, seção 10 da proposta técnica). Contexto: Forja de Runas (ADR-032 a 034, 22/10/2026). A "Fase 2: magia por texto com IA" foi abandonada: não mexer mais no porteiro (Supabase + Groq) nem no `Interpretador`; o código fica guardado, sem apagar.
+Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035, seção 10 da proposta técnica). Contexto: Forja de Runas (ADR-032 a 034, 22/10/2026). A magia por texto com IA foi abandonada e removida do jogo (ADR-041): não existe mais caixa de texto, porteiro nem `Interpretador` no jogo; o código antigo está só no histórico do git.
 
 Prioridade definida pelo Claude como gestor (22/10/2026), nesta ordem:
 1. ~~Reescrever o plano de fases~~ feito e aprovado em 22/10/2026 (ADR-035, seção 10 da proposta técnica).
@@ -68,13 +68,11 @@ A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvime
 ## Ferramentas (sessões na nuvem)
 O hook `.claude/hooks/session-start.sh` instala o Godot 4.7.2 e reimporta o projeto ao abrir a sessão.
 - Testes: `ferramentas/rodar_testes.sh` (sai com 0 se tudo passar).
-- Print do jogo rodando: `ferramentas/tirar_print.sh SAIDA.png [--posicao x,y,z] [--olhar x,y,z] [--frase "..."]`. O projeto usa Forward+ (ADR-036), mas aqui o print sai em Compatibility (sem GPU): névoa volumétrica e SDFGI só aparecem no PC do Vitor. O FPS do print não vale nada.
+- Print do jogo rodando: `ferramentas/tirar_print.sh SAIDA.png [--posicao x,y,z] [--olhar x,y,z] [--runas ...] [--barra-cheia] [--usar n]`. O projeto usa Forward+ (ADR-036), mas aqui o print sai em Compatibility (sem GPU): névoa volumétrica e SDFGI só aparecem no PC do Vitor. O FPS do print não vale nada.
 - Prints padrão do cenário e critérios de cor: `docs/auditoria-visual-ambiente.md` (seção G). Medir com `python3 ferramentas/medir_cores.py PRINT.png`.
 - FPS: `ferramentas/medir_fps.sh --rapido` só confere que a ferramenta roda; o número que vale é o do Vitor com `ferramentas\medir_fps.bat` na RTX 2060.
 - Personagem ou criatura nova: seguir a skill `personagem-low-poly`.
 - Depois de criar um script com `class_name` novo, rodar `godot --headless --editor --quit --path jogo` antes dos testes.
-- Antes de reimplantar a função do Supabase: `ferramentas/checar_porteiro.sh` (confere a sintaxe com o Node, sem precisar do Deno).
-- A rede desta sessão não alcança o Supabase: o deploy da função funciona pela ferramenta MCP, mas a resposta da IA só é testada jogando.
 
 ## Agentes (ADR-005)
 Equipe enxuta por causa da cota do plano Pro. Acionar especialistas só quando valer a pena:
