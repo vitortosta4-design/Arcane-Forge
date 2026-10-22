@@ -1,9 +1,16 @@
 # Instruções para o Claude Code · Arcane Forge
 
 ## Antes de qualquer tarefa
-1. Leia `docs/decisoes.md` (decisões aprovadas, não rediscutir sem motivo forte).
-2. Leia `docs/proposta-tecnica.md` (arquitetura e plano da fase atual).
-3. Confira em que fase o projeto está e trabalhe só dentro dela.
+1. Leia `docs/contexto/estado-atual.md` (onde paramos e qual é o próximo passo).
+2. Leia `docs/decisoes.md` (decisões aprovadas, não rediscutir sem motivo forte).
+3. Leia `docs/proposta-tecnica.md` (arquitetura e plano da fase atual).
+4. Confira em que fase o projeto está e trabalhe só dentro dela.
+- `docs/contexto/diario.md` é o histórico. Não leia inteiro: procure nele só quando precisar de um detalhe antigo.
+
+## Ao fim de toda sessão (ADR-038)
+- Reescreva `docs/contexto/estado-atual.md` inteiro, curto: onde paramos, o que está quebrado, próximo passo, o que depende do Vitor.
+- Acrescente no fim de `docs/contexto/diario.md` o que foi feito, achados e limitações.
+- Decisão nova vai para `docs/decisoes.md` como ADR. Nada de diário dentro dele.
 
 ## Fase atual
 Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035, seção 10 da proposta técnica). Contexto: Forja de Runas (ADR-032 a 034, 22/10/2026). A "Fase 2: magia por texto com IA" foi abandonada: não mexer mais no porteiro (Supabase + Groq) nem no `Interpretador`; o código fica guardado, sem apagar.
@@ -52,6 +59,11 @@ A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvime
 - A IA de linguagem nunca executa código nem decide física: ela só gera fichas de magia, que o validador confere.
 - Toda lógica de combate passa pelo "juiz" (host), mesmo jogando sozinho.
 - Respeitar os limites da seção 5 da proposta técnica.
+- **Proibido esconder erro em silêncio.** Se algo que devia existir não existe (nó, recurso, campo da ficha, receita), registre com `push_error` ou `push_warning` dizendo o que faltou e onde. Um `if x == null: return` calado só é aceito quando a ausência é normal no jogo, com um comentário explicando por quê.
+- **Sem complexidade antecipada.** Faça o mais simples que resolve a tarefa em andamento. Nada de sistema genérico, configuração ou camada "para o futuro" sem uma tarefa atual que precise.
+- **Sistemas desacoplados.** Cada sistema faz uma coisa e conversa com os outros por sinais ou funções claras (ex.: o HUD lê a mana do mago, nunca muda a mana). Se uma mudança obriga a mexer em muitos arquivos sem relação, pare e repense.
+- **HUD no layout oficial (ADR-039).** Peça nova de tela entra na posição fixada na ADR-039, mesmo com visual provisório.
+- **Arte feita no projeto (ADR-040).** Não buscar pacotes de modelos prontos.
 
 ## Ferramentas (sessões na nuvem)
 O hook `.claude/hooks/session-start.sh` instala o Godot 4.7.2 e reimporta o projeto ao abrir a sessão.
