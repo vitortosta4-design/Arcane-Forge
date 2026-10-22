@@ -61,6 +61,14 @@ func definir_material(nome: String) -> void:
 	_mesh.set_surface_override_material(0, mat)
 
 
+## Troca a bola provisória pelo corpo da ficha (CorposInvocacao).
+func definir_corpo(corpo: String, material: String) -> void:
+	_mesh.visible = false
+	var visual := CorposInvocacao.criar(corpo, Validador.cor_para_material(material), material)
+	visual.name = "Corpo"
+	add_child(visual)
+
+
 func _physics_process(delta: float) -> void:
 	if _morta:
 		return

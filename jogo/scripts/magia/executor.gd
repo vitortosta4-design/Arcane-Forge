@@ -187,5 +187,6 @@ static func _criar_invocacao(componente: Dictionary, origem: Vector3, invocador:
 	criatura.global_position = origem
 	criatura.scale = Vector3.ONE * componente.get("escala", 1.0)
 	criatura.definir_material(componente.get("material", "pedra"))
+	criatura.definir_corpo(componente.get("corpo", "bolha"), componente.get("material", "pedra"))
 	Host.registrar_criatura(criatura)
 	return criatura
