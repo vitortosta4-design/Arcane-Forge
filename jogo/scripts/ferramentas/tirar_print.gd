@@ -38,6 +38,18 @@ func _process(delta: float) -> bool:
 				_mago.look_at(_vetor(_args["olhar"]), Vector3.UP)
 			if _args.has("terceira"):
 				_mago._trocar_camera()
+			if _args.has("runas"):
+				for nome in str(_args["runas"]).split(","):
+					_mago.coletar_runa(nome)
+			if _args.has("barra-cheia"):
+				# Só para o print: equipa dois medalhões forjados de verdade pelo
+				# livro nos espaços vazios (os 2 padrão já vêm na barra).
+				for soma in [["vida", "fogo"], ["arremesso", "agua"]]:
+					var resultado: Dictionary = _mago.livro.forjar(soma)
+					if resultado.get("ok", false):
+						_mago.barra.equipar(resultado)
+					else:
+						push_warning("tirar_print: não forjou %s: %s" % [soma, resultado.get("motivo", "?")])
 			if _args.has("camera"):
 				# Câmera livre (por exemplo para ver o mago de frente).
 				var camera := Camera3D.new()
@@ -50,6 +62,8 @@ func _process(delta: float) -> bool:
 
 	if _etapa == 1 and _tempo >= 0.5:
 		_etapa = 2
+		if _mago and _args.has("usar"):
+			_mago.usar_medalhao(int(_args["usar"]) - 1)
 		if _mago and _args.has("frase"):
 			root.get_node("/root/Porteiro").ativo = false
 			_mago.conjurar_por_texto(_args["frase"])

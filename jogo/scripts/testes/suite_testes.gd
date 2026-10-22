@@ -120,6 +120,7 @@ func _ready() -> void:
 	await _testar_caixa_e_barril_de_madeira()
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
+	await _testar_hud_no_layout_da_adr_039()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -2116,3 +2117,38 @@ func _testar_runa_no_mapa_vai_para_a_mochila() -> void:
 	mago.queue_free()
 	if is_instance_valid(runa):
 		runa.queue_free()
+
+
+## Layout oficial do HUD (ADR-039): cada peça no seu canto, o aviso de
+## interação logo acima da barra, e o HUD só lê o mago (não muda nada).
+func _testar_hud_no_layout_da_adr_039() -> void:
+	var mago: Node3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	var hud: CanvasLayer = load("res://cenas/hud.tscn").instantiate()
+	add_child(hud)
+	hud.configurar(mago)
+	mago.barra.equipar({"nome": "Teste", "cor": "#ff7a1a", "simbolo": "F", "ficha": {}})
+	var vida_antes: float = mago.vida_atual
+	var mana_antes: float = mago.mana_atual
+	var medalhoes_antes: Array = mago.barra.medalhoes.duplicate(true)
+	for i in 3:
+		await get_tree().process_frame
+	var tela: Vector2 = hud.get_viewport().get_visible_rect().size
+	var painel: Control = hud.get_node("PainelMago")
+	var minimapa: Control = hud.get_node("Minimapa")
+	var aviso: Label = hud.get_node("Aviso")
+	_afirmar("HUD: retrato, vida e mana no canto superior esquerdo", painel.get_global_rect().position.x < 40 and painel.get_global_rect().position.y < 40)
+	_afirmar("HUD: minimapa reservado no canto inferior direito",
+		minimapa.get_global_rect().end.x > tela.x - 40 and minimapa.get_global_rect().end.y > tela.y - 40)
+	hud.mostrar_aviso("E: usar a bigorna")
+	var topo_barra: float = tela.y - BarraHud.TAMANHO - BarraHud.MARGEM_BAIXO
+	_afirmar("HUD: aviso de interação aparece logo acima da barra, no centro",
+		aviso.visible and aviso.text == "E: usar a bigorna" and aviso.get_global_rect().end.y <= topo_barra
+		and absf(aviso.get_global_rect().get_center().x - tela.x / 2.0) < 2.0)
+	hud.mostrar_aviso("")
+	_afirmar("HUD: aviso vazio some", not aviso.visible)
+	_afirmar("HUD: só lê o mago (vida, mana e medalhões continuam iguais)",
+		mago.vida_atual == vida_antes and mago.mana_atual == mana_antes and mago.barra.medalhoes == medalhoes_antes)
+	mago.queue_free()
+	hud.queue_free()
+	await get_tree().process_frame

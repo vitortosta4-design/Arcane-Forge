@@ -13,4 +13,10 @@ echo "$saida" | grep -E "FALHOU|SCRIPT ERROR|Parse Error|TODOS OS TESTES|FALHAS:
 if [ $codigo -eq 124 ]; then
   echo "Tempo esgotado (a suíte leva uns 6 s): quase sempre é erro de compilação acima."
 fi
+# Um erro de script interrompe só o teste em que aconteceu e a suíte segue
+# dizendo "todos passaram". Erro de script conta como falha.
+if [ $codigo -eq 0 ] && echo "$saida" | grep -qE "SCRIPT ERROR|Parse Error"; then
+  echo "FALHA: houve erro de script durante os testes (ver acima)."
+  exit 1
+fi
 exit $codigo

@@ -134,3 +134,13 @@ Depois de subir o piso para RTX 2060 (ADR-031), ajustei `arena_teste.tscn` (Envi
 - **Caixa de texto (Q) saiu do jogo;** o código fica guardado em `scripts/ui/caixa_conjuracao.gd`.
 - Evidências: `evidencias/fase-2/forja_*.png`. Testes 292/292.
 - **Falta para fechar a Fase 2:** jogar do começo ao fim no PC (achar runas, forjar 2 medalhões, usar na galinha), FPS na RTX 2060 e ajustar números jogando.
+
+## HUD no layout oficial da ADR-039 (22/10/2026)
+- **O que mudou:** `cenas/hud.tscn` reorganizado peça por peça, com âncoras (funciona em qualquer resolução). Novos `scripts/ui/painel_mago.gd` (retrato placeholder em círculo roxo, barras de vida e mana com números, etiquetas de runas numa linha só, que viram só bolinha e número se não couberem) e `scripts/ui/minimapa_reservado.gd` (círculo com N e seta). `barra_hud.gd` perdeu o contador de runas (foi para o painel) e ganhou: contorno branco no medalhão selecionado, espaço vazio cinza com contorno fino, recarga com o medalhão apagado enchendo de cor como relógio e os segundos que faltam no meio. Aviso de interação e legenda da magia com fundo cinza liso, só aparecem quando têm texto. Estados numa faixa própria ("Estados: Lento"). Mira maior com contorno escuro. FPS escondido, F3 liga.
+- **Só lê:** HUD, painel e barra só leem o mago e a barra; teste confere que vida, mana e medalhões não mudam com o HUD rodando.
+- **Sem erro escondido:** falta de nó no `hud.tscn`, mago nulo ou sem sinal/estados geram `push_warning` dizendo o quê. Painel e barra só reclamam se continuarem sem mago depois de 1 s (o HUD nasce antes de ser ligado ao mago, e isso é normal).
+- **Pedido do Vitor no meio do trabalho:** visual 100% provisório, formas lisas, sem moldura nem ornamento (o estilo virá de uma referência dele). Os aros dourados, barras chanfradas e bordas que eu tinha começado foram tirados.
+- **Crítico (2 rodadas):** a 1ª (5/10, reprovado) julgou estilo antes do ajuste do Vitor e ficou sem efeito. A 2ª, só posição/tamanho/legibilidade, deu 7/10 reprovado por: mira pequena, recarga escondendo qual medalhão é, runas quebrando linha e se misturando com estados, texto da magia sem fundo, vazio sumindo na terra, minimapa grande. Tudo isso foi corrigido. Ficou de fora (não é do HUD): mãos em primeira pessoa encostando nos medalhões 1 e 4.
+- **Ferramenta de testes:** `rodar_testes.sh` agora falha se aparecer erro de script (antes um erro dentro de um teste deixava a suíte dizer "todos passaram"). `tirar_print.sh` ganhou `--runas`, `--barra-cheia` e `--usar n`.
+- **Testes:** 5 novos de layout (297/297). O teste instável da área não apareceu.
+- **Prints:** `evidencias/fase-2/hud_clareira.png`, `hud_barra_cheia.png`, `hud_bigorna.png`.

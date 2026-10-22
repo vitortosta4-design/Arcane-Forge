@@ -12,6 +12,9 @@
 #   --frase2 "texto"  conjura uma segunda frase --intervalo s depois (padrão 1)
 #   --terceira        troca para a câmera em terceira pessoa
 #   --espera s        segundos até o print (padrão 2.5)
+#   --runas a,b,c     dá essas runas ao mago
+#   --barra-cheia     equipa 2 medalhões forjados nos espaços vazios
+#   --usar n          usa o medalhão n (1 a 4) aos 0,5 s (fica em recarga)
 #   --camera x,y,z    câmera livre nesse ponto (ex.: ver o mago de frente)
 #   --alvo-camera x,y,z  para onde a câmera livre olha (padrão 0,1,0)
 #
@@ -20,7 +23,7 @@
 set -uo pipefail
 
 if [ $# -lt 1 ]; then
-  sed -n '2,19p' "$0"
+  sed -n '2,22p' "$0"
   exit 1
 fi
 
