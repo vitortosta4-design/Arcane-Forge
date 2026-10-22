@@ -20,6 +20,7 @@ const NOMES_ESTADOS := {
 }
 
 var _tempo_legenda_s := 0.0
+var _aviso: Label = null
 
 
 func _ready() -> void:
@@ -33,6 +34,20 @@ func configurar(mago: Node) -> void:
 	mago.estados.estados_mudaram.connect(_ao_estados_mudarem)
 	mago.teleportou.connect(_ao_teleportar)
 	_ao_vida_mudar(mago.vida_atual, mago.vida_maxima)
+	var barra := BarraHud.new()
+	barra.name = "BarraMedalhoes"
+	barra.mago = mago
+	add_child(barra)
+	_aviso = Label.new()
+	_aviso.name = "Aviso"
+	_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_aviso.set_anchors_preset(Control.PRESET_CENTER)
+	_aviso.position = Vector2(-300, 60)
+	_aviso.size = Vector2(600, 30)
+	_aviso.add_theme_font_size_override("font_size", 20)
+	_aviso.add_theme_color_override("font_outline_color", Color.BLACK)
+	_aviso.add_theme_constant_override("outline_size", 6)
+	add_child(_aviso)
 	_ao_mana_mudar(mago.mana_atual, mago.mana_maxima)
 
 
@@ -69,3 +84,9 @@ func _ao_teleportar() -> void:
 func _ao_conjurar(legenda: String) -> void:
 	_label_legenda.text = legenda
 	_tempo_legenda_s = 2.5
+
+
+## Texto curto no meio da tela (ex.: "E: usar a bigorna"). Vazio esconde.
+func mostrar_aviso(texto: String) -> void:
+	if _aviso:
+		_aviso.text = texto

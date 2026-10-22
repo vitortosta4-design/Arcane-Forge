@@ -44,6 +44,13 @@ const COR_NEVE := Color(0.72, 0.74, 0.8)
 const COR_TOCHA := Color(1.0, 0.6, 0.28)
 const ENERGIA_TOCHA := 2.6
 const ALCANCE_TOCHA := 7.5
+## Pontos fixos de runa (ADR-035, Fase 2). Na Fase 7 o gerador de mapas
+## sorteia estes pontos; por enquanto são sempre os mesmos.
+const PONTOS_RUNA := [
+	["fogo", Vector2(6, -6)], ["agua", Vector2(-8, 6)], ["feroz", Vector2(12, 4)],
+	["vida", Vector2(-10, -8)], ["arremesso", Vector2(3, 12)], ["prende", Vector2(15, -12)],
+	["fogo", Vector2(-3, -14)],
+]
 
 var _ruido := FastNoiseLite.new()
 var _ruido_morros := FastNoiseLite.new()
@@ -69,6 +76,7 @@ func _ready() -> void:
 	_criar_grama()
 	_criar_ruinas()
 	_criar_tochas()
+	_criar_runas()
 	_criar_fundo()
 
 
@@ -490,6 +498,16 @@ func _tocha(base: Vector3) -> void:
 	c.position = Vector3.UP * 0.95
 	corpo.add_child(c)
 	tocha.add_child(corpo)
+
+
+func _criar_runas() -> void:
+	for ponto in PONTOS_RUNA:
+		var runa := RunaColetavel.new()
+		runa.nome = ponto[0]
+		runa.name = "Runa_%s" % ponto[0]
+		var p: Vector2 = ponto[1]
+		runa.position = _no_chao(p.x, p.y)
+		add_child(runa)
 
 
 # --- Fundo: montanhas, castelo, cachoeira, ilhas e nuvens --------------------
