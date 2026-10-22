@@ -121,6 +121,7 @@ func _ready() -> void:
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
 	await _testar_hud_no_layout_da_adr_039()
+	await _testar_ciclo_da_forja_do_comeco_ao_fim()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -2162,3 +2163,88 @@ func _testar_hud_no_layout_da_adr_039() -> void:
 	mago.queue_free()
 	hud.queue_free()
 	await get_tree().process_frame
+
+
+## Critério da Fase 2 (proposta técnica, seção 10), na arena de verdade e
+## pelos caminhos do jogo: o mago encosta em 3 runas na clareira, entra na
+## caverna pela boca, forja 2 medalhões diferentes na bigorna, sai pela
+## saída e usa os dois na galinha. Só não testa a diversão (isso é o Vitor).
+func _testar_ciclo_da_forja_do_comeco_ao_fim() -> void:
+	var arena: Node3D = load("res://cenas/arena_teste.tscn").instantiate()
+	add_child(arena)
+	await get_tree().physics_frame
+	var mago: Node3D = arena.get_node("Mago")
+	var galinha: Node3D = arena.get_node("GalinhaZumbi")
+	var caverna: Caverna = arena.get_node("Caverna")
+	var clareira: Clareira = arena.get_node("Clareira")
+	# Grimório de teste num arquivo próprio, para não sujar o do Vitor.
+	var caminho_grimorio := "user://grimorio_teste_ciclo.json"
+	caverna.forja.grimorio = Grimorio.abrir(caminho_grimorio)
+	galinha.estados.aplicar("cego", 60.0) # parada, para não bicar o mago no meio do teste
+	var medalhoes_iniciais := 0
+	for m in mago.barra.medalhoes:
+		if m != null:
+			medalhoes_iniciais += 1
+
+	# 1. Achar 3 runas: encostar em cada uma pela física.
+	for nome in ["fogo", "vida", "agua"]:
+		var runa: Node3D = clareira.get_node_or_null("Runa_%s" % nome)
+		if runa == null:
+			_afirmar("ciclo: runa de %s existe na clareira" % nome, false)
+			arena.queue_free()
+			return
+		mago.global_position = runa.global_position + Vector3(0, 0.1, 0.4)
+		for i in 10:
+			await get_tree().physics_frame
+	_afirmar("ciclo: achou 3 runas encostando nelas (%s)" % str(mago.runas), mago.runas.size() == 3)
+
+	# 2. Entrar na caverna pela boca.
+	var entrada: Area3D = caverna.get_node("Entrar")
+	mago.global_position = entrada.global_position
+	for i in 10:
+		await get_tree().physics_frame
+	_afirmar("ciclo: a boca leva para dentro da caverna", mago.global_position.distance_to(caverna.entrada_camara()) < 3.0)
+
+	# 3. Forjar 2 medalhões diferentes na bigorna.
+	mago.global_position = caverna.forja.global_position + Vector3(3, 1, 0)
+	var golem: Dictionary = caverna.forja.martelar(mago, ["vida", "fogo"])
+	var jato: Dictionary = caverna.forja.martelar(mago, ["agua"])
+	_afirmar("ciclo: forjou 2 medalhões diferentes",
+		golem.get("ok", false) and jato.get("ok", false) and golem["medalhao"]["nome"] != jato["medalhao"]["nome"])
+	_afirmar("ciclo: as runas foram gastas", mago.runas.is_empty())
+
+	# 4. Sair e usar os dois na galinha.
+	var saida: Area3D = caverna.get_node("Sair")
+	mago.global_position = saida.global_position
+	for i in 10:
+		await get_tree().physics_frame
+	_afirmar("ciclo: a saída volta para a clareira", mago.global_position.y > -20.0)
+	galinha.global_position = Vector3(0, 0.2, -4)
+	mago.global_position = Vector3(0, 0.1, 3)
+	await get_tree().physics_frame
+	# Mira como o jogador: o corpo gira só no plano e a cabeça inclina.
+	mago.look_at(Vector3(galinha.global_position.x, mago.global_position.y, galinha.global_position.z), Vector3.UP)
+	mago.get_node("PivotCabeca").look_at(galinha.global_position + Vector3.UP * 0.3, Vector3.UP)
+	var vida_inicial: float = galinha._vida_atual
+	var criaturas_antes: int = get_tree().get_nodes_in_group("criatura_invocada").size()
+	var usou_jato: bool = mago.usar_medalhao(int(jato["espaco"]))
+	for i in 60:
+		await get_tree().physics_frame
+	# O Jato d'Água da receita só molha (apaga fogo, conduz choque), sem dano.
+	_afirmar("ciclo: o jato d'água acerta e molha a galinha", usou_jato and galinha.estados.esta_molhado())
+	await get_tree().create_timer(0.6).timeout # cooldown entre conjurações
+	var usou_golem: bool = mago.usar_medalhao(int(golem["espaco"]))
+	await get_tree().physics_frame
+	_afirmar("ciclo: o medalhão do golem invoca a criatura", usou_golem and get_tree().get_nodes_in_group("criatura_invocada").size() > criaturas_antes)
+	# O golem é lento: espera ele chegar e bater na galinha (até 8 s de física).
+	for i in Engine.physics_ticks_per_second * 8:
+		await get_tree().physics_frame
+		if not is_instance_valid(galinha) or galinha._vida_atual < vida_inicial:
+			break
+	_afirmar("ciclo: o golem alcança e machuca a galinha", not is_instance_valid(galinha) or galinha._vida_atual < vida_inicial)
+	_afirmar("ciclo: a barra continua com os medalhões (recarga, não some)",
+		mago.barra.medalhoes.filter(func(m): return m != null).size() == medalhoes_iniciais + 2)
+
+	arena.queue_free()
+	await get_tree().process_frame
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(caminho_grimorio))

@@ -36,12 +36,18 @@ func _ready() -> void:
 	var no := todas.get_node_or_null("Runa_%s_acesa" % nome) as Node3D
 	if no:
 		todas.remove_child(no)
+		# Solta o "dono" do arquivo .glb antes de mudar de pai (senão o Godot
+		# avisa no console, uma vez por runa, que o dono ficou inconsistente).
+		for parte in [no] + no.find_children("*", "", true, false):
+			parte.owner = null
 		no.position = Vector3.ZERO
 		_visual = Node3D.new()
 		_visual.add_child(no)
 		_visual.scale = Vector3.ONE * ESCALA
 		_garantir_cor_do_brilho(no)
 		add_child(_visual)
+	else:
+		push_warning("RunaColetavel: o modelo não tem o nó 'Runa_%s_acesa'; a runa fica invisível (só a coleta funciona)." % nome)
 	todas.queue_free()
 
 	var luz := OmniLight3D.new()
