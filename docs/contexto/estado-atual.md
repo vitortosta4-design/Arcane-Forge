@@ -14,6 +14,8 @@ Atualizado em: 22/10/2026
 - Testes: 279/279 (os 28 a menos eram do porteiro e do interpretador). Crítico do HUD (só posição, tamanho e legibilidade): 7/10 reprovado na 2ª rodada; os 3 itens que ele exigiu foram feitos depois (sem nova rodada, para poupar cota).
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
 
+- Equipe tem agora o **animador** (ADR-042), além do crítico.
+
 ## Próximo passo
 1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
 2. Ajustar números (mana, recarga) a partir do que ele disser.

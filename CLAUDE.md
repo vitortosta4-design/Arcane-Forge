@@ -80,6 +80,7 @@ Equipe enxuta por causa da cota do plano Pro. Acionar especialistas só quando v
 2. testador (roda o jogo, tira print, confere critérios)
 3. game designer (equilíbrio e diversão)
 4. **crítico** (`.claude/agents/critico.md`, ADR-037): o "gamer chato da Steam" que compara cada entrega com as referências e diz o que não está bom. Rodar **depois de toda entrega visual ou de jogabilidade, antes de relatar ao Vitor**. Ele tem força de "cliente tem sempre razão": o Claude é o mediador e acata o que ele exigir, exceto quando ferir hardware mínimo, orçamento ou decisão aprovada; aí leva ao Vitor. O relatório ao Vitor inclui a nota e o veredito do crítico.
+5. **animador** (`.claude/agents/animador.md`, ADR-042): o "dev de animação" que deixa o movimento com vida, peso e graça. Chamar quando a entrega tiver movimento (personagem, criatura, bigorna, magia, medalhão, interface, câmera). Ele implementa e prova com folha de quadros, GIF e teste; depois o crítico avalia.
 Evitar agentes em paralelo editando os mesmos arquivos.
 
 ## Ao fim de cada etapa, relatar ao Vitor

@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 22/10/2026 (ADR-040)
+Última atualização: 22/10/2026 (ADR-042)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -395,6 +395,16 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Fica:** os componentes de magia e as fichas de exemplo (usados pelas receitas e pelos testes).
 - **Supabase (escolha do Vitor, 22/10/2026: apagar):** o projeto `arcane-forge` (só tinha as tabelas e a função da magia por IA) foi pausado pelo Claude; apagar de vez é pelo painel, porque a ferramenta do Claude não tem essa opção. A pasta `supabase/` saiu do repositório junto. Os outros projetos do Vitor no Supabase não foram tocados.
 - **Fácil de mudar?** Sim: o código removido continua no histórico do git.
+
+
+## ADR-042 · Agente animador (dev de animação)
+**Status:** Aprovada (22/10/2026, pedido do Vitor)
+
+- **Problema:** o Vitor quer que o jogador veja o jogo e pense "caramba, o dev da animação trabalhou". Até aqui a animação era feita de passagem por quem modelava ou programava a peça, sem um dono.
+- **Escolha:** um quinto agente, o **animador** (`.claude/agents/animador.md`), com os princípios clássicos de animação e de sensação de jogo (antecipação, comprimir e esticar, continuação, tempo, pausa de impacto, reação a dano, interface que anima). Ele implementa (edita arquivos) e prova o movimento com folha de quadros, GIF e teste automático, já que a nuvem só tira prints parados.
+- **Junto:** o crítico (ADR-037) continua avaliando depois dele.
+- **Consequências:** amplia a equipe da ADR-005 (de 4 para 5 especialistas). Gasta cota a cada uso; chamar por entrega com movimento, não a cada ajuste. Ele respeita hardware mínimo, low poly de propósito e regras de jogo no Host.
+- **Fácil de mudar?** Sim.
 
 ---
 
