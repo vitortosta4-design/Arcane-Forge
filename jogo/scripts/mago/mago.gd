@@ -26,6 +26,8 @@ var _entrada_bloqueada := false
 var _aguardando_interpretacao := false
 var _reducao_escudo := 0.0
 var estados := ControladorEstados.new()
+## Runas que o mago carrega (Forja de Runas). Só o Host mexe aqui.
+var runas: Array[String] = []
 
 @onready var _pivot_cabeca: Node3D = $PivotCabeca
 @onready var _camera_primeira_pessoa: Camera3D = $PivotCabeca/CameraPrimeiraPessoa
@@ -38,6 +40,7 @@ signal mana_mudou(atual: float, maxima: float)
 signal conjurou(legenda: String)
 signal morreu
 signal teleportou
+signal runas_mudaram(runas: Array)
 
 
 func _ready() -> void:
@@ -288,3 +291,8 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 		velocity += direcao * empurrao
 	if vida_atual <= 0.0:
 		morreu.emit()
+
+
+func adicionar_runa(nome: String) -> void:
+	runas.append(nome)
+	runas_mudaram.emit(runas.duplicate())

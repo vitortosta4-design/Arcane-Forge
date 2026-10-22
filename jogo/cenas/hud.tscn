@@ -68,6 +68,20 @@ theme_override_colors/font_outline_color = Color(0.08, 0.07, 0.1, 0.75)
 theme_override_constants/outline_size = 4
 text = ""
 
+[node name="Runas" type="RichTextLabel" parent="."]
+offset_left = 16.0
+offset_top = 112.0
+offset_right = 520.0
+offset_bottom = 140.0
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.07, 0.1, 0.8)
+theme_override_constants/outline_size = 4
+text = "Runas: nenhuma"
+
 [node name="Legenda" type="Label" parent="."]
 anchor_left = 0.5
 anchor_right = 0.5

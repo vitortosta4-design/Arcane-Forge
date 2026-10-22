@@ -121,6 +121,7 @@ func _ready() -> void:
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
 	_testar_livro_de_receitas()
+	await _testar_coleta_de_runas()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -1964,3 +1965,49 @@ func _testar_livro_de_receitas() -> void:
 			_afirmar("receitas: recusa %s" % str(invalida), false)
 			return
 	_afirmar("receitas: recusa soma vazia, duas formas, três elementos, 4 runas e runa inventada", true)
+
+
+## Coleta de runa pelo juiz (Fase 2): perto vale uma vez só, longe não vale,
+## e o HUD mostra o contador.
+func _testar_coleta_de_runas() -> void:
+	var mago: Node3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	var hud: CanvasLayer = load("res://cenas/hud.tscn").instantiate()
+	add_child(hud)
+	hud.configurar(mago)
+	var runa: RunaColetavel = load("res://cenas/forja/runa_coletavel.tscn").instantiate()
+	runa.nome_runa = "agua"
+	add_child(runa)
+	runa.global_position = Vector3(30, 0, 30)
+	mago.global_position = Vector3(0, 0, 0)
+	_afirmar("runa: longe demais não coleta", not Host.coletar_runa(mago, runa) and mago.runas.is_empty())
+	mago.global_position = Vector3(30, 0, 29)
+	_afirmar("runa: perto coleta", Host.coletar_runa(mago, runa) and mago.runas == ["agua"])
+	_afirmar("runa: a mesma runa não é coletada duas vezes", not Host.coletar_runa(mago, runa) and mago.runas.size() == 1)
+	var texto: String = hud.get_node("Runas").text
+	_afirmar("runa: HUD mostra o contador e o nome (%s)" % texto, "(1)" in texto and "Água" in texto)
+	_afirmar("runa: HUD avisa que pegou a runa", "Água" in hud.get_node("Legenda").text)
+	await get_tree().create_timer(0.4).timeout
+	_afirmar("runa: some do mapa depois de coletada", not is_instance_valid(runa))
+
+	# Encostar de verdade (pela física, sem chamar o Host na mão).
+	var chao := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	var caixa := BoxShape3D.new()
+	caixa.size = Vector3(20, 1, 20)
+	forma.shape = caixa
+	chao.add_child(forma)
+	add_child(chao)
+	chao.global_position = Vector3(-40, -0.5, 0)
+	var outra: RunaColetavel = load("res://cenas/forja/runa_coletavel.tscn").instantiate()
+	outra.nome_runa = "fogo"
+	add_child(outra)
+	outra.global_position = Vector3(-40, 0, 0)
+	mago.global_position = Vector3(-40, 0.05, 0.3)
+	for i in 6:
+		await get_tree().physics_frame
+	_afirmar("runa: encostar nela coleta", mago.runas == ["agua", "fogo"])
+	mago.queue_free()
+	hud.queue_free()
+	chao.queue_free()
+	await get_tree().process_frame

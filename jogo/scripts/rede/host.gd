@@ -6,6 +6,9 @@ extends Node
 const LIMITE_PROJETEIS_ATIVOS := 40
 const LIMITE_CRIATURAS_INVOCADAS := 6
 const LIMITE_MAGIAS_ATIVAS_POR_DONO := 3
+## Até onde o mago pode estar da runa para a coleta valer (proteção para o
+## cooperativo: o convidado não pega runa do outro lado do mapa).
+const DISTANCIA_COLETA_RUNA_M := 2.5
 const CenaEfeitoExplosao := preload("res://cenas/efeitos/explosao_visual.tscn")
 
 var projeteis_ativos: Array[Node] = []
@@ -121,3 +124,17 @@ func pode_invocar_criatura() -> bool:
 
 func registrar_criatura(c: Node) -> void:
 	criaturas_invocadas.append(c)
+
+
+## Coleta de runa (Fase 2, ADR-035). Quem pega leva; o juiz confere que a
+## runa existe, ainda não foi pega, é de um tipo conhecido e está perto.
+func coletar_runa(mago: Node, runa: Node) -> bool:
+	if not is_instance_valid(runa) or not is_instance_valid(mago) or runa.coletada:
+		return false
+	if LivroDeReceitas.runa(runa.nome_runa).is_empty():
+		return false
+	if (mago as Node3D).global_position.distance_to((runa as Node3D).global_position) > DISTANCIA_COLETA_RUNA_M:
+		return false
+	mago.adicionar_runa(runa.nome_runa)
+	runa.ao_ser_coletada()
+	return true
