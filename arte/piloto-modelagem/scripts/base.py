@@ -142,7 +142,7 @@ def camera(alvo, distancia=4.0, altura=1.6, angulo=-35, lente=50):
     return cam
 
 
-def renderizar(caminho, largura=900, altura=900, amostras=48):
+def renderizar(caminho, largura=900, altura=900, amostras=48, transparente=False):
     cena = bpy.context.scene
     cena.render.engine = "CYCLES"
     cena.cycles.device = "CPU"
@@ -150,7 +150,7 @@ def renderizar(caminho, largura=900, altura=900, amostras=48):
     cena.cycles.use_denoising = True
     cena.render.resolution_x = largura
     cena.render.resolution_y = altura
-    cena.render.film_transparent = False
+    cena.render.film_transparent = transparente
     cena.view_settings.view_transform = "AgX"
     cena.view_settings.look = "AgX - Punchy"
     cena.render.filepath = caminho

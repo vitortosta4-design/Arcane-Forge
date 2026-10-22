@@ -58,3 +58,15 @@ Feito a partir de `referencias/runas_folha_vitor.png`. 8 runas, ~600 triângulos
 - 2 rodadas: na v1 pareciam peças de papelão e o símbolo de vida parecia um cata-vento.
 
 Falta para o jogo: o halo de brilho em volta do símbolo aceso (efeito glow do Godot) e a animação de acender e se encaixar na bigorna.
+
+## Lote 3b: runas refeitas (v2, 21/10/2026)
+
+O Vitor achou a v1 sem esmero (formato de quebra-cabeça perfeito, símbolo colado, ícones básicos e descentralizados). `scripts/runas2.py` refaz do zero:
+
+- Laje em pé com laterais em degrau complementares: bloco, dente e recuo na direita casam com recuo, fenda e bloco na esquerda (passo 0,93 unidade). Topo quebrado e base variam por runa.
+- Símbolo entalhado por booleana (sulco de 7,5 mm com parede e fundo). Acesa: fundo na cor saturada e parede no tom claro.
+- Chanfro largo, face facetada, rachaduras finas.
+- Ícones redesenhados no traço da referência (chama pontuda com caracol, gota com miolo, broto com folhas, garras afiladas, espiral com rabo, dois elos, flecha curva com rastros, estrela partida) e centralizados pela massa da peça.
+- 8 rodadas, comparando runa por runa com recortes da referência (`renders/runas_v2/comparacao_runas_v2.png`).
+
+O que ainda separa da referência: pintura (luz e sombra pintadas na pedra, quinas claras, contorno escuro), brilho com halo (glow) e cor mais viva da pedra acesa. Cor chapada por face chegou no limite; o próximo passo é textura pintada (assar sombra e desgaste de quina) ou testar uma ferramenta de imagem para 3D.
