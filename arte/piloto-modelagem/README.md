@@ -47,3 +47,14 @@ Feito a partir de `referencias/mago_folha_vitor.png`. ~2.600 triângulos, ~1 m c
 - 7 rodadas: o rosto sumia sob a aba (v1), as mãos pareciam vassouras (v5), as poses eram tampadas pelas animações gravadas (v3) e cabeça e chapéu foram aumentados em 20% para ficar mais chibi (v7).
 
 Falta para o jogo: o brilho da magia na mão ao conjurar (efeito de partículas no Godot), o manto não balança (peças rígidas) e as ~67 peças podem ser juntadas por osso e material.
+
+## Lote 3: runas de quebra-cabeça (21/10/2026)
+
+Feito a partir de `referencias/runas_folha_vitor.png`. 8 runas, ~600 triângulos cada (4.844 no total).
+
+- `scripts/runas.py`: placa de pedra grossa com borda irregular e chanfro, e o símbolo por cima. Fogo, água, vida, feroz, gravitação, prende, arremesso e quebrar.
+- Encaixe de verdade: dente na direita e em cima, fenda na esquerda e embaixo. Com as runas lado a lado a 0,3 m, o dente de uma entra na fenda da próxima (as 3 combinações do render estão encaixadas assim).
+- Dois arquivos: `runas.glb` (apagadas) e `runas_acesas.glb` (pedra tingida e símbolo brilhando). Cada runa é um nó com a pedra e as partes do símbolo como filhos, então o jogo também pode só trocar o material para acender.
+- 2 rodadas: na v1 pareciam peças de papelão e o símbolo de vida parecia um cata-vento.
+
+Falta para o jogo: o halo de brilho em volta do símbolo aceso (efeito glow do Godot) e a animação de acender e se encaixar na bigorna.
