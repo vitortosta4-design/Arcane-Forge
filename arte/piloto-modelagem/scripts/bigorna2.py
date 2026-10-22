@@ -835,6 +835,18 @@ def camera_em(pos, alvo, lente=60):
     bpy.context.scene.camera = cam
 
 
+def juntar_por_material(objs, prefixo):
+    por_mat = {}
+    for o in objs:
+        m = o.data.materials[0].name if o.data.materials else "sem"
+        por_mat.setdefault(m, []).append(o)
+    for m, lista in por_mat.items():
+        if len(lista) > 1:
+            base.juntar(lista, f"{prefixo}_{m}")
+        else:
+            lista[0].name = f"{prefixo}_{m}"
+
+
 def principal():
     base.limpar_cena()
     criar_materiais()
@@ -844,6 +856,18 @@ def principal():
         for g in rostos.values():
             for o in g.children_recursive:
                 o.hide_set(False)
+        # junta as pecas de cada grupo por material: de ~325 malhas para poucas dezenas
+        # (cada malha e uma "chamada de desenho"; menos chamadas, menos peso no PC fraco)
+        grupos = [("Base", [o for o in raiz.children if o.type == "MESH"]),
+                  ("Corpo", [o for o in corpo.children if o.type == "MESH"]),
+                  ("Anel", [o for o in bpy.data.objects["AnelPedras"].children if o.type == "MESH"])]
+        for t, g in rostos.items():
+            grupos.append((f"Rosto_{t}", [o for o in g.children if o.type == "MESH"
+                                          and not o.name.startswith(("Estilhaco_", "Fagulha_"))]))
+        for nome, objs in grupos:
+            juntar_por_material(objs, nome)
+        todas = [o for o in bpy.data.objects if o.type == "MESH"]
+        print("MALHAS_EXPORTADAS", len(todas), "TRIANGULOS", base.contar_triangulos(todas))
         base.exportar_glb(SAIDA + ".glb", [raiz], animacoes=True, luzes=True)
         return
     rig = palco()
