@@ -1,0 +1,120 @@
+{
+  "_leia_me": "Livro de receitas da Forja de Runas (ADR-032, ADR-035). Uma forja usa até 3 runas: no máximo uma de forma e até duas de elemento. A ordem não importa. 'runas' de cada receita é a soma exata. Combinações sem receita viram uma versão básica (montada pelo jogo a partir dos dados de 'runas' abaixo). As fichas passam pelo Validador como qualquer magia; números ajustáveis jogando.",
+  "runas": {
+    "arremesso": {"tipo": "forma", "nome": "Arremesso", "cor": "#1a8cff"},
+    "vida": {"tipo": "forma", "nome": "Vida", "cor": "#3cff1e"},
+    "prende": {"tipo": "forma", "nome": "Prende", "cor": "#ff9a00"},
+    "fogo": {"tipo": "elemento", "nome": "Fogo", "cor": "#ff4a00", "material": "fogo", "estado": "queimando", "etiquetas": ["fogo"]},
+    "agua": {"tipo": "elemento", "nome": "Água", "cor": "#0f7bff", "material": "agua", "estado": "molhado", "etiquetas": []},
+    "feroz": {"tipo": "elemento", "nome": "Feroz", "cor": "#ff1a1a", "material": "metal", "estado": "", "etiquetas": []}
+  },
+  "receitas": [
+    {
+      "runas": ["fogo"],
+      "nome": "Bola de Fogo",
+      "legenda": "uma bola de fogo rápida que explode",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "esfera", "material": "fogo", "velocidade": 20,
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 2.0, "dano": 12, "empurrao": 3, "etiquetas": ["fogo"]}]}
+      ]}
+    },
+    {
+      "runas": ["agua"],
+      "nome": "Jato d'Água",
+      "legenda": "um jato que empurra e deixa molhado",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "esfera", "material": "agua", "velocidade": 22,
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 1.5, "dano": 6, "empurrao": 5, "etiquetas": []},
+                         {"tipo": "estado", "nome_estado": "molhado", "duracao_s": 4}]}
+      ]}
+    },
+    {
+      "runas": ["feroz"],
+      "nome": "Mordida Voadora",
+      "legenda": "uma mordida que voa e arranca um pedaço",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "ovo", "material": "metal", "velocidade": 24,
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 1.0, "dano": 16, "empurrao": 2, "etiquetas": []}]}
+      ]}
+    },
+    {
+      "runas": ["arremesso", "fogo"],
+      "nome": "Molotov Arcano",
+      "legenda": "uma garrafa que se quebra e deixa o chão em chamas",
+      "modelo": "molotov_arcano",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "ovo", "material": "fogo", "velocidade": 12,
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 1.5, "dano": 6, "empurrao": 1, "etiquetas": ["fogo"]},
+                         {"tipo": "area", "raio_m": 2.5, "duracao_s": 4, "dano_por_s": 5, "material": "fogo", "nome_estado": "queimando"}]}
+      ]}
+    },
+    {
+      "runas": ["arremesso", "agua"],
+      "nome": "Balão d'Água",
+      "legenda": "um balão que estoura e encharca todo mundo em volta",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "ovo", "material": "agua", "velocidade": 11,
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 3.0, "dano": 2, "empurrao": 2, "etiquetas": []},
+                         {"tipo": "area", "raio_m": 3.0, "duracao_s": 3, "dano_por_s": 0, "material": "agua", "nome_estado": "molhado"}]}
+      ]}
+    },
+    {
+      "runas": ["prende", "fogo"],
+      "nome": "Correntes em Brasa",
+      "legenda": "correntes em brasa saem do chão e prendem quem estiver perto",
+      "modelo": "correntes_arcanas",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "projetil", "forma": "esfera", "material": "fogo", "velocidade": 16,
+         "ao_impactar": [{"tipo": "area", "raio_m": 2.5, "duracao_s": 4, "dano_por_s": 4, "material": "fogo", "nome_estado": "lento"},
+                         {"tipo": "estado", "nome_estado": "queimando", "duracao_s": 3}]}
+      ]}
+    },
+    {
+      "runas": ["prende", "agua"],
+      "nome": "Pântano Grudento",
+      "legenda": "o chão em volta vira lama e tudo anda devagar",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "area", "raio_m": 4.0, "duracao_s": 6, "dano_por_s": 0, "material": "agua", "nome_estado": "lento"}
+      ]}
+    },
+    {
+      "runas": ["vida", "fogo"],
+      "nome": "Golem de Fogo",
+      "legenda": "um golem de fogo grandão e lento que luta por você",
+      "modelo": "golem_fogo",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "invocacao", "corpo": "bolha", "material": "fogo", "escala": 1.6, "vida": 35, "dano_contato": 6, "duracao_s": 8, "comportamento": "perseguir_inimigo_proximo"}
+      ]}
+    },
+    {
+      "runas": ["vida", "feroz"],
+      "nome": "Leão",
+      "legenda": "um leão que corre atrás do inimigo mais perto",
+      "modelo": "leao",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "invocacao", "corpo": "quadrupede", "material": "metal", "escala": 1.3, "vida": 25, "dano_contato": 8, "duracao_s": 8, "comportamento": "perseguir_inimigo_proximo"}
+      ]}
+    },
+    {
+      "runas": ["vida", "agua"],
+      "nome": "Fonte da Vida",
+      "legenda": "cura você e molha quem estiver em volta",
+      "ficha": {"natureza": "boa", "componentes": [
+        {"tipo": "cura", "quantidade": 25},
+        {"tipo": "area", "raio_m": 3.0, "duracao_s": 4, "dano_por_s": 0, "material": "agua", "nome_estado": "molhado"}
+      ]}
+    },
+    {
+      "runas": ["vida", "feroz", "fogo"],
+      "nome": "Galinha Flamejante",
+      "legenda": "uma galinha em chamas que bota ovos explosivos",
+      "modelo": "galinha",
+      "ficha": {"natureza": "neutra", "componentes": [
+        {"tipo": "invocacao", "id": "galinha", "corpo": "ave", "material": "fogo", "escala": 1.2, "vida": 20, "dano_contato": 4, "duracao_s": 8, "comportamento": "perseguir_inimigo_proximo"},
+        {"tipo": "lancador", "anexado_a": "galinha", "intervalo_s": 1.2,
+         "projetil": {"forma": "ovo", "material": "fogo", "velocidade": 10},
+         "ao_impactar": [{"tipo": "explosao", "raio_m": 1.5, "dano": 6, "empurrao": 2, "etiquetas": ["fogo"]}]}
+      ]}
+    }
+  ]
+}

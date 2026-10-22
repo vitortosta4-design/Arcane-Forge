@@ -120,6 +120,7 @@ func _ready() -> void:
 	await _testar_caixa_e_barril_de_madeira()
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
+	_testar_livro_de_receitas()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -1888,3 +1889,78 @@ func _testar_bigorna_ignora_pedido_invalido_ou_no_meio_da_troca() -> void:
 	_afirmar("a primeira troca termina normalmente", b.expressao == "rindo" and _rostos_visiveis(b) == ["rindo"])
 	b.queue_free()
 	await get_tree().process_frame
+
+
+## Forja de Runas (ADR-032, ADR-035): toda soma válida dá alguma coisa que
+## dá para conjurar, a mesma soma dá sempre a mesma magia, a ordem não
+## importa e o arquivo de receitas não tem erro.
+func _testar_livro_de_receitas() -> void:
+	var formas: Array = []
+	var elementos: Array = []
+	for nome in LivroDeReceitas.todas_as_runas():
+		if LivroDeReceitas.runa(nome)["tipo"] == "forma":
+			formas.append(nome)
+		else:
+			elementos.append(nome)
+	_afirmar("receitas: 6 runas na primeira leva (3 formas, 3 elementos)", formas.size() == 3 and elementos.size() == 3)
+
+	# Todas as somas possíveis: sem forma ou com uma, e de 0 a 2 elementos
+	# (podendo repetir, já que dá para achar duas runas de fogo).
+	var somas: Array = []
+	for f in [""] + formas:
+		var com_forma: Array = [] if f == "" else [f]
+		somas.append(com_forma)
+		for i in elementos.size():
+			somas.append(com_forma + [elementos[i]])
+			for j in range(i, elementos.size()):
+				somas.append(com_forma + [elementos[i], elementos[j]])
+	somas = somas.filter(func(s): return not s.is_empty())
+	var todas_ok := true
+	var falhas: Array = []
+	for soma in somas:
+		var r := LivroDeReceitas.forjar(soma)
+		var ficha := Validador.validar_ficha(r.get("ficha", {}))
+		var custo := Validador.calcular_custo_mana(ficha)
+		if r.is_empty() or ficha["componentes"].is_empty() or custo <= 0.0 or custo > 100.0:
+			todas_ok = false
+			falhas.append("%s (custo %.0f)" % ["+".join(soma), custo])
+	_afirmar("receitas: todas as %d somas possíveis viram magia conjurável %s" % [somas.size(), str(falhas)], todas_ok)
+
+	var a := LivroDeReceitas.forjar(["vida", "fogo"])
+	var b := LivroDeReceitas.forjar(["fogo", "vida"])
+	var c := LivroDeReceitas.forjar(["vida", "fogo"])
+	_afirmar("receitas: ordem das runas não importa", a["ficha"] == b["ficha"] and a["chave"] == b["chave"])
+	_afirmar("receitas: mesma soma dá sempre a mesma magia", a["ficha"] == c["ficha"])
+	_afirmar("receitas: fogo sozinho é a bola de fogo", LivroDeReceitas.forjar(["fogo"])["nome"] == "Bola de Fogo")
+	_afirmar("receitas: vida + fogo é o golem de fogo", a["nome"] == "Golem de Fogo" and a["especial"])
+	_afirmar("receitas: arremesso + fogo é o molotov arcano", LivroDeReceitas.forjar(["fogo", "arremesso"])["nome"] == "Molotov Arcano")
+	_afirmar("receitas: vida + feroz é o leão", LivroDeReceitas.forjar(["feroz", "vida"])["nome"] == "Leão")
+	_afirmar("receitas: prende + fogo são as correntes em brasa", LivroDeReceitas.forjar(["prende", "fogo"])["nome"] == "Correntes em Brasa")
+	var basica := LivroDeReceitas.forjar(["arremesso", "feroz"])
+	_afirmar("receitas: soma sem receita dá versão básica, não especial", not basica.is_empty() and not basica["especial"])
+	_afirmar("receitas: cor e nome da versão básica não dependem da ordem",
+		LivroDeReceitas.forjar(["fogo", "agua"])["cor"] == LivroDeReceitas.forjar(["agua", "fogo"])["cor"]
+		and LivroDeReceitas.forjar(["fogo", "agua"])["nome"] == LivroDeReceitas.forjar(["agua", "fogo"])["nome"])
+	_afirmar("receitas: cor do medalhão vem do elemento", LivroDeReceitas.forjar(["prende", "agua"])["cor"] == Color("#0f7bff"))
+
+	var especiais := 0
+	var chaves := {}
+	var receitas_ok := true
+	for receita in LivroDeReceitas.dados()["receitas"]:
+		var k := LivroDeReceitas.chave(receita["runas"])
+		if LivroDeReceitas.problema(receita["runas"]) != "" or chaves.has(k):
+			receitas_ok = false
+		chaves[k] = true
+		var original: Array = receita["ficha"]["componentes"]
+		if Validador.validar_ficha(receita["ficha"])["componentes"].size() != original.size():
+			receitas_ok = false
+		if receita["runas"].size() >= 2:
+			especiais += 1
+	_afirmar("receitas: arquivo sem soma repetida nem componente que o validador descarta", receitas_ok)
+	_afirmar("receitas: cerca de 8 receitas especiais (tem %d)" % especiais, especiais >= 8)
+
+	for invalida in [[], ["vida", "prende"], ["fogo", "agua", "feroz"], ["vida", "fogo", "agua", "feroz"], ["dragao"]]:
+		if not LivroDeReceitas.forjar(invalida).is_empty() or LivroDeReceitas.problema(invalida) == "":
+			_afirmar("receitas: recusa %s" % str(invalida), false)
+			return
+	_afirmar("receitas: recusa soma vazia, duas formas, três elementos, 4 runas e runa inventada", true)
