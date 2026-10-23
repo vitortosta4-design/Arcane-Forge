@@ -108,6 +108,7 @@ func _ready() -> void:
 	_testar_hud_tem_mira_no_centro()
 	await _testar_hud_no_layout_da_adr_039()
 	await _testar_ciclo_da_forja_do_comeco_ao_fim()
+	await _testar_mago_modelado_pela_folha()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -2117,3 +2118,54 @@ func _testar_ciclo_da_forja_do_comeco_ao_fim() -> void:
 	arena.queue_free()
 	await get_tree().process_frame
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(caminho_grimorio))
+
+
+## Mago da folha do Vitor (arte/personagens/mago/mago.py): esqueleto com
+## dois ossos por dedo, animações certas tocando na hora certa e os dedinhos
+## da mão de primeira pessoa mexendo parados.
+func _testar_mago_modelado_pela_folha() -> void:
+	var mago: Node3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	var corpo: VisualMago = mago.get_node("CorpoVisivel")
+	var esqueletos := corpo.find_children("*", "Skeleton3D", true, false)
+	var anim := corpo.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	_afirmar("mago: modelo com esqueleto", esqueletos.size() == 1)
+	var esqueleto: Skeleton3D = esqueletos[0] if not esqueletos.is_empty() else null
+	var dedos_ok := esqueleto != null
+	for lado in ["E", "D"]:
+		for dedo in ["Indicador", "Medio", "Anelar", "Minimo", "Polegar"]:
+			if esqueleto and (esqueleto.find_bone("%s1%s" % [dedo, lado]) < 0 or esqueleto.find_bone("%s2%s" % [dedo, lado]) < 0):
+				dedos_ok = false
+	_afirmar("mago: cada dedo das duas mãos tem dois ossos", dedos_ok)
+	var faltando := ["Parado", "Andar", "Conjurar", "ErguerCajado", "Dano"].filter(func(n): return anim == null or not anim.has_animation(n))
+	_afirmar("mago: tem as 5 animações %s" % str(faltando), faltando.is_empty())
+	_afirmar("mago: parado toca Parado", anim and anim.current_animation == "Parado")
+	corpo.animar(0.016, 4.5, true)
+	_afirmar("mago: andando toca Andar, mais rápido quando corre (pé não patina)", anim.current_animation == "Andar" and anim.speed_scale > 1.0)
+	corpo.animar(0.016, 0.0, true)
+	_afirmar("mago: parou, volta ao Parado", anim.current_animation == "Parado")
+	corpo.conjurar()
+	_afirmar("mago: conjurar toca Conjurar na hora", anim.current_animation == "Conjurar")
+	corpo.animar(0.016, 4.5, true)
+	_afirmar("mago: andar não corta o Conjurar no meio", anim.current_animation == "Conjurar")
+	mago.receber_dano(5.0, mago.global_position + Vector3.FORWARD, 0.0)
+	_afirmar("mago: levar dano toca Dano", anim.current_animation == "Dano")
+
+	var maos: MaosPrimeiraPessoa = mago.get_node("PivotCabeca/CameraPrimeiraPessoa/Mao")
+	var anim1p := maos.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var esq1p := maos.find_child("Skeleton3D", true, false) as Skeleton3D
+	_afirmar("mãos 1P: modelo com esqueleto e Parado1P em loop",
+		anim1p != null and esq1p != null and anim1p.current_animation == "Parado1P"
+		and anim1p.get_animation("Parado1P").loop_mode == Animation.LOOP_LINEAR)
+	if anim1p and esq1p:
+		var osso := esq1p.find_bone("Medio1E")
+		anim1p.seek(0.2, true)
+		var antes := esq1p.get_bone_pose_rotation(osso)
+		anim1p.seek(0.95, true)
+		var depois := esq1p.get_bone_pose_rotation(osso)
+		_afirmar("mãos 1P: parado, o dedo médio dobra e desdobra (movimento fofo)", antes.angle_to(depois) > deg_to_rad(4.0))
+		maos.conjurar()
+		_afirmar("mãos 1P: conjurar toca Conjurar1P", anim1p.current_animation == "Conjurar1P")
+	mago.queue_free()
+	await get_tree().process_frame

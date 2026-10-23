@@ -260,6 +260,8 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 	dano *= (1.0 - _reducao_escudo)
 	vida_atual = maxf(0.0, vida_atual - dano)
 	vida_mudou.emit(vida_atual, vida_maxima)
+	if dano > 0.0:
+		_corpo_visivel.reagir_dano()
 	if empurrao != 0.0:
 		# Empurrão negativo puxa para o centro em vez de afastar: a mesma
 		# conta com o sinal invertido (proposta técnica, seção 3).
