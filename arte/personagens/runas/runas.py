@@ -751,4 +751,5 @@ def principal():
     base.renderizar(SAIDA + ".png", largura=1536, altura=1024, amostras=48, transparente=True)
 
 
-principal()
+if __name__ == "__main__":
+    principal()
