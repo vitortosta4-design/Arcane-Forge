@@ -51,10 +51,16 @@ func _process(delta: float) -> bool:
 						_mago.barra.equipar(resultado)
 					else:
 						push_warning("tirar_print: não forjou %s: %s" % [soma, resultado.get("motivo", "?")])
+			if _args.has("estados"):
+				for nome in str(_args["estados"]).split(","):
+					_mago.aplicar_estado(nome, 30.0)
 			if _args.has("galinha"):
 				var galinha := current_scene.get_node_or_null("GalinhaZumbi") as Node3D
 				if galinha:
 					galinha.global_position = _vetor(_args["galinha"])
+					if _args.has("ferir-galinha"):
+						# Dano direto (sem magia) só para a barra de vida dela aparecer no print.
+						galinha.receber_dano(float(_args["ferir-galinha"]), galinha.global_position + Vector3.BACK, 0.0)
 				else:
 					push_warning("tirar_print: --galinha pedido, mas a cena não tem GalinhaZumbi.")
 			if _args.has("camera"):

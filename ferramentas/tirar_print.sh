@@ -15,6 +15,8 @@
 #   --usar n          usa o medalhão n (1 a 4) aos 0,5 s (fica em recarga)
 #   --andar s         segura W por s segundos a partir de 0,5 s
 #   --galinha x,y,z   põe a galinha zumbi nesse ponto
+#   --estados a,b     aplica esses estados no mago (os ícones aparecem no HUD)
+#   --ferir-galinha d tira d de vida da galinha (a barra de vida dela aparece)
 #   --martelar a,b    martela essas runas na bigorna aos 0,5 s (use com --runas)
 #   --camera x,y,z    câmera livre nesse ponto (ex.: ver o mago de frente)
 #   --alvo-camera x,y,z  para onde a câmera livre olha (padrão 0,1,0)

@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 23/10/2026 (ADR-043)
+Última atualização: 23/10/2026 (ADR-039, estilo do HUD)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -376,6 +376,14 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Decidido pelo Claude como gestor:** tamanhos, margens e o visual provisório. O Vitor julga pelo print.
 - **Pendência (22/10/2026):** falta a **referência visual do HUD e do medalhão**, a ser gerada pelo Vitor. Até ela chegar e ser aprovada, o HUD fica com formas lisas em cinza e nas cores dos elementos; não inventar estilo (moldura, ornamento, textura) sem ela.
 - **Escolhas do Vitor (22/10/2026, depois do primeiro print):** sem selo de nível no retrato (o jogo não tem nível); medalhão continua redondo (ADR-033), dentro de uma moldura em losango como na referência; mãos em primeira pessoa mais baixas e afastadas para não encostar na barra. Estilo do HUD 100% provisório (formas lisas) até o Vitor aprovar uma referência visual do HUD.
+- **Referência do HUD aprovada (23/10/2026):** `docs/referencias/hud-referencia-01.png`, gerada pelo Vitor no ChatGPT a partir do prompt do Claude, depois de duas correções. O estilo deixa de ser provisório e passa a seguir essa imagem: aros dourados com cravos, barras com ponta cortada, plaquinha do número da tecla em cima do medalhão, minimapa com aro e plaquinha do N.
+- **Escolhas do Vitor sobre a referência (23/10/2026):**
+  - 1b: tudo redondo. O medalhão é redondo e o encaixe também; a moldura em losango sai.
+  - 2b: recarga mostrada por uma sombra de relógio que cobre a parte que ainda falta, sem o reloginho da imagem.
+  - 3b: a barra de vida do inimigo só aparece depois que ele leva dano e some alguns segundos depois do último acerto.
+  - 4b: no cooperativo (Fase 3), o parceiro aparece abaixo do retrato só com a vida, sem a mana.
+- **Mudança de posição, seguindo a referência aprovada:** o contador de runas sai de baixo do retrato e vai para a esquerda da barra de medalhões. Os estados passam a ser ícones logo abaixo das barras.
+- **Decidido pelo Claude como gestor:** sem números de vida e mana nas barras (a referência não tem); o retrato é o próprio modelo do mago fotografado por uma câmera separada; o minimapa já mostra a clareira de verdade (foto de cima, com runas, inimigos e a marca da forja), porque o crítico reprovou o disco vazio e a clareira já existe; a tela inteira passa a escalar com a janela (`stretch canvas_items`), para o HUD não ficar pequeno em 1080p.
 - **Fácil de mudar?** Sim, é camada de interface.
 
 ## ADR-040 · Arte feita no próprio projeto, sem pacotes prontos

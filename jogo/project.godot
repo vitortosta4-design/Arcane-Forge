@@ -81,3 +81,8 @@ interagir={
 
 renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="gl_compatibility"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"

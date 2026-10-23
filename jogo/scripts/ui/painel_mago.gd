@@ -1,35 +1,42 @@
 class_name PainelMago
 extends Control
-## Canto superior esquerdo do HUD (ADR-039): retrato do mago com vida e mana
-## ao lado e, logo abaixo, as runas carregadas. Só LÊ o mago; nunca mexe em
-## vida, mana ou runas.
-## Visual 100% provisório de propósito (pedido do Vitor, 22/10/2026): formas
-## lisas em cinza e nas cores dos elementos, sem moldura nem ornamento. O
-## estilo vem depois, de uma referência que o Vitor ainda vai aprovar. Aqui só
-## importam posição, tamanho e legibilidade.
+## Canto superior esquerdo do HUD (ADR-039, estilo da referência
+## docs/referencias/hud-referencia-01.png): retrato redondo do mago numa
+## moldura dourada, com a barra de vida e a de mana ao lado. Só LÊ o mago;
+## nunca mexe em vida ou mana.
+## O retrato é o próprio modelo do mago (mago.glb) fotografado uma vez por
+## uma câmera numa "salinha" separada (SubViewport), então ele muda sozinho
+## quando o modelo mudar, sem desenho à parte.
 
-const COR_RETRATO := Color(0.3, 0.22, 0.58) # roxo do manto, placeholder
-const COR_FUNDO := Color(0.15, 0.15, 0.17, 0.75)
-const COR_VAZIO := Color(0.32, 0.32, 0.35, 0.9)
-const COR_VIDA := Color(0.85, 0.22, 0.22)
-const COR_MANA := Color(0.24, 0.5, 0.95)
-const RAIO_RETRATO := 34.0
-const CENTRO_RETRATO := Vector2(38, 38)
-const BARRA_X := 84.0
-const BARRA_LARGURA := 220.0
-const ALTURA_RUNAS := 82.0
+const CENTRO_RETRATO := Vector2(46, 46)
+const RAIO_RETRATO := 44.0
+const ARO := 7.0
+const BARRA_X := 100.0
+const VIDA_POS := Vector2(BARRA_X, 16)
+const VIDA_TAMANHO := Vector2(236, 20)
+const MANA_POS := Vector2(BARRA_X, 46)
+const MANA_TAMANHO := Vector2(206, 15)
+## Fundo quente atrás do mago azul (o crítico reprovou azul sobre azul):
+## âmbar embaixo, roxo em cima, como a luz dourada da referência.
+const COR_FUNDO_RETRATO := Color(0.85, 0.5, 0.22)
+const COR_FUNDO_RETRATO_ALTO := Color(0.5, 0.26, 0.55)
+## Câmera do retrato: de frente, na altura dos olhos (a aba larga do chapéu
+## esconde o rosto se a câmera vier de cima), pegando o chapéu inteiro.
+const CAMERA_RETRATO := Vector3(0.08, 0.42, 1.8)
+const ALVO_RETRATO := Vector3(0.0, 0.7, 0.0)
+const LADO_RETRATO_PX := 256
 
 var mago: Node = null
-var _fonte: Font = null
 var _avisou := false
 ## O HUD nasce e só depois o mago é ligado (no mesmo quadro ou no seguinte);
 ## só é problema se continuar sem mago depois de um tempinho.
 var _vivo_s := 0.0
+var _retrato: SubViewport = null
 
 
 func _ready() -> void:
-	_fonte = ThemeDB.fallback_font
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_montar_retrato()
 
 
 func _process(delta: float) -> void:
@@ -37,62 +44,83 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## Salinha do retrato: o modelo do mago parado, uma luz quente de frente e
+## uma azulada de lado (o contraste quente e frio da referência). Desenha um
+## quadro só e para (UPDATE_ONCE), então não pesa nada no jogo.
+func _montar_retrato() -> void:
+	_retrato = SubViewport.new()
+	_retrato.size = Vector2i(LADO_RETRATO_PX, LADO_RETRATO_PX)
+	_retrato.own_world_3d = true
+	_retrato.transparent_bg = true
+	_retrato.render_target_update_mode = SubViewport.UPDATE_ONCE
+	add_child(_retrato)
+	var modelo: Node3D = VisualMago.MODELO.instantiate()
+	_retrato.add_child(modelo)
+	var anim: AnimationPlayer = modelo.find_child("AnimationPlayer", true, false)
+	if anim and anim.has_animation("Parado"):
+		anim.play("Parado")
+		anim.seek(0.0, true)
+		anim.pause()
+	elif anim:
+		push_warning("PainelMago: mago.glb sem a animação 'Parado'; o retrato sai na pose de modelagem.")
+	var camera := Camera3D.new()
+	camera.fov = 30.0
+	_retrato.add_child(camera)
+	camera.look_at_from_position(CAMERA_RETRATO, ALVO_RETRATO)
+	var sol := DirectionalLight3D.new()
+	sol.light_color = Color(1.0, 0.86, 0.66)
+	sol.light_energy = 1.3
+	_retrato.add_child(sol)
+	sol.look_at_from_position(Vector3(0.6, 1.4, 1.4), ALVO_RETRATO)
+	var contorno := DirectionalLight3D.new()
+	contorno.light_color = Color(0.55, 0.65, 1.0)
+	contorno.light_energy = 0.9
+	_retrato.add_child(contorno)
+	contorno.look_at_from_position(Vector3(-1.2, 0.9, -0.6), ALVO_RETRATO)
+	var ambiente := WorldEnvironment.new()
+	ambiente.environment = Environment.new()
+	ambiente.environment.background_mode = Environment.BG_CLEAR_COLOR
+	ambiente.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	ambiente.environment.ambient_light_color = Color(0.5, 0.55, 0.8)
+	ambiente.environment.ambient_light_energy = 0.6
+	_retrato.add_child(ambiente)
+
+
 func _draw() -> void:
 	if mago == null:
 		if not _avisou and _vivo_s > 1.0:
-			push_warning("PainelMago: nenhum mago configurado; retrato, vida, mana e runas não aparecem.")
+			push_warning("PainelMago: nenhum mago configurado; retrato, vida e mana não aparecem.")
 			_avisou = true
 		return
-	draw_circle(CENTRO_RETRATO, RAIO_RETRATO, COR_RETRATO)
-	_barra(Vector2(BARRA_X, 14), 22.0, float(mago.vida_atual), float(mago.vida_maxima), COR_VIDA)
-	_barra(Vector2(BARRA_X, 44), 16.0, float(mago.mana_atual), float(mago.mana_maxima), COR_MANA)
-	_runas()
+	_desenhar_retrato()
+	EstiloHud.barra(self, VIDA_POS, VIDA_TAMANHO, _fracao(mago.vida_atual, mago.vida_maxima), EstiloHud.VIDA, EstiloHud.VIDA_CLARA)
+	EstiloHud.barra(self, MANA_POS, MANA_TAMANHO, _fracao(mago.mana_atual, mago.mana_maxima), EstiloHud.MANA, EstiloHud.MANA_CLARA)
 
 
-func _barra(pos: Vector2, altura: float, atual: float, maxima: float, cor: Color) -> void:
-	var fracao := clampf(atual / maxima, 0.0, 1.0) if maxima > 0.0 else 0.0
-	draw_rect(Rect2(pos, Vector2(BARRA_LARGURA, altura)), COR_VAZIO)
-	draw_rect(Rect2(pos, Vector2(BARRA_LARGURA * fracao, altura)), cor)
-	var texto := "%d/%d" % [roundi(atual), roundi(maxima)]
-	var tamanho := 13 if altura < 20.0 else 15
-	var largura := _fonte.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
-	_texto(pos + Vector2((BARRA_LARGURA - largura) / 2.0, altura / 2.0 + tamanho * 0.36), texto, tamanho)
+func _fracao(atual, maxima) -> float:
+	return clampf(float(atual) / float(maxima), 0.0, 1.0) if float(maxima) > 0.0 else 0.0
 
 
-## Runas na mochila, logo abaixo das barras, sempre numa linha só: uma
-## etiqueta por tipo, com bolinha na cor da runa e a quantidade. Se não
-## couber com os nomes, fica só bolinha e número (o crítico reprovou a quebra
-## de linha, que invadia o lugar dos estados).
-func _runas() -> void:
-	var contagem := {}
-	for r in mago.runas:
-		contagem[r] = contagem.get(r, 0) + 1
-	var textos := {}
-	var largura_total := 0.0
-	for nome in contagem:
-		var rotulo: String = nome
-		if mago.livro:
-			rotulo = mago.livro.formas.get(nome, mago.livro.elementos.get(nome, {})).get("nome", nome)
-		textos[nome] = "%s x%d" % [rotulo, contagem[nome]] if contagem[nome] > 1 else rotulo
-		largura_total += _fonte.get_string_size(textos[nome], HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 34.0
-	var x := _etiqueta(BARRA_X, ALTURA_RUNAS, "Runas: %d" % mago.runas.size(), Color(0, 0, 0, 0)) + 4.0
-	var compacto := x + largura_total > size.x
-	for nome in contagem:
-		var texto: String = str(contagem[nome]) if compacto else textos[nome]
-		x = _etiqueta(x, ALTURA_RUNAS, texto, RunaColetavel.CORES.get(nome, Color.WHITE)) + 4.0
-
-
-## Etiqueta lisa (com bolinha de cor, se tiver); devolve onde ela termina.
-func _etiqueta(x: float, y: float, texto: String, cor: Color) -> float:
-	var com_cor := cor.a > 0.0
-	var largura := _fonte.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + (30.0 if com_cor else 14.0)
-	draw_rect(Rect2(Vector2(x, y), Vector2(largura, 22)), COR_FUNDO)
-	if com_cor:
-		draw_circle(Vector2(x + 11, y + 11), 6.0, cor)
-	_texto(Vector2(x + (21.0 if com_cor else 7.0), y + 16), texto, 14)
-	return x + largura
-
-
-func _texto(base: Vector2, texto: String, tamanho: int) -> void:
-	draw_string_outline(_fonte, base, texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, 4, Color(0, 0, 0, 0.7))
-	draw_string(_fonte, base, texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, Color.WHITE)
+func _desenhar_retrato() -> void:
+	var raio_dentro := RAIO_RETRATO - ARO
+	# Fundo em degradê, roxo em cima e âmbar embaixo.
+	var fundo := PackedVector2Array()
+	var cores := PackedColorArray()
+	for i in 48:
+		var a := TAU * i / 48.0
+		var p := CENTRO_RETRATO + Vector2(cos(a), sin(a)) * raio_dentro
+		fundo.append(p)
+		cores.append(COR_FUNDO_RETRATO_ALTO.lerp(COR_FUNDO_RETRATO, (sin(a) + 1.0) / 2.0))
+	draw_polygon(fundo, cores)
+	if _retrato:
+		# A foto do modelo recortada em círculo: um polígono redondo que usa
+		# a textura da salinha como "papel de parede".
+		var pontos := PackedVector2Array()
+		var uvs := PackedVector2Array()
+		for i in 48:
+			var a := TAU * i / 48.0
+			var d := Vector2(cos(a), sin(a))
+			pontos.append(CENTRO_RETRATO + d * raio_dentro)
+			uvs.append(Vector2(0.5, 0.5) + d * 0.5)
+		draw_polygon(pontos, PackedColorArray([Color.WHITE]), uvs, _retrato.get_texture())
+	EstiloHud.aro(self, CENTRO_RETRATO, RAIO_RETRATO, ARO, 4)

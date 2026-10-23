@@ -21,6 +21,8 @@ var _coletada := false
 
 
 func _ready() -> void:
+	# O minimapa marca as runas que ainda estão no chão.
+	add_to_group("runa_no_mapa")
 	collision_layer = 0
 	collision_mask = 2
 	monitoring = true
@@ -87,6 +89,7 @@ func _ao_encostar(corpo: Node) -> void:
 	if _coletada or not corpo.has_method("coletar_runa"):
 		return
 	_coletada = true
+	remove_from_group("runa_no_mapa")
 	corpo.coletar_runa(nome)
 	# Some subindo e encolhendo, para o jogador ver que pegou.
 	var tw := create_tween()

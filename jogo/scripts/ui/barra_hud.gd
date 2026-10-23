@@ -1,23 +1,23 @@
 class_name BarraHud
 extends Control
-## Barra de medalhões no pé da tela, no centro (ADR-033, posição da
-## ADR-039), no lugar dos ícones da referência. Só lê a barra do mago.
-## Visual 100% provisório de propósito: círculos lisos na cor do elemento,
-## cinza quando vazio; o estilo vem de uma referência que o Vitor vai aprovar. Provisório até a Fase 5 (medalhão definitivo):
-## cada medalhão é um disco na cor do elemento com o símbolo da forma, o
-## número da tecla e uma "sombra de relógio" enquanto recarrega.
+## Barra dos 4 medalhões no pé da tela, no centro (ADR-033, ADR-039), no
+## estilo da referência docs/referencias/hud-referencia-01.png: medalhão
+## redondo com aro dourado e cravos, miolo de pedra lapidada e a runa acesa
+## na cor do elemento; espaço livre é pedra rachada apagada. O número da
+## tecla fica numa plaquinha em cima. Recarga: uma sombra escura em forma de
+## relógio cobre a parte que ainda falta (escolha 2b do Vitor, 23/10/2026).
+## Só lê a barra do mago.
 
+## Diâmetro do medalhão, aro incluído.
 const TAMANHO := 64.0
-const ESPACO := 26.0
-
-## Distância do pé da tela até a base dos medalhões (o número da tecla fica
-## embaixo deles). O aviso de interação do HUD fica logo acima disto.
-const MARGEM_BAIXO := 46.0
-const COR_LIVRE := Color(0.2, 0.2, 0.22, 0.85)
-const COR_PLACA := Color(0.15, 0.15, 0.17, 0.8)
-const COR_MOLDURA := Color(0.22, 0.22, 0.25, 0.85)
-## Quanto a ponta do losango passa do medalhão.
-const MOLDURA_LOSANGO := 11.0
+const ESPACO := 20.0
+## Distância do pé da tela até a base dos medalhões.
+const MARGEM_BAIXO := 22.0
+## Quanto a plaquinha da tecla sobe acima do medalhão. O aviso de interação
+## do HUD fica acima disto.
+const ALTURA_PLACA := 16.0
+const ARO := 6.0
+const PEDRA_LIVRE := Color(0.24, 0.23, 0.27, 0.92)
 
 var mago: Node = null
 var _fonte: Font = null
@@ -37,6 +37,14 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## Centro do medalhão i na tela (também usado pelo contador de runas, que
+## fica à esquerda do primeiro).
+static func centro_do_espaco(i: int, tela: Vector2) -> Vector2:
+	var largura := BarraMedalhoes.ESPACOS * TAMANHO + (BarraMedalhoes.ESPACOS - 1) * ESPACO
+	var inicio_x := (tela.x - largura) / 2.0
+	return Vector2(inicio_x + i * (TAMANHO + ESPACO) + TAMANHO / 2.0, tela.y - MARGEM_BAIXO - TAMANHO / 2.0)
+
+
 func _draw() -> void:
 	if mago == null or mago.get("barra") == null:
 		if not _avisou and _vivo_s > 1.0:
@@ -44,64 +52,80 @@ func _draw() -> void:
 			_avisou = true
 		return
 	var barra: BarraMedalhoes = mago.barra
-	var largura := BarraMedalhoes.ESPACOS * TAMANHO + (BarraMedalhoes.ESPACOS - 1) * ESPACO
 	var tela := get_viewport_rect().size
-	var inicio := Vector2((tela.x - largura) / 2.0, tela.y - TAMANHO - MARGEM_BAIXO)
+	var raio := TAMANHO / 2.0
 	for i in BarraMedalhoes.ESPACOS:
-		var centro := inicio + Vector2(i * (TAMANHO + ESPACO) + TAMANHO / 2.0, TAMANHO / 2.0)
-		var raio := TAMANHO / 2.0
-		var selecionado: bool = i == mago.espaco_selecionado
-		# Medalhão redondo dentro de uma moldura em losango lisa (escolha 3b do
-		# Vitor: forma da referência sem contrariar o medalhão redondo da
-		# ADR-033). O selecionado ganha contorno branco no losango.
-		var losango := _losango(centro, raio + MOLDURA_LOSANGO)
-		draw_colored_polygon(losango, COR_MOLDURA)
-		if selecionado:
-			var contorno := losango.duplicate()
-			contorno.append(losango[0])
-			draw_polyline(contorno, Color.WHITE, 3.0)
+		var centro := centro_do_espaco(i, tela)
 		var medalhao = barra.medalhoes[i]
+		var selecionado: bool = i == mago.espaco_selecionado
+		if selecionado:
+			# Selecionado: halo dourado em volta, sem mudar o tamanho (a barra
+			# não "pula" ao trocar de tecla).
+			# Halo em camadas, pulsando de leve, para não sumir no chão de terra.
+			var pulso := 0.75 + 0.25 * sin(_vivo_s * 4.0)
+			draw_arc(centro, raio + 7.0, 0.0, TAU, 64, Color(1.0, 0.9, 0.55, 0.22 * pulso), 9.0, true)
+			draw_arc(centro, raio + 4.0, 0.0, TAU, 64, Color(1.0, 0.92, 0.6, 0.5 * pulso), 4.0, true)
+			draw_arc(centro, raio + 2.0, 0.0, TAU, 64, Color(1.0, 0.98, 0.85, 0.95), 2.0, true)
 		if medalhao == null:
-			# Espaço livre: cinza translúcido, mais claro que o fundo do jogo.
-			draw_circle(centro, raio, COR_LIVRE)
-			draw_arc(centro, raio, 0.0, TAU, 48, Color(1, 1, 1, 0.35), 1.5)
+			_espaco_livre(centro, raio - ARO)
 		else:
-			var cor := Color(medalhao.get("cor", "#ffffff"))
-			var fracao := barra.fracao_recarga(i)
-			if fracao <= 0.0:
-				draw_circle(centro, raio, cor)
-				_texto_centrado(medalhao.get("simbolo", "●"), centro + Vector2(0, 9), 28, Color.WHITE)
-			else:
-				# Recarga: o medalhão fica apagado (ainda dá para ver qual é), a
-				# parte já recarregada volta a ter cor, como um relógio
-				# enchendo, e os segundos que faltam ficam grandes no meio.
-				draw_circle(centro, raio, cor.darkened(0.6))
-				if fracao < 1.0:
-					draw_colored_polygon(_setor(centro, raio, 1.0 - fracao), cor)
-				_texto_centrado(medalhao.get("simbolo", "●"), centro + Vector2(0, 9), 28, Color(1, 1, 1, 0.35))
-				var segundos := ceili(fracao * float(medalhao.get("recarga_s", 1.0)))
-				_texto_centrado(str(segundos), centro + Vector2(0, 11), 30, Color.WHITE)
-		# Número da tecla logo abaixo.
-		draw_rect(Rect2(centro + Vector2(-11, raio + MOLDURA_LOSANGO + 4.0), Vector2(22, 20)), COR_PLACA)
-		_texto_centrado(str(i + 1), centro + Vector2(0, raio + MOLDURA_LOSANGO + 19.0), 14, Color.WHITE)
+			_medalhao(centro, raio - ARO, medalhao, barra.fracao_recarga(i))
+		EstiloHud.aro(self, centro, raio, ARO, 4 if medalhao != null else 0)
+		EstiloHud.placa(self, centro + Vector2(0, -raio - ALTURA_PLACA * 0.15), 18.0, str(i + 1), _fonte, 13)
 
 
-func _losango(centro: Vector2, meia_diagonal: float) -> PackedVector2Array:
-	return PackedVector2Array([centro + Vector2(0, -meia_diagonal), centro + Vector2(meia_diagonal, 0),
-		centro + Vector2(0, meia_diagonal), centro + Vector2(-meia_diagonal, 0)])
+func _espaco_livre(centro: Vector2, raio: float) -> void:
+	EstiloHud.disco_lapidado(self, centro, raio, PEDRA_LIVRE, 8)
+	# Rachaduras: o espaço parece vazio e gasto, não um botão apagado.
+	var rachas := [[Vector2(-0.6, -0.5), Vector2(-0.1, -0.05), Vector2(0.15, 0.55)],
+		[Vector2(-0.1, -0.05), Vector2(0.55, -0.3)], [Vector2(-0.55, 0.35), Vector2(-0.2, 0.2)]]
+	for racha in rachas:
+		var pts := PackedVector2Array()
+		for p in racha:
+			pts.append(centro + p * raio)
+		draw_polyline(pts, Color(0.08, 0.07, 0.1, 0.8), 1.6, true)
 
 
-## Fatia de pizza a partir do topo, no sentido horário, cobrindo a fração dada.
+func _medalhao(centro: Vector2, raio: float, medalhao: Dictionary, fracao_recarga: float) -> void:
+	var cor := Color(medalhao.get("cor", "#ffffff"))
+	# Pedra do miolo tingida pelo elemento, escura, para o símbolo aceso
+	# saltar (mesma ideia da pedra acesa das runas 3D).
+	var pedra := cor.darkened(0.5).lerp(EstiloHud.PEDRA, 0.2)
+	EstiloHud.disco_lapidado(self, centro, raio, pedra, 8)
+	var nome := _runa_do_simbolo(medalhao)
+	if nome != "":
+		EstiloHud.simbolo_runa(self, nome, centro, raio * 1.45, cor, pedra)
+	else:
+		# Medalhão sem runa conhecida: o símbolo de texto antigo, para não
+		# sumir nada. Acontece com fichas de teste.
+		EstiloHud.texto_centrado(self, _fonte, str(medalhao.get("simbolo", "●")), centro + Vector2(0, 9), 26, cor.lightened(0.4))
+	if fracao_recarga > 0.0:
+		draw_colored_polygon(_setor(centro, raio, fracao_recarga), Color(0.02, 0.02, 0.05, 0.68))
+		var segundos := ceili(fracao_recarga * float(medalhao.get("recarga_s", 1.0)))
+		EstiloHud.texto_centrado(self, _fonte, str(segundos), centro + Vector2(0, 8), 22, Color.WHITE)
+
+
+## Qual runa desenhar: a de forma (ela decide o modelo da magia, ADR-032);
+## se não tiver forma, o primeiro elemento.
+func _runa_do_simbolo(medalhao: Dictionary) -> String:
+	var runas: Array = medalhao.get("runas", [])
+	var livro = mago.get("livro") if mago else null
+	for r in runas:
+		if livro and livro.formas.has(str(r)) and EstiloHud.tem_simbolo(str(r)):
+			return str(r)
+	for r in runas:
+		if EstiloHud.tem_simbolo(str(r)):
+			return str(r)
+	return ""
+
+
+## Sombra de relógio: cobre a fração que ainda falta recarregar, começando
+## no topo e indo no sentido horário; a parte livre vai crescendo.
 func _setor(centro: Vector2, raio: float, fracao: float) -> PackedVector2Array:
 	var pontos := PackedVector2Array([centro])
-	var passos := maxi(3, ceili(40 * fracao))
+	var inicio := -PI / 2.0 + TAU * (1.0 - fracao)
+	var passos := maxi(3, ceili(48 * fracao))
 	for k in passos + 1:
-		var angulo := -PI / 2.0 + TAU * fracao * k / passos
+		var angulo := inicio + TAU * fracao * k / passos
 		pontos.append(centro + Vector2(cos(angulo), sin(angulo)) * raio)
 	return pontos
-
-
-func _texto_centrado(texto: String, base: Vector2, tamanho: int, cor: Color) -> void:
-	var largura := _fonte.get_string_size(texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho).x
-	draw_string_outline(_fonte, base - Vector2(largura / 2.0, 0), texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, 4, Color(0, 0, 0, 0.7))
-	draw_string(_fonte, base - Vector2(largura / 2.0, 0), texto, HORIZONTAL_ALIGNMENT_LEFT, -1, tamanho, cor)

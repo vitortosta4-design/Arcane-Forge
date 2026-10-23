@@ -10,6 +10,11 @@ const INTERVALO_ATAQUE_S := 1.0
 @export var vida := 30.0
 
 var _vida_atual: float
+## Segundos desde o último dano recebido. O HUD usa para mostrar a barra de
+## vida só depois que alguém acerta a galinha (escolha 3b do Vitor).
+var segundos_desde_dano := INF
+## Altura da barra de vida acima dos pés.
+const ALTURA_BARRA_VIDA := 1.0
 var _cooldown_ataque := 0.0
 var _morta := false
 var estados := ControladorEstados.new()
@@ -29,6 +34,7 @@ func aplicar_estado(nome_estado: String, duracao_s: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	segundos_desde_dano += delta
 	if _morta:
 		return
 
@@ -86,11 +92,17 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 	if _morta:
 		return
 	_vida_atual -= dano
+	segundos_desde_dano = 0.0
 	if empurrao != 0.0:
 		var direcao := (global_position - origem_dano).normalized()
 		velocity += direcao * empurrao
 	if _vida_atual <= 0.0:
 		_morrer()
+
+
+## Fração da vida que sobra (0 a 1), só para leitura do HUD.
+func fracao_vida() -> float:
+	return clampf(_vida_atual / vida, 0.0, 1.0) if vida > 0.0 and not _morta else 0.0
 
 
 func _morrer() -> void:

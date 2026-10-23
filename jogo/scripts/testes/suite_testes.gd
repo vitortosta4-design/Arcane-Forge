@@ -106,6 +106,7 @@ func _ready() -> void:
 	await _testar_caixa_e_barril_de_madeira()
 	await _testar_magia_sai_da_mao_e_acerta_a_mira()
 	_testar_hud_tem_mira_no_centro()
+	await _testar_vida_do_inimigo_so_depois_do_acerto()
 	await _testar_hud_no_layout_da_adr_039()
 	await _testar_ciclo_da_forja_do_comeco_ao_fim()
 	await _testar_mago_modelado_pela_folha()
@@ -1169,7 +1170,7 @@ func _testar_hud_mostra_estados_do_mago() -> void:
 	await get_tree().process_frame
 	hud.configurar(mago)
 	mago.aplicar_estado("lento", 3.0)
-	_afirmar("HUD mostra quando o mago está lento", "Lento" in hud.get_node("Estados").text)
+	_afirmar("HUD mostra quando o mago está lento", "Lento" in hud.get_node("Estados").nomes_legiveis() and hud.get_node("Estados").visible)
 	mago.queue_free()
 	hud.queue_free()
 
@@ -1706,6 +1707,24 @@ func _testar_magia_sai_da_mao_e_acerta_a_mira() -> void:
 	await get_tree().process_frame
 
 
+## Escolha 3b do Vitor: a barra de vida do inimigo só aparece depois que ele
+## leva dano, e some sozinha depois de alguns segundos sem levar.
+func _testar_vida_do_inimigo_so_depois_do_acerto() -> void:
+	var galinha: Node3D = load("res://cenas/inimigos/galinha_zumbi.tscn").instantiate()
+	add_child(galinha)
+	galinha.estados.aplicar("cego", 30.0)
+	await get_tree().physics_frame
+	var visivel := func(): return galinha.segundos_desde_dano <= VidaInimigos.VISIVEL_POR_S and galinha.fracao_vida() > 0.0
+	_afirmar("vida do inimigo: escondida antes de levar dano", not visivel.call())
+	galinha.receber_dano(10.0, galinha.global_position + Vector3.BACK, 0.0)
+	_afirmar("vida do inimigo: aparece depois do acerto, com a fração certa",
+		visivel.call() and is_equal_approx(galinha.fracao_vida(), (galinha.vida - 10.0) / galinha.vida))
+	galinha.segundos_desde_dano = VidaInimigos.VISIVEL_POR_S + 0.1
+	_afirmar("vida do inimigo: some depois de um tempo sem acerto", not visivel.call())
+	galinha.queue_free()
+	await get_tree().process_frame
+
+
 func _testar_hud_tem_mira_no_centro() -> void:
 	var hud: CanvasLayer = load("res://cenas/hud.tscn").instantiate()
 	var mira: Control = hud.get_node_or_null("Mira")
@@ -2022,13 +2041,19 @@ func _testar_hud_no_layout_da_adr_039() -> void:
 	_afirmar("HUD: minimapa reservado no canto inferior direito",
 		minimapa.get_global_rect().end.x > tela.x - 40 and minimapa.get_global_rect().end.y > tela.y - 40)
 	hud.mostrar_aviso("E: usar a bigorna")
-	var topo_barra: float = tela.y - BarraHud.TAMANHO - BarraHud.MARGEM_BAIXO - BarraHud.MOLDURA_LOSANGO
+	var topo_barra: float = tela.y - BarraHud.TAMANHO - BarraHud.MARGEM_BAIXO - BarraHud.ALTURA_PLACA
 	_afirmar("HUD: aviso de interação aparece logo acima da barra, no centro",
 		aviso.visible and aviso.text == "E: usar a bigorna" and aviso.get_global_rect().end.y <= topo_barra
 		and absf(aviso.get_global_rect().get_center().x - tela.x / 2.0) < 2.0)
 	hud.mostrar_aviso("")
 	_afirmar("HUD: aviso vazio some", not aviso.visible)
 	_afirmar("HUD: sem texto da magia lançada (era do plano da IA por texto)", hud.get_node_or_null("Legenda") == null)
+	# Contador de runas à esquerda da barra, como na referência do HUD.
+	var primeiro := BarraHud.centro_do_espaco(0, tela)
+	_afirmar("HUD: barra de medalhões centralizada embaixo",
+		absf((primeiro.x + BarraHud.centro_do_espaco(3, tela).x) / 2.0 - tela.x / 2.0) < 1.0 and primeiro.y > tela.y - 90.0)
+	_afirmar("HUD: símbolos de runa carregados para todas as runas do livro",
+		(mago.livro.formas.keys() + mago.livro.elementos.keys()).all(func(n): return EstiloHud.tem_simbolo(n)))
 	_afirmar("HUD: só lê o mago (vida, mana e medalhões continuam iguais)",
 		mago.vida_atual == vida_antes and mago.mana_atual == mana_antes and mago.barra.medalhoes == medalhoes_antes)
 	mago.queue_free()
