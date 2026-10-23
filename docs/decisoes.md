@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 22/10/2026 (ADR-042)
+Última atualização: 23/10/2026 (ADR-043)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -406,6 +406,16 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Consequências:** amplia a equipe da ADR-005 (de 4 para 5 especialistas). Gasta cota a cada uso; chamar por entrega com movimento, não a cada ajuste. Ele respeita hardware mínimo, low poly de propósito e regras de jogo no Host.
 - **Atualização (23/10/2026, auditoria pedida pelo Vitor):** o animador virou diretor técnico de animação: diagnostica, propõe e só implementa com autorização; avalia cada peça com notas de 0 a 5 em seis eixos (arte, legibilidade, resposta, som e efeitos, estabilidade, desempenho), cada nota com a origem (visto, medido, deduzido, pendente), sem média que esconda defeito grave; tem critério objetivo de "pronto". Para enxergar movimento na nuvem, usa `ferramentas/gravar_quadros.sh` (gravação com tempo fixo pelo Movie Maker do Godot, folha de quadros, GIF e mapa de som). Primeira auditoria em `docs/auditoria-animacao.md`.
 - **Fácil de mudar?** Sim.
+
+
+## ADR-043 · Refinar os modelos antes do teste com o amigo, começando pelo mago
+**Status:** Aprovada (23/10/2026, decisão do Vitor)
+
+- **Problema:** a ADR-035 deixava o acabamento visual (Fase 5) para depois do teste com o amigo. O Vitor preferiu refinar os modelos agora, seguindo a referência à risca, a começar pelo mago, já dentro do jogo e com "uma mãozinha bonita e dedinhos com movimento suave e fofo". Animação fina fica para depois dos modelos (conversa de 23/10/2026: animar bem um modelo que ainda vai mudar é retrabalho).
+- **Escolha:** o mago passa a ser o modelo com esqueleto feito no Blender por script, pela folha do Vitor (`arte/personagens/mago/mago.py`, ~3.600 triângulos), com dois ossos por dedo e animações Parado, Andar, Conjurar, ErguerCajado e Dano; em primeira pessoa, um modelo próprio dos braços (`mago_1p.glb`, ~1.100 triângulos) com Parado1P (ondinha dos dedos) e Conjurar1P. O boneco feito em código saiu.
+- **Não muda:** low poly de propósito (ADR-007), mago tosco (ADR-019), cor chapada por face até as texturas pintadas pelo Vitor.
+- **Pendente do Vitor:** a folha põe o cajado na mão esquerda e a arte conceito, em primeira pessoa, na direita; hoje cada modelo segue a sua referência.
+- **Fácil de mudar?** Sim: o modelo é regerado pelo script.
 
 ---
 

@@ -39,15 +39,15 @@ DEDOS = ("Indicador", "Medio", "Anelar", "Minimo")
 def criar_materiais():
     global AZUL, AZUL_ESC, AZUL_CLARO, BEGE, COURO, COURO_ESC, LUVA, ROSTO, OLHO, CRISTAL, CALCA, MADEIRA, CABELO, DOURADO
     # Paleta tirada dos quadradinhos da folha (canto superior esquerdo).
-    AZUL = base.material("MantoAzul", "#2f43c9", rugosidade=0.8)
-    AZUL_ESC = base.material("MantoAzulEscuro", "#1f2a86", rugosidade=0.85)
-    AZUL_CLARO = base.material("MantoAzulClaro", "#3d55e0", rugosidade=0.8)
+    AZUL = base.material("MantoAzul", "#2a3bb8", rugosidade=0.8)
+    AZUL_ESC = base.material("MantoAzulEscuro", "#1b2478", rugosidade=0.85)
+    AZUL_CLARO = base.material("MantoAzulClaro", "#3447cc", rugosidade=0.8)
     BEGE = base.material("Acabamento", "#e0a462", rugosidade=0.7)
     COURO = base.material("Couro", "#7b4a2e", rugosidade=0.75)
     COURO_ESC = base.material("CouroEscuro", "#4c2b1b", rugosidade=0.8)
-    LUVA = base.material("Luva", "#6e3f27", rugosidade=0.8)
+    LUVA = base.material("Luva", "#a26a42", rugosidade=0.75)
     ROSTO = base.material("RostoSombra", "#3a2416", rugosidade=0.9)
-    OLHO = base.material("Olho", "#000000", rugosidade=1.0, emissao="#ff9a26", forca=1.6)
+    OLHO = base.material("Olho", "#000000", rugosidade=1.0, emissao="#ff7414", forca=0.9)
     CRISTAL = base.material("Cristal", "#3fc4ff", rugosidade=0.2, emissao="#36b8ff", forca=2.4)
     CALCA = base.material("Calca", "#262043", rugosidade=0.85)
     MADEIRA = base.material("Madeira", "#6b412b", rugosidade=0.8)
@@ -198,21 +198,21 @@ def chapeu():
     p = []
     # Aba larga e grossa, caindo nas laterais e na frente, com facetas
     # irregulares (folha: aba "mole" de chapéu de feiticeiro).
-    aba = torno("ChapeuAba", [(0.0, 0.0), (0.17, 0.004), (0.3, -0.03), (0.36, -0.058), (0.36, -0.078),
-                              (0.29, -0.052), (0.17, -0.022), (0.0, -0.02)], AZUL, lados=16, ruido=0.0, semente=11)
+    aba = torno("ChapeuAba", [(0.0, 0.0), (0.18, 0.004), (0.34, -0.036), (0.43, -0.07), (0.43, -0.09),
+                              (0.34, -0.06), (0.18, -0.022), (0.0, -0.02)], AZUL, lados=16, ruido=0.0, semente=11)
 
     def cair(c):
         r = math.hypot(c.x, c.y)
         a = math.atan2(c.y, c.x)
         # cai mais nas laterais e um pouco na frente; atrás fica mais reta
-        queda = 0.05 * (r / 0.36) ** 2 * (0.7 + 0.4 * math.cos(2 * a) + 0.25 * math.sin(a))
+        queda = 0.06 * (r / 0.43) ** 2 * (0.7 + 0.4 * math.cos(2 * a) + 0.25 * math.sin(a))
         return Vector((c.x, c.y, c.z - queda))
     deformar(aba, cair)
     aba.location = (0, 0, 0.705)
     p.append(aba)
     # Faixa bege fina perto da beirada de cima da aba (folha: acabamento bege
     # na borda). Mesma queda da aba, um pouco acima dela.
-    borda = torno("ChapeuAbaBorda", [(0.3, -0.026), (0.335, -0.045)], BEGE, lados=16, fechar=(False, False))
+    borda = torno("ChapeuAbaBorda", [(0.36, -0.03), (0.4, -0.055)], BEGE, lados=16, fechar=(False, False))
     m = borda.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.006
     deformar(borda, lambda c: cair(c) + Vector((0, 0, 0.012)))
@@ -240,8 +240,8 @@ def chapeu():
     p.append(casco("ChapeuLosango", [Vector(v) for v in ((0, -0.198, 0.775), (0.034, -0.198, 0.748), (0, -0.198, 0.721),
                                                           (-0.034, -0.198, 0.748), (0, -0.178, 0.748))], DOURADO))
     for k, a in enumerate((-0.75, 0.75, -1.6, 1.6, 2.4, -2.4, 3.14)):
-        p.append(caixa(f"ChapeuTacha{k}", (math.sin(a) * 0.19, -math.cos(a) * 0.19, 0.748), (0.026, 0.012, 0.026),
-                       COURO_ESC, rot=(0, 0, a)))
+        p.append(caixa(f"ChapeuTacha{k}", (math.sin(a) * 0.19, -math.cos(a) * 0.19, 0.748), (0.032, 0.014, 0.034),
+                       COURO, rot=(0, 0, a)))
     return p
 
 
@@ -277,7 +277,7 @@ def corpo():
                   AZUL, lados=12, achatar=0.84, ruido=0.02, semente=7)
     p.append(manto)
     # Barra bege com zigue-zague de triângulos subindo (folha).
-    barra = torno("MantoBarra", [(0.27, 0.11), (0.27, 0.135)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
+    barra = torno("MantoBarra", [(0.27, 0.105), (0.268, 0.15)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
     m = barra.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.012
     p.append(barra)
@@ -287,11 +287,11 @@ def corpo():
             continue
         x, y = math.cos(a) * 0.272, math.sin(a) * 0.272 * 0.85
         n = Vector((math.cos(a), math.sin(a) * 0.85, 0.15)).normalized()
-        p.append(triangulo_na_superficie(f"MantoZigue{k}", (x, y, 0.133), n, (0, 0, 1), 0.06, 0.045, BEGE))
+        p.append(triangulo_na_superficie(f"MantoZigue{k}", (x, y, 0.148), n, (0, 0, 1), 0.06, 0.05, BEGE))
     # Abertura da frente: forro escuro e acabamento bege dos dois lados.
     for s in (-1, 1):
         p.append(tubo(f"FrenteAcab{s}", [(s * 0.012, -0.165, 0.4), (s * 0.03, -0.18, 0.27), (s * 0.065, -0.205, 0.18),
-                                         (s * 0.095, -0.225, 0.12)], 0.017, BEGE, lados=4))
+                                         (s * 0.095, -0.225, 0.12)], 0.026, BEGE, lados=4))
     p.append(casco("FrenteFenda", [Vector(v) for v in ((-0.085, -0.222, 0.12), (0.085, -0.222, 0.12), (0, -0.185, 0.26),
                                                        (0, -0.17, 0.12))], AZUL_ESC))
     # Capinha nos ombros com bicos e borda bege (folha: capelete pontudo).
@@ -310,11 +310,11 @@ def corpo():
         p.append(triangulo_na_superficie(f"CapinhaBorda{k}", (x * 1.01, y * 1.01, 0.366), n, (0, 0, -1), 0.045, 0.022, BEGE,
                                          espessura=0.006))
     # Broche de losango na gola.
-    p.append(casco("Broche", [Vector(v) for v in ((0, -0.158, 0.46), (0.03, -0.158, 0.425), (0, -0.158, 0.39),
-                                                  (-0.03, -0.158, 0.425), (0, -0.135, 0.425))], DOURADO))
+    p.append(casco("Broche", [Vector(v) for v in ((0, -0.175, 0.44), (0.04, -0.175, 0.4), (0, -0.175, 0.36),
+                                                  (-0.04, -0.175, 0.4), (0, -0.15, 0.4))], DOURADO))
     # Alça cruzada do ombro esquerdo à bolsa direita, com fivela.
     p.append(tubo("Alca", [(-0.13, -0.11, 0.43), (-0.07, -0.158, 0.38), (0.03, -0.17, 0.32), (0.13, -0.142, 0.26)],
-                  0.016, COURO_ESC, lados=4, achatar=0.5))
+                  0.03, COURO, lados=4, achatar=0.45))
     p.append(caixa("AlcaFivela", (-0.045, -0.166, 0.365), (0.03, 0.01, 0.028), DOURADO, rot=(0, 0.6, 0)))
     # Cinto largo com fivela grande.
     cinto = torno("Cinto", [(0.172, 0.27), (0.178, 0.31)], COURO, lados=12, achatar=0.84, fechar=(False, False))
@@ -349,46 +349,53 @@ def corpo():
 
 # ---------------------------------------------------------------- luva com dedos
 def luva(prefixo, pulso, frente, cima, lado, escala=1.0, abertura=1.0, curva=0.25):
-    """Luva grande de couro: palma, 4 dedos de dois gomos e polegar.
+    """Luva de couro fofinha: palma gordinha, 4 dedos curtos e roliços em leque
+    (dois gomos cada, a ponta arredondada) e um polegar bem separado.
 
     pulso: ponto do punho; frente: direção para onde os dedos apontam; cima:
     costas da mão; lado: do indicador para o mínimo. Devolve as peças da palma
     e, para cada dedo, (gomo1, gomo2, base, meio, ponta) para montar os ossos.
+    Lição da crítica de 23/10/2026: dedos compridos e paralelos viravam
+    "tábuas com frestas pretas"; aqui eles são curtos, grossos e abertos em
+    leque a partir de uma palma arredondada.
     """
     f, c, l = Vector(frente).normalized(), Vector(cima).normalized(), Vector(lado).normalized()
     e = escala
     p_palma = []
-    centro = Vector(pulso) + f * 0.045 * e
-    palma = casco(f"{prefixo}Palma", [centro + f * a * e + l * b * e + c * d * e for a, b, d in (
-        (-0.04, -0.04, 0.02), (-0.04, 0.04, 0.02), (0.04, -0.045, 0.018), (0.04, 0.045, 0.018),
-        (-0.04, -0.035, -0.02), (-0.04, 0.035, -0.02), (0.04, -0.04, -0.016), (0.04, 0.04, -0.016),
-        (0.0, 0.0, 0.03), (0.0, 0.0, -0.026))], LUVA)
-    p_palma.append(palma)
+    centro = Vector(pulso) + f * 0.042 * e
+    # Palma arredondada: dois anéis de octógono (base e nó dos dedos).
+    pts = []
+    for a_f, larg, alt in ((-0.035, 0.036, 0.022), (0.0, 0.044, 0.026), (0.034, 0.042, 0.02)):
+        for k in range(8):
+            ang = 2 * math.pi * k / 8
+            pts.append(centro + f * a_f * e + l * math.cos(ang) * larg * e + c * math.sin(ang) * alt * e)
+    p_palma.append(casco(f"{prefixo}Palma", pts, LUVA))
     # Punho da luva (cano) mais largo, como na folha.
-    cano = tubo(f"{prefixo}LuvaCano", [Vector(pulso) - f * 0.03 * e, Vector(pulso) + f * 0.012 * e], [0.05 * e, 0.046 * e], LUVA, lados=7)
+    cano = tubo(f"{prefixo}LuvaCano", [Vector(pulso) - f * 0.032 * e, Vector(pulso) + f * 0.01 * e], [0.05 * e, 0.045 * e], LUVA, lados=8)
     p_palma.append(cano)
     dedos = {}
     for i, nome in enumerate(DEDOS):
         t = (i - 1.5) / 1.5           # -1 indicador ... +1 mínimo
-        comp = (0.036, 0.04, 0.037, 0.03)[i] * e
-        raio = (0.0145, 0.015, 0.0145, 0.013)[i] * e
-        base_dedo = centro + f * 0.042 * e + l * t * 0.034 * e
-        d1 = (f + l * t * 0.18 * abertura - c * curva * 0.5).normalized()
+        comp = (0.024, 0.027, 0.025, 0.021)[i] * e
+        raio = (0.0155, 0.016, 0.0155, 0.014)[i] * e
+        base_dedo = centro + f * (0.03 - abs(t) * 0.006) * e + l * t * 0.03 * e
+        d1 = (f + l * t * 0.42 * abertura - c * curva * 0.4).normalized()
         meio = base_dedo + d1 * comp
-        d2 = (f + l * t * 0.22 * abertura - c * curva).normalized()
-        ponta = meio + d2 * comp * 0.85
-        g1 = tubo(f"{prefixo}{nome}1", [base_dedo - d1 * raio * 0.5, meio], [raio, raio * 0.95], LUVA, lados=6)
-        g2 = tubo(f"{prefixo}{nome}2", [meio - d2 * raio * 0.4, ponta - d2 * raio * 0.3, ponta], [raio * 0.95, raio * 0.85, raio * 0.45],
-                  LUVA, lados=6)
+        d2 = (f + l * t * 0.5 * abertura - c * curva).normalized()
+        ponta = meio + d2 * comp * 0.9
+        g1 = tubo(f"{prefixo}{nome}1", [base_dedo - d1 * raio * 0.6, meio], [raio * 1.05, raio], LUVA, lados=6)
+        g2 = tubo(f"{prefixo}{nome}2", [meio - d2 * raio * 0.5, ponta - d2 * raio * 0.5, ponta + d2 * raio * 0.1],
+                  [raio, raio * 0.92, raio * 0.5], LUVA, lados=6)
         dedos[nome] = (g1, g2, base_dedo, meio, ponta)
-    # Polegar: sai do lado do indicador, apontando para a frente e para dentro.
-    base_pol = centro - l * 0.042 * e - f * 0.005 * e
-    d1 = (f * 0.5 - l * 0.75 - c * 0.15).normalized()
-    meio = base_pol + d1 * 0.034 * e
-    d2 = (f * 0.8 - l * 0.35 - c * 0.3).normalized()
-    ponta = meio + d2 * 0.03 * e
-    g1 = tubo(f"{prefixo}Polegar1", [base_pol, meio], [0.016 * e, 0.015 * e], LUVA, lados=6)
-    g2 = tubo(f"{prefixo}Polegar2", [meio, ponta - d2 * 0.004 * e, ponta], [0.015 * e, 0.012 * e, 0.006 * e], LUVA, lados=6)
+    # Polegar: sai da lateral da palma, perto do pulso, bem afastado dos dedos.
+    base_pol = centro - l * 0.038 * e - f * 0.012 * e - c * 0.004 * e
+    d1 = (f * 0.35 - l * 0.85 - c * 0.2).normalized()
+    meio = base_pol + d1 * 0.03 * e
+    d2 = (f * 0.75 - l * 0.55 - c * 0.25).normalized()
+    ponta = meio + d2 * 0.026 * e
+    g1 = tubo(f"{prefixo}Polegar1", [base_pol, meio], [0.016 * e, 0.0145 * e], LUVA, lados=6)
+    g2 = tubo(f"{prefixo}Polegar2", [meio - d2 * 0.006 * e, ponta - d2 * 0.006 * e, ponta + d2 * 0.002 * e],
+              [0.0145 * e, 0.013 * e, 0.007 * e], LUVA, lados=6)
     dedos["Polegar"] = (g1, g2, base_pol, meio, ponta)
     return p_palma, dedos
 
@@ -403,11 +410,12 @@ def braco(lado):
     manga = torno(f"Manga{s}", [(0.055, 0.0), (0.072, eixo.length * 0.55), (0.092, eixo.length)], AZUL, lados=9,
                   ruido=0.03, semente=20 + s)
     manga.matrix_world = Matrix.Translation(ombro) @ giro
-    punho_o = torno(f"Punho{s}", [(0.095, 0.0), (0.092, 0.036)], BEGE, lados=9)
-    punho_o.matrix_world = Matrix.Translation(ombro + eixo * 0.9) @ giro
+    punho_o = torno(f"Punho{s}", [(0.097, 0.0), (0.094, 0.05)], BEGE, lados=9)
+    punho_o.matrix_world = Matrix.Translation(ombro + eixo * 0.86) @ giro
     pulso = punho + eixo.normalized() * 0.015
-    frente = (eixo.normalized() + Vector((0, -0.25, -0.2))).normalized()
-    cima = Vector((s * 0.9, -0.15, 0.4)).normalized()
+    # Mão aberta e relaxada como na folha: costas para cima, dedos para fora.
+    frente = (eixo.normalized() + Vector((s * 0.3, -0.25, 0.25))).normalized()
+    cima = Vector((s * 0.25, -0.15, 1.0)).normalized()
     lado_v = frente.cross(cima).normalized() * (-s)
     palma, dedos = luva(f"Mao{'E' if s < 0 else 'D'}", pulso, frente, cima, lado_v, escala=1.3, abertura=1.0, curva=0.35)
     return [manga, punho_o], palma, dedos, ombro, pulso
@@ -570,7 +578,7 @@ def dedos(lado, curva=0.0, leque=0.0, onda=None, polegar=None):
         extra = onda[i] if onda else 0.0
         t = (i - 1.5) / 1.5
         r[f"{nome}1{lado}"] = (curva + extra, 0, leque * t)
-        r[f"{nome}2{lado}"] = ((curva + extra) * 1.2, 0, 0)
+        r[f"{nome}2{lado}"] = ((curva + extra) * 1.15, 0, 0)
     pc = curva * 0.6 if polegar is None else polegar
     r[f"Polegar1{lado}"] = (pc, 0, 0)
     r[f"Polegar2{lado}"] = (pc * 1.1, 0, 0)
@@ -588,7 +596,7 @@ def junta(*poses):
 SEGURA_D = dedos("D", curva=70, polegar=40)
 
 POSES = {
-    "neutra": junta(SEGURA_D, dedos("E", curva=15, leque=6)),
+    "neutra": junta(SEGURA_D, dedos("E", curva=20, leque=24, polegar=-6)),
     # mão esquerda esticada à frente, dedos bem abertos (folha "conjurando")
     "conjurando": junta(SEGURA_D, dedos("E", curva=-12, leque=22, polegar=-10),
                         {"dir_BracoE": (-0.25, -1.0, 0.12), "dir_MaoE": (-0.05, -0.7, 0.7), "dir_BracoD": (0.45, -0.35, -0.6),
@@ -620,7 +628,7 @@ def gravar(arm, nome, quadros, acoes):
 
 def onda_dos_dedos(fase, forca=1.0):
     """Os quatro dedos dobrando um depois do outro, como quem tamborila no ar."""
-    return [forca * (8 + 10 * math.sin(fase - i * 0.9)) for i in range(4)]
+    return [forca * (7 + 9 * math.sin(fase - i * 0.7)) for i in range(4)]
 
 
 def animar(arm):
@@ -671,7 +679,7 @@ def bracos_1p():
     for s, nome in ((-1, "E"), (1, "D")):
         # antebraço entrando pela borda de baixo da tela
         if s < 0:
-            cotovelo, pulso = Vector((-0.46, 0.1, -0.4)), Vector((-0.37, 0.44, -0.23))
+            cotovelo, pulso = Vector((-0.46, 0.1, -0.38)), Vector((-0.36, 0.45, -0.2))
             # mão esquerda aberta: costas da mão para quem joga, dedos para a frente e para cima
             cima = Vector((-0.15, -0.75, 0.65)).normalized()
         else:
@@ -684,10 +692,10 @@ def bracos_1p():
         manga.matrix_world = Matrix.Translation(cotovelo) @ giro
         punho = torno(f"Punho1P{nome}", [(0.082, 0.0), (0.08, 0.04)], BEGE, lados=9)
         punho.matrix_world = Matrix.Translation(cotovelo + eixo * 0.86) @ giro
-        frente = (eixo.normalized() + Vector((0, 0.2, 0.25 if s < 0 else 0.1))).normalized()
+        frente = (eixo.normalized() + Vector((0.15 if s < 0 else 0, 0.2, 0.55 if s < 0 else 0.1))).normalized()
         # lado: do indicador para o mínimo (na mão esquerda o indicador fica à direita)
         lado_v = frente.cross(cima).normalized() * (1 if s < 0 else -1)
-        palma, d = luva(f"Mao1P{nome}", pulso, frente, cima, lado_v, escala=1.45, abertura=1.25, curva=0.2)
+        palma, d = luva(f"Mao1P{nome}", pulso, frente, cima, lado_v, escala=1.05, abertura=1.25, curva=0.12)
         p[nome] = ([manga, punho], palma, d, cotovelo, pulso, cima)
     # cajado na mão direita, inclinado para a frente
     caj = cajado()
@@ -731,8 +739,8 @@ def animar_1p(arm):
     quadros = []
     for f in range(0, 73, 4):
         fase = 2 * math.pi * f / 72
-        quadros.append((f + 1, junta(segura, dedos("E", curva=8, leque=8, onda=onda_dos_dedos(fase * 2, 1.1), polegar=6 + 5 * math.sin(fase * 2)),
-                                     {"MaoE": (3 * math.sin(fase), 0, 2 * math.sin(fase * 2)), "MaoD": (0, 0, 2 * math.sin(fase))})))
+        quadros.append((f + 1, junta(segura, dedos("E", curva=8, leque=8, onda=onda_dos_dedos(fase, 1.0), polegar=6 + 4 * math.sin(fase)),
+                                     {"MaoE": (6 * math.sin(fase), 0, 4 * math.sin(fase * 2)), "BracoE": (2 * math.sin(fase), 0, 0), "MaoD": (0, 0, 2 * math.sin(fase))})))
     gravar(arm, "Parado1P", quadros, acoes)
     aberta = dedos("E", curva=-14, leque=26, polegar=-12)
     gravar(arm, "Conjurar1P", [(1, junta(segura, dedos("E", curva=8, leque=8))),
