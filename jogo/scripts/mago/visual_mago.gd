@@ -10,13 +10,14 @@ extends Node3D
 ## de jogo nenhuma.
 
 const MODELO := preload("res://assets/modelos/mago/mago.glb")
-## O modelo tem ~1 m com o chapéu (escala da folha). Aumentado por igual para
-## os olhos ficarem perto da altura da câmera de primeira pessoa (1,6 m).
-const ESCALA := 2.4
+## O modelo tem ~1,4 m com o chapéu (proporção da folha, 7ª rodada: corpo e
+## pernas mais longos). Aumentado por igual para os olhos ficarem perto da
+## altura da câmera de primeira pessoa (1,6 m); altura total igual à de antes.
+const ESCALA := 2.05
 ## Velocidade em que a animação Andar casa com o passo (m/s, já na escala do
 ## jogo). Acima ou abaixo disso ela acelera ou desacelera, para o pé não
 ## patinar no chão.
-const VELOCIDADE_DO_PASSO := 3.2
+const VELOCIDADE_DO_PASSO := 4.8  # passada ~1,5x maior com as pernas novas (era 3,2)
 const MISTURA_S := 0.15
 const COR_CRISTAL := Color(0.3, 0.62, 1.0)
 
