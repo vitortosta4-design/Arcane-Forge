@@ -440,6 +440,14 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Ressalva:** "debaixo d'água" pressupõe água em que se entra, que ainda não existe no plano. Entra só se essa mecânica for aprovada.
 - **Fácil de mudar?** Sim. Até a implementação, é só plano.
 
+
+## ADR-045 · Proporção do mago pela folha
+**Status:** Aprovada (23/10/2026, escolha 1a do Vitor: "aumentar ele pra ficar como na folha"). Ajusta a ADR-043.
+
+- **Problema:** o mago da ADR-043 era um sino curto com as pernas escondidas; o crítico mediu pernas a ~10% da altura, contra ~20% na folha.
+- **Escolha:** tronco ~30% mais longo e pernas à mostra (~16% da altura, meio-termo entre casaco longo e pernas visíveis), cabeça e chapéu do mesmo tamanho. O jogo reduz a escala do modelo (2,4 → 2,05) para a altura total no mundo ficar igual à de antes, e a velocidade em que a passada casa com o chão foi para 4,8 m/s.
+- **Fica de fora (pendência aceita pelo crítico):** abertura frontal com lapelas e casaco esvoaçando (pede pintura de peso no manto).
+- **Fácil de mudar?** Sim: o mapa vertical `_MAPA_Z` em `arte/personagens/mago/mago.py`.
 ---
 
 ## Status da descoberta

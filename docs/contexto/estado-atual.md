@@ -2,7 +2,7 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 23/10/2026 (estilo do HUD)
+Atualizado em: 23/10/2026 (mago 6ª rodada, runas pelo vetor)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035).
@@ -11,7 +11,8 @@ Atualizado em: 23/10/2026 (estilo do HUD)
 - **Ciclo da forja testado de ponta a ponta na arena de verdade** (teste automático): encosta em 3 runas, entra na caverna pela boca, forja 2 medalhões diferentes, sai e usa os dois na galinha (o Jato a molha, o Golem a alcança e machuca). Da Fase 2 só falta o que é do Vitor: jogar, achar divertido e medir FPS.
 - HUD placeholder aprovado pelo Vitor como provisório; o texto da magia lançada saiu (era do plano da IA por texto).
 - Magia por texto com IA **removida do jogo** (ADR-041): sem caixa de texto, porteiro, `Interpretador` ou tecla Q.
-- **Mago novo no jogo** (ADR-043): modelo da folha do Vitor com esqueleto, dedos de dois ossos e 5 animações; braços próprios em primeira pessoa com ondinha nos dedos. Mão aprovada pelo Vitor. Crítico: 4,5 → 6,0 → 6,5 → 6,5 → 7,0 (reprovado; pendências no diário: pernas e botas, poses, aba, braços parados a 45°).
+- **Mago novo no jogo** (ADR-043): modelo da folha do Vitor com esqueleto, dedos de dois ossos e 5 animações; braços próprios em primeira pessoa com ondinha nos dedos. Mão aprovada pelo Vitor. Crítico: 4,5 → 6,0 → 6,5 → 6,5 → 7,0 → 7,2 → 7,8 → 8,0 → **8,4 aprovado** (9ª rodada, ADR-045: proporção da folha; ramo `mago-criticas`, ainda fora do `main`). Pendências aceitas: lapelas e casaco esvoaçando.
+- **Runas pelo vetor do Vitor** (ramo `runas-contorno-svg`): contorno dele nas 8; faltam os símbolos gravitação, arremesso e quebrar (e talvez refazer a água como contorno).
 - **Runas v6 no jogo** (`runas_v4_acesas.glb`, gerada por `arte/personagens/runas/runas.py`): encaixe de quebra-cabeça, topo torto com pico, pedra acesa escura. Crítico: 5 → 6 → 6,5 (reprovado). Detalhes e pedidos dele no diário.
 - Testes: 302/302. Crítico do HUD (só posição, tamanho e legibilidade): 7/10 reprovado na 2ª rodada; os 3 itens que ele exigiu foram feitos depois (sem nova rodada, para poupar cota).
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
@@ -19,6 +20,8 @@ Atualizado em: 23/10/2026 (estilo do HUD)
 - Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
 
 ## Próximo passo
+- Vitor olha o mago aprovado (ramo `mago-criticas`) e decide se junta ao `main`.
+- Runas: montar as 8 quando os símbolos chegarem, trocar no jogo e acertar o brilho da pedra pelo print.
 0. Runas: o Vitor decide se a pedra acesa fica tingida (como a folha) ou cinza com cor só em volta do símbolo (pedido do crítico), e se segue mais uma rodada (abas maiores, chanfro) ou passa para o próximo modelo (galinha zumbi ou bigorna).
 1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
 2. Ajustar números (mana, recarga) a partir do que ele disser.

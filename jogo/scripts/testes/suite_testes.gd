@@ -2167,7 +2167,8 @@ func _testar_mago_modelado_pela_folha() -> void:
 	var faltando := ["Parado", "Andar", "Conjurar", "ErguerCajado", "Dano"].filter(func(n): return anim == null or not anim.has_animation(n))
 	_afirmar("mago: tem as 5 animações %s" % str(faltando), faltando.is_empty())
 	_afirmar("mago: parado toca Parado", anim and anim.current_animation == "Parado")
-	corpo.animar(0.016, 4.5, true)
+	# acima da velocidade em que a passada casa com o chão, a animação acelera
+	corpo.animar(0.016, VisualMago.VELOCIDADE_DO_PASSO * 1.3, true)
 	_afirmar("mago: andando toca Andar, mais rápido quando corre (pé não patina)", anim.current_animation == "Andar" and anim.speed_scale > 1.0)
 	corpo.animar(0.016, 0.0, true)
 	_afirmar("mago: parou, volta ao Parado", anim.current_animation == "Parado")
