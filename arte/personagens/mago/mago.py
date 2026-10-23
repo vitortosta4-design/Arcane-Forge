@@ -359,7 +359,12 @@ def luva(prefixo, pulso, frente, cima, lado, escala=1.0, abertura=1.0, curva=0.2
     "tábuas com frestas pretas"; aqui eles são curtos, grossos e abertos em
     leque a partir de uma palma arredondada.
     """
-    f, c, l = Vector(frente).normalized(), Vector(cima).normalized(), Vector(lado).normalized()
+    f = Vector(frente).normalized()
+    # costas e lado sempre perpendiculares aos dedos (senão a mão "deita")
+    c = Vector(cima) - f * Vector(cima).dot(f)
+    c.normalize()
+    l = Vector(lado) - f * Vector(lado).dot(f) - c * Vector(lado).dot(c)
+    l.normalize()
     e = escala
     p_palma = []
     centro = Vector(pulso) + f * 0.042 * e
@@ -460,17 +465,21 @@ def ossos_da_mao(eb, lado, pulso, dedos, cima, pai):
     m = eb.new(f"Mao{lado}")
     m.head, m.tail = pulso, pulso + (Vector(dedos["Medio"][2]) - Vector(pulso)).normalized() * 0.05
     m.parent = eb[pai]
-    m.align_roll(Vector(cima))
+    # Z do osso para o lado da PALMA: girar X positivo fecha o dedo para a
+    # palma (com Z para as costas, os dedos dobravam para trás; achado do
+    # Vitor em 23/10/2026: "as mãos estão invertidas").
+    palma = -Vector(cima)
+    m.align_roll(palma)
     for nome, (g1, g2, b, meio, ponta) in dedos.items():
         o1 = eb.new(f"{nome}1{lado}")
         o1.head, o1.tail = b, meio
         o1.parent = m
-        o1.align_roll(Vector(cima))
+        o1.align_roll(palma)
         o2 = eb.new(f"{nome}2{lado}")
         o2.head, o2.tail = meio, ponta
         o2.parent = o1
         o2.use_connect = True
-        o2.align_roll(Vector(cima))
+        o2.align_roll(palma)
 
 
 def montar():
@@ -517,6 +526,7 @@ def montar():
         osso(f"Perna{nome}", (x, 0, 0.16), (x, 0, 0.02), "Quadril")
     bpy.ops.object.mode_set(mode="OBJECT")
 
+    arm["leque_E"], arm["leque_D"] = 1, -1
     copa_e_aba = [o for o in p_chapeu]
     prender(p_corpo, arm, "Quadril")
     prender(p_cabeca, arm, "Cabeca")
@@ -549,7 +559,14 @@ def pose(arm, **rot):
         if k.startswith("loc_"):
             arm.pose.bones[k[4:]].location = v
         elif not k.startswith(("dir_", "mundo_")):
-            arm.pose.bones[k].rotation_euler = tuple(math.radians(a) for a in v)
+            r = [math.radians(a) for a in v]
+            # Leque (giro em Z do primeiro gomo): mão esquerda e direita são
+            # espelhadas, então o mesmo número abre uma e fecha a outra. Cada
+            # esqueleto guarda o sinal de cada mão (medido: abrir = pontas do
+            # indicador e do mínimo se afastam).
+            if k[-1] in "ED" and k[:-1].endswith("1") and k[:-2] in DEDOS:
+                r[2] *= arm.get("leque_" + k[-1], 1)
+            arm.pose.bones[k].rotation_euler = r
     # Direções por último, do pai para o filho, já com a pose do pai aplicada
     # (senão a mão gira em cima do giro do braço e o cajado sai deitado).
     bpy.context.view_layer.update()
@@ -680,8 +697,9 @@ def bracos_1p():
         # antebraço entrando pela borda de baixo da tela
         if s < 0:
             cotovelo, pulso = Vector((-0.46, 0.1, -0.38)), Vector((-0.36, 0.45, -0.2))
-            # mão esquerda aberta: costas da mão para quem joga, dedos para a frente e para cima
-            cima = Vector((-0.15, -0.75, 0.65)).normalized()
+            # mão esquerda aberta e em pé: costas da mão para quem joga, palma
+            # para a frente (para o alvo), dedos para cima (arte conceito)
+            cima = Vector((0.05, -1.0, -0.1)).normalized()
         else:
             cotovelo, pulso = Vector((0.48, 0.1, -0.44)), Vector((0.41, 0.46, -0.3))
             cima = Vector((0.85, -0.2, 0.45)).normalized()
@@ -692,9 +710,11 @@ def bracos_1p():
         manga.matrix_world = Matrix.Translation(cotovelo) @ giro
         punho = torno(f"Punho1P{nome}", [(0.082, 0.0), (0.08, 0.04)], BEGE, lados=9)
         punho.matrix_world = Matrix.Translation(cotovelo + eixo * 0.86) @ giro
-        frente = (eixo.normalized() + Vector((0.15 if s < 0 else 0, 0.2, 0.55 if s < 0 else 0.1))).normalized()
+        frente = (eixo.normalized() + Vector((0.05, 0.0, 1.2)) if s < 0 else eixo.normalized() + Vector((0, 0.2, 0.1))).normalized()
         # lado: do indicador para o mínimo (na mão esquerda o indicador fica à direita)
-        lado_v = frente.cross(cima).normalized() * (1 if s < 0 else -1)
+        # do indicador para o mínimo: o polegar fica do lado de dentro
+        # (centro da tela) na mão aberta e por cima na mão do cajado
+        lado_v = frente.cross(cima).normalized() * s
         palma, d = luva(f"Mao1P{nome}", pulso, frente, cima, lado_v, escala=1.05, abertura=1.25, curva=0.12)
         p[nome] = ([manga, punho], palma, d, cotovelo, pulso, cima)
     # cajado na mão direita, inclinado para a frente
@@ -718,6 +738,7 @@ def bracos_1p():
         b.parent = raiz
         ossos_da_mao(eb, nome, pulso, d, cima, f"Braco{nome}")
     bpy.ops.object.mode_set(mode="OBJECT")
+    arm["leque_E"], arm["leque_D"] = -1, 1
     for nome in ("E", "D"):
         mangas, palma, d, *_r = p[nome]
         prender(mangas, arm, f"Braco{nome}")
@@ -838,4 +859,5 @@ def principal():
             base.renderizar(f"{SAIDA}_{nome}.png", largura=560, altura=640, amostras=32)
 
 
-principal()
+if __name__ == "__main__":
+    principal()

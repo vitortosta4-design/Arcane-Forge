@@ -2165,6 +2165,23 @@ func _testar_mago_modelado_pela_folha() -> void:
 		anim1p.seek(0.95, true)
 		var depois := esq1p.get_bone_pose_rotation(osso)
 		_afirmar("mãos 1P: parado, o dedo médio dobra e desdobra (movimento fofo)", antes.angle_to(depois) > deg_to_rad(4.0))
+		# Orientação (Vitor, 23/10/2026: "as mãos estão invertidas"). No espaço
+		# da câmera: x para a direita, y para cima, -z para a frente.
+		anim1p.seek(0.0, true)
+		var cam_inv: Transform3D = maos.global_transform.affine_inverse()
+		var em_cam := func(nome: String) -> Vector3:
+			return cam_inv * (esq1p.global_transform * esq1p.get_bone_global_pose(esq1p.find_bone(nome)).origin)
+		var pulso_e: Vector3 = em_cam.call("MaoE")
+		var pulso_d: Vector3 = em_cam.call("MaoD")
+		_afirmar("mãos 1P: polegar esquerdo para dentro (centro da tela)", (em_cam.call("Polegar2E") as Vector3).x > pulso_e.x + 0.02)
+		_afirmar("mãos 1P: mão esquerda em pé (dedos para cima)", (em_cam.call("Medio2E") as Vector3).y > pulso_e.y + 0.03)
+		_afirmar("mãos 1P: polegar direito por cima do cajado", (em_cam.call("Polegar2D") as Vector3).y > pulso_d.y + 0.02)
+		var antes_curva: Vector3 = em_cam.call("Medio2E")
+		var giro_x: Basis = Basis(Vector3.RIGHT, deg_to_rad(50))
+		var osso_e := esq1p.find_bone("Medio1E")
+		esq1p.set_bone_pose_rotation(osso_e, esq1p.get_bone_pose_rotation(osso_e) * Quaternion(giro_x))
+		var depois_curva: Vector3 = em_cam.call("Medio2E")
+		_afirmar("mãos 1P: dobrar o dedo esquerdo leva a ponta para a frente (para a palma, não para trás)", depois_curva.z < antes_curva.z - 0.01)
 		maos.conjurar()
 		_afirmar("mãos 1P: conjurar toca Conjurar1P", anim1p.current_animation == "Conjurar1P")
 	mago.queue_free()
