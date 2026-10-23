@@ -45,7 +45,7 @@ def criar_materiais():
     BEGE = base.material("Acabamento", "#e0a462", rugosidade=0.7)
     COURO = base.material("Couro", "#7b4a2e", rugosidade=0.75)
     COURO_ESC = base.material("CouroEscuro", "#4c2b1b", rugosidade=0.8)
-    LUVA = base.material("Luva", "#a26a42", rugosidade=0.75)
+    LUVA = base.material("Luva", "#96582f", rugosidade=0.7)
     ROSTO = base.material("RostoSombra", "#3a2416", rugosidade=0.9)
     OLHO = base.material("Olho", "#000000", rugosidade=1.0, emissao="#ff7414", forca=0.9)
     CRISTAL = base.material("Cristal", "#3fc4ff", rugosidade=0.2, emissao="#36b8ff", forca=2.4)
@@ -370,9 +370,9 @@ def luva(prefixo, pulso, frente, cima, lado, escala=1.0, abertura=1.0, curva=0.2
     centro = Vector(pulso) + f * 0.042 * e
     # Palma arredondada: dois anéis de octógono (base e nó dos dedos).
     pts = []
-    for a_f, larg, alt in ((-0.035, 0.036, 0.022), (0.0, 0.044, 0.026), (0.034, 0.042, 0.02)):
-        for k in range(8):
-            ang = 2 * math.pi * k / 8
+    for a_f, larg, alt in ((-0.036, 0.034, 0.02), (-0.012, 0.043, 0.026), (0.014, 0.045, 0.026), (0.036, 0.04, 0.018)):
+        for k in range(10):
+            ang = 2 * math.pi * k / 10
             pts.append(centro + f * a_f * e + l * math.cos(ang) * larg * e + c * math.sin(ang) * alt * e)
     p_palma.append(casco(f"{prefixo}Palma", pts, LUVA))
     # Punho da luva (cano) mais largo, como na folha.
@@ -388,9 +388,9 @@ def luva(prefixo, pulso, frente, cima, lado, escala=1.0, abertura=1.0, curva=0.2
         meio = base_dedo + d1 * comp
         d2 = (f + l * t * 0.5 * abertura - c * curva).normalized()
         ponta = meio + d2 * comp * 0.9
-        g1 = tubo(f"{prefixo}{nome}1", [base_dedo - d1 * raio * 0.6, meio], [raio * 1.05, raio], LUVA, lados=6)
-        g2 = tubo(f"{prefixo}{nome}2", [meio - d2 * raio * 0.5, ponta - d2 * raio * 0.5, ponta + d2 * raio * 0.1],
-                  [raio, raio * 0.92, raio * 0.5], LUVA, lados=6)
+        g1 = tubo(f"{prefixo}{nome}1", [base_dedo - d1 * raio * 0.6, meio], [raio * 1.1, raio * 0.95], LUVA, lados=7)
+        g2 = tubo(f"{prefixo}{nome}2", [meio - d2 * raio * 0.5, ponta - d2 * raio * 0.6, ponta + d2 * raio * 0.25],
+                  [raio * 0.95, raio * 0.72, raio * 0.3], LUVA, lados=7)
         dedos[nome] = (g1, g2, base_dedo, meio, ponta)
     # Polegar: sai da lateral da palma, perto do pulso, bem afastado dos dedos.
     base_pol = centro - l * 0.038 * e - f * 0.012 * e - c * 0.004 * e
@@ -645,7 +645,7 @@ def gravar(arm, nome, quadros, acoes):
 
 def onda_dos_dedos(fase, forca=1.0):
     """Os quatro dedos dobrando um depois do outro, como quem tamborila no ar."""
-    return [forca * (7 + 9 * math.sin(fase - i * 0.7)) for i in range(4)]
+    return [forca * (10 + 13 * math.sin(fase - i * 0.8)) for i in range(4)]
 
 
 def animar(arm):
@@ -705,11 +705,11 @@ def bracos_1p():
             cima = Vector((0.85, -0.2, 0.45)).normalized()
         eixo = pulso - cotovelo
         giro = Vector((0, 0, 1)).rotation_difference(eixo.normalized()).to_matrix().to_4x4()
-        manga = torno(f"Manga1P{nome}", [(0.085, 0.0), (0.078, eixo.length * 0.6), (0.072, eixo.length * 0.92)], AZUL, lados=9,
+        manga = torno(f"Manga1P{nome}", [(0.078, 0.0), (0.07, eixo.length * 0.6), (0.064, eixo.length * 0.92)], AZUL, lados=9,
                       ruido=0.03, semente=30 + s)
         manga.matrix_world = Matrix.Translation(cotovelo) @ giro
-        punho = torno(f"Punho1P{nome}", [(0.082, 0.0), (0.08, 0.04)], BEGE, lados=9)
-        punho.matrix_world = Matrix.Translation(cotovelo + eixo * 0.86) @ giro
+        punho = torno(f"Punho1P{nome}", [(0.07, 0.0), (0.068, 0.028)], BEGE, lados=9)
+        punho.matrix_world = Matrix.Translation(cotovelo + eixo * 0.89) @ giro
         frente = (eixo.normalized() + Vector((0.05, 0.0, 1.2)) if s < 0 else eixo.normalized() + Vector((0, 0.2, 0.1))).normalized()
         # lado: do indicador para o mínimo (na mão esquerda o indicador fica à direita)
         # do indicador para o mínimo: o polegar fica do lado de dentro
