@@ -110,5 +110,7 @@ func _garantir_cor_do_brilho(raiz: Node) -> void:
 				var mat := n.get_active_material(i) as StandardMaterial3D
 				if mat and mat.emission_enabled and mat.albedo_color.v < 0.1:
 					var copia := mat.duplicate() as StandardMaterial3D
-					copia.albedo_color = mat.emission
+					# Escurecida: com a cor cheia, sol mais emissão estouravam o
+					# símbolo para rosa-claro de longe (achado do crítico, 23/10).
+					copia.albedo_color = mat.emission.darkened(0.6)
 					n.set_surface_override_material(i, copia)
