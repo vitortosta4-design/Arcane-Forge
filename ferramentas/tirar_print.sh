@@ -13,6 +13,9 @@
 #   --runas a,b,c     dá essas runas ao mago
 #   --barra-cheia     equipa 2 medalhões forjados nos espaços vazios
 #   --usar n          usa o medalhão n (1 a 4) aos 0,5 s (fica em recarga)
+#   --andar s         segura W por s segundos a partir de 0,5 s
+#   --galinha x,y,z   põe a galinha zumbi nesse ponto
+#   --martelar a,b    martela essas runas na bigorna aos 0,5 s (use com --runas)
 #   --camera x,y,z    câmera livre nesse ponto (ex.: ver o mago de frente)
 #   --alvo-camera x,y,z  para onde a câmera livre olha (padrão 0,1,0)
 #
@@ -21,7 +24,7 @@
 set -uo pipefail
 
 if [ $# -lt 1 ]; then
-  sed -n '2,20p' "$0"
+  sed -n '2,23p' "$0"
   exit 1
 fi
 

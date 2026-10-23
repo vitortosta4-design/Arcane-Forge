@@ -14,7 +14,7 @@ Atualizado em: 22/10/2026
 - Testes: 279/279 (os 28 a menos eram do porteiro e do interpretador). Crítico do HUD (só posição, tamanho e legibilidade): 7/10 reprovado na 2ª rodada; os 3 itens que ele exigiu foram feitos depois (sem nova rodada, para poupar cota).
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
 
-- Equipe tem agora o **animador** (ADR-042), além do crítico.
+- Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
 
 ## Próximo passo
 1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
@@ -26,6 +26,7 @@ Atualizado em: 22/10/2026
 - Névoa volumétrica e SDFGI só aparecem no PC do Vitor (a nuvem renderiza em Compatibility).
 
 ## Pendente do Vitor
+- Animação: autorizar a ordem de trabalho da auditoria; decidir o tempo de aviso da bicada (proposta 0,25 s), se a galinha zumbi vira a galinha do piloto com esqueleto e se o mago passa a usar o modelo com esqueleto.
 - Apagar o projeto `arcane-forge` no painel do Supabase (já pausado pelo Claude; a ferramenta dele não apaga) e revogar a chave da Groq que ficava guardada nele.
 - **Referência visual do HUD e do medalhão, a ser gerada pelo Vitor** (o estilo do HUD espera por ela; ADR-033 pede a do medalhão antes da Fase 5).
 - Jogar o ciclo da forja e opinar.

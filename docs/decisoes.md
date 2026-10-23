@@ -404,6 +404,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Escolha:** um quinto agente, o **animador** (`.claude/agents/animador.md`), com os princípios clássicos de animação e de sensação de jogo (antecipação, comprimir e esticar, continuação, tempo, pausa de impacto, reação a dano, interface que anima). Ele implementa (edita arquivos) e prova o movimento com folha de quadros, GIF e teste automático, já que a nuvem só tira prints parados.
 - **Junto:** o crítico (ADR-037) continua avaliando depois dele.
 - **Consequências:** amplia a equipe da ADR-005 (de 4 para 5 especialistas). Gasta cota a cada uso; chamar por entrega com movimento, não a cada ajuste. Ele respeita hardware mínimo, low poly de propósito e regras de jogo no Host.
+- **Atualização (23/10/2026, auditoria pedida pelo Vitor):** o animador virou diretor técnico de animação: diagnostica, propõe e só implementa com autorização; avalia cada peça com notas de 0 a 5 em seis eixos (arte, legibilidade, resposta, som e efeitos, estabilidade, desempenho), cada nota com a origem (visto, medido, deduzido, pendente), sem média que esconda defeito grave; tem critério objetivo de "pronto". Para enxergar movimento na nuvem, usa `ferramentas/gravar_quadros.sh` (gravação com tempo fixo pelo Movie Maker do Godot, folha de quadros, GIF e mapa de som). Primeira auditoria em `docs/auditoria-animacao.md`.
 - **Fácil de mudar?** Sim.
 
 ---

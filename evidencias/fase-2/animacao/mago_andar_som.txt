@@ -1,0 +1,8 @@
+quadro 55 (1.833s): pico 0.40
+quadro 56 (1.867s): pico 0.16
+quadro 57 (1.900s): pico 0.04
+quadro 59 (1.967s): pico 0.57
+quadro 60 (2.000s): pico 0.57
+quadro 61 (2.033s): pico 0.17
+quadro 62 (2.067s): pico 0.05
+quadro 63 (2.100s): pico 0.01

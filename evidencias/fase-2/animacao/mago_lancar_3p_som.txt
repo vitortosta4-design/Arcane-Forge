@@ -1,0 +1,3 @@
+quadro 16 (0.533s): pico 0.38
+quadro 17 (0.567s): pico 0.11
+quadro 18 (0.600s): pico 0.02

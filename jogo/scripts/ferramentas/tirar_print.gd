@@ -1,6 +1,7 @@
 extends SceneTree
 ## Ferramenta de desenvolvimento, não faz parte do jogo: abre a arena, posiciona
-## o mago e salva um print. Chamada por
+## o mago, encena uma ação (opcional) e salva um print. Também é a encenação
+## da gravação quadro a quadro (ferramentas/gravar_quadros.sh). Chamada por
 ## ferramentas/tirar_print.sh, que explica os argumentos.
 ##
 ## Armadilhas já encontradas (não repetir):
@@ -50,6 +51,12 @@ func _process(delta: float) -> bool:
 						_mago.barra.equipar(resultado)
 					else:
 						push_warning("tirar_print: não forjou %s: %s" % [soma, resultado.get("motivo", "?")])
+			if _args.has("galinha"):
+				var galinha := current_scene.get_node_or_null("GalinhaZumbi") as Node3D
+				if galinha:
+					galinha.global_position = _vetor(_args["galinha"])
+				else:
+					push_warning("tirar_print: --galinha pedido, mas a cena não tem GalinhaZumbi.")
 			if _args.has("camera"):
 				# Câmera livre (por exemplo para ver o mago de frente).
 				var camera := Camera3D.new()
@@ -62,9 +69,24 @@ func _process(delta: float) -> bool:
 
 	if _etapa == 1 and _tempo >= 0.5:
 		_etapa = 2
+		if _args.has("andar"):
+			# Segura W por --andar segundos (o mago lê a ação como um jogador).
+			Input.action_press("mover_frente")
+		if _mago and _args.has("martelar"):
+			# Martela na bigorna as runas dadas (precisam estar na mochila, --runas).
+			var caverna := current_scene.get_node_or_null("Caverna")
+			if caverna and caverna.get("forja"):
+				var saida: Dictionary = caverna.forja.martelar(_mago, str(_args["martelar"]).split(","))
+				print("MARTELOU: ", saida.get("mensagem", "?"))
+			else:
+				push_warning("tirar_print: --martelar pedido, mas a cena não tem Caverna com forja.")
+		# Depois de martelar, para dar para usar o medalhão recém-forjado.
 		if _mago and _args.has("usar"):
 			_mago.usar_medalhao(int(_args["usar"]) - 1)
 		return false
+
+	if _args.has("andar") and _etapa >= 2 and _tempo >= 0.5 + float(_args["andar"]) and Input.is_action_pressed("mover_frente"):
+		Input.action_release("mover_frente")
 
 	if _etapa >= 2 and _tempo >= float(_args.get("espera", "2.5")):
 		var saida: String = _args.get("saida", "/tmp/print.png")
