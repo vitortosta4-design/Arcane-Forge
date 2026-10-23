@@ -272,28 +272,33 @@ def cabeca():
 
 def corpo():
     p = []
-    # Casaco em sino, mais longo e aberto na barra (folha: quase até as botas).
-    manto = torno("Manto", [(0.13, 0.46), (0.162, 0.4), (0.19, 0.3), (0.228, 0.2), (0.262, 0.13), (0.268, 0.115)],
+    # Casaco em sino, longo até quase as botas e bem aberto embaixo (folha).
+    manto = torno("Manto", [(0.13, 0.46), (0.162, 0.4), (0.19, 0.3), (0.232, 0.2), (0.275, 0.11), (0.29, 0.075)],
                   AZUL, lados=12, achatar=0.84, ruido=0.02, semente=7)
     p.append(manto)
-    # Barra bege com zigue-zague de triângulos subindo (folha).
-    barra = torno("MantoBarra", [(0.27, 0.105), (0.268, 0.15)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
+    # Barra: faixa sólida e larga cor de areia (folha).
+    barra = torno("MantoBarra", [(0.293, 0.068), (0.283, 0.12)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
     m = barra.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.012
     p.append(barra)
-    for k in range(12):
-        a = 2 * math.pi * (k + 0.5) / 12
-        if abs(math.sin(a) + 1) < 0.05:
+    # Poucos recortes: triângulos largos e baixos, colados no tecido, subindo
+    # da barra (crítica da 4ª rodada: dentes finos pareciam armadilha de urso).
+    for k in range(7):
+        a = 2 * math.pi * (k + 0.5) / 7 + 0.25
+        if abs(math.sin(a) + 1) < 0.15:
             continue
-        x, y = math.cos(a) * 0.272, math.sin(a) * 0.272 * 0.85
-        n = Vector((math.cos(a), math.sin(a) * 0.85, 0.15)).normalized()
-        p.append(triangulo_na_superficie(f"MantoZigue{k}", (x, y, 0.148), n, (0, 0, 1), 0.06, 0.05, BEGE))
-    # Abertura da frente: forro escuro e acabamento bege dos dois lados.
+        x, y = math.cos(a) * 0.285, math.sin(a) * 0.285 * 0.85
+        n = Vector((math.cos(a), math.sin(a) * 0.85, 0.25)).normalized()
+        p.append(triangulo_na_superficie(f"MantoRecorte{k}", (x, y, 0.118), n, (0, 0, 1), 0.12, 0.05, BEGE, espessura=0.004))
+    # Frente: abre só da cintura para baixo (folha), com acabamento de areia.
     for s in (-1, 1):
-        p.append(tubo(f"FrenteAcab{s}", [(s * 0.012, -0.165, 0.4), (s * 0.03, -0.18, 0.27), (s * 0.065, -0.205, 0.18),
-                                         (s * 0.095, -0.225, 0.12)], 0.026, BEGE, lados=4))
-    p.append(casco("FrenteFenda", [Vector(v) for v in ((-0.085, -0.222, 0.12), (0.085, -0.222, 0.12), (0, -0.185, 0.26),
-                                                       (0, -0.17, 0.12))], AZUL_ESC))
+        p.append(tubo(f"FrenteAcab{s}", [(s * 0.01, -0.2, 0.26), (s * 0.05, -0.222, 0.17), (s * 0.1, -0.248, 0.08)],
+                      0.022, BEGE, lados=4))
+        # Gola em V de areia, do ombro até o broche.
+        p.append(tubo(f"GolaV{s}", [(s * 0.1, -0.13, 0.46), (s * 0.05, -0.16, 0.41), (s * 0.005, -0.172, 0.37)],
+                      0.017, BEGE, lados=4))
+    p.append(casco("FrenteFenda", [Vector(v) for v in ((-0.1, -0.245, 0.075), (0.1, -0.245, 0.075), (0, -0.2, 0.25),
+                                                       (0, -0.18, 0.075))], AZUL_ESC))
     # Capinha nos ombros com bicos e borda bege (folha: capelete pontudo).
     capa = torno("Capinha", [(0.118, 0.475), (0.168, 0.43), (0.2, 0.37), (0.205, 0.355)], AZUL_CLARO, lados=12,
                  achatar=0.86, fechar=(False, False))
@@ -317,21 +322,30 @@ def corpo():
                   0.03, COURO, lados=4, achatar=0.45))
     p.append(caixa("AlcaFivela", (-0.045, -0.166, 0.365), (0.03, 0.01, 0.028), DOURADO, rot=(0, 0.6, 0)))
     # Cinto largo com fivela grande.
-    cinto = torno("Cinto", [(0.172, 0.27), (0.178, 0.31)], COURO, lados=12, achatar=0.84, fechar=(False, False))
+    cinto = torno("Cinto", [(0.212, 0.262), (0.199, 0.312)], COURO, lados=12, achatar=0.86, fechar=(False, False))
     m = cinto.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.016
     p.append(cinto)
-    p.append(caixa("Fivela", (0, -0.158, 0.29), (0.055, 0.014, 0.045), DOURADO, chanfro=0.005))
-    p.append(caixa("FivelaMiolo", (0, -0.166, 0.29), (0.03, 0.006, 0.022), COURO_ESC))
+    p.append(caixa("Fivela", (0, -0.192, 0.287), (0.075, 0.02, 0.062), BEGE, chanfro=0.006))
+    p.append(caixa("FivelaMiolo", (0, -0.195, 0.287), (0.034, 0.006, 0.024), COURO_ESC))
+    p.append(caixa("FivelaCostas", (0, 0.182, 0.287), (0.05, 0.016, 0.042), DOURADO, chanfro=0.004))
     # Duas bolsas grandes na frente, com tampa e botão.
     for s in (-1, 1):
         cx = s * 0.13
-        p.append(caixa(f"Bolsa{s}", (cx, -0.15, 0.225), (0.105, 0.058, 0.1), COURO, chanfro=0.012))
-        p.append(caixa(f"BolsaTampa{s}", (cx, -0.181, 0.256), (0.11, 0.016, 0.046), COURO_ESC, chanfro=0.004))
-        p.append(caixa(f"BolsaBotao{s}", (cx, -0.191, 0.24), (0.02, 0.01, 0.024), DOURADO))
+        p.append(caixa(f"Bolsa{s}", (cx, -0.178, 0.222), (0.1, 0.055, 0.098), COURO, chanfro=0.012))
+        p.append(caixa(f"BolsaTampa{s}", (cx, -0.207, 0.252), (0.105, 0.016, 0.046), COURO_ESC, chanfro=0.004))
+        p.append(caixa(f"BolsaBotao{s}", (cx, -0.217, 0.236), (0.02, 0.01, 0.024), DOURADO))
     # Bolsinha de lado, atrás (costas da folha).
-    p.append(caixa("BolsaCostas", (0.0, 0.15, 0.24), (0.1, 0.045, 0.075), COURO, chanfro=0.008))
-    p.append(caixa("BolsaCostasLosango", (0.0, 0.175, 0.245), (0.018, 0.006, 0.026), AZUL_CLARO, rot=(0, 0.78, 0)))
+    for s in (-1, 1):
+        cx = s * 0.12
+        p.append(caixa(f"BolsaCostas{s}", (cx, 0.178, 0.222), (0.095, 0.05, 0.095), COURO, chanfro=0.01))
+        p.append(caixa(f"BolsaCostasTampa{s}", (cx, 0.205, 0.25), (0.1, 0.014, 0.044), COURO_ESC, chanfro=0.004))
+    p.append(casco("BolsaCostasLosango", [Vector(v) for v in ((-0.12, 0.214, 0.25), (-0.1, 0.214, 0.225), (-0.12, 0.214, 0.2),
+                                                              (-0.14, 0.214, 0.225), (-0.12, 0.222, 0.225))], AZUL_CLARO))
+    # Capuz caído: uma peça só, achatada, em ponta sobre as costas (folha).
+    p.append(casco("Capuz", [Vector(v) for v in (
+        (-0.13, 0.08, 0.48), (0.13, 0.08, 0.48), (-0.15, 0.16, 0.45), (0.15, 0.16, 0.45),
+        (-0.1, 0.18, 0.4), (0.1, 0.18, 0.4), (0.0, 0.2, 0.33), (0.0, 0.13, 0.5), (0.0, 0.15, 0.36))], AZUL_ESC))
     # Pernas curtas e botas robustas com dobra bege no cano.
     pernas = {}
     for s, nome in ((-1, "E"), (1, "D")):
