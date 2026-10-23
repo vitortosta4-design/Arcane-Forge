@@ -99,11 +99,25 @@ def silhueta(seed):
     pts += [(dir_x - q2, base_z), (dir_x, base_z + q2)]
     # direita: dente quadrado para fora
     pts += [(dir_x, za), (dir_x + dente, za), (dir_x + dente, zb), (dir_x, zb)]
-    pts += [(dir_x, topo_z - q3), (dir_x - q3, topo_z)]
-    pts += dentes_horizontais(topo_z, 1, dir_x - q3 - 0.05, esq_x + q4 + 0.05)
-    pts += [(esq_x + q4, topo_z), (esq_x, topo_z - q4)]
+    # lasca em V na lateral direita, acima do dente
+    # topo torto com um pico, como na folha: um lado mais baixo que o outro,
+    # o pico fora do centro e, as vezes, um degrau reto antes dele
+    queda_d, queda_e = r.uniform(0.0, 0.1), r.uniform(0.0, 0.1)
+    if r.random() < 0.5:
+        queda_d, queda_e = queda_e, queda_d
+    zl = r.uniform(zb + 0.08, topo_z - q3 - queda_d - 0.1)
+    pts += [(dir_x + j(0.012), zl - 0.035), (dir_x - r.uniform(0.025, 0.045), zl), (dir_x + j(0.012), zl + 0.035)]
+    px, pico = r.uniform(-0.15, 0.15), r.uniform(0.1, 0.17)
+    pts += [(dir_x, topo_z - q3 - queda_d), (dir_x - q3, topo_z - queda_d)]
+    if r.random() < 0.6:
+        xd = (dir_x - q3 + px) / 2
+        pts += [(xd + 0.04, topo_z - queda_d * 0.5), (xd + 0.04, topo_z + 0.05), (xd - 0.03, topo_z + 0.05 + j(0.01))]
+    pts += [(px + 0.03, topo_z + pico), (px - 0.035, topo_z + pico - 0.02)]
+    pts += [(esq_x + q4, topo_z - queda_e), (esq_x, topo_z - q4 - queda_e)]
     # esquerda: reentrancia quadrada para dentro (o dente da vizinha entra aqui)
     pts += [(esq_x, zb), (esq_x + dente, zb), (esq_x + dente, za), (esq_x, za)]
+    zl = r.uniform(base_z + q1 + 0.08, za - 0.1)
+    pts += [(esq_x + j(0.012), zl + 0.03), (esq_x + r.uniform(0.02, 0.04), zl), (esq_x + j(0.012), zl - 0.03)]
     pts += [(esq_x, base_z + q1)]
     return pts
 
@@ -477,15 +491,18 @@ def mats_runa(nome, acesa):
             # Escura no arquivo de propósito: o sol do jogo clareia cerca de 1,7x
             # (medido no print: #7a3322 virava #dc724d, salmão). Assim a pedra
             # chega no jogo perto do tom escuro e saturado da folha.
-            "borda": base.material(f"R_{nome}_{sfx}_borda", misturar(tom, "#000000", 0.18), rugosidade=0.6,
-                                   emissao=brilho, forca=0.08),
-            "lado": base.material(f"R_{nome}_{sfx}_lado", misturar(tom, "#000000", 0.45), rugosidade=0.9,
-                                  emissao=brilho, forca=0.06),
-            "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#000000", rugosidade=1.0, emissao=brilho, forca=2.4),
-            "parede": base.material(f"R_{nome}_{sfx}_parede", "#000000", rugosidade=1.0, emissao=miolo, forca=1.3),
+            # Borda e lateral puxam para o cinza-arroxeado escuro da folha
+            # (medido nela: #6a4d5a); o calor do elemento fica no meio da face.
+            "borda": base.material(f"R_{nome}_{sfx}_borda", misturar(tom, "#4a3843", 0.45), rugosidade=0.6,
+                                   emissao=brilho, forca=0.04),
+            "lado": base.material(f"R_{nome}_{sfx}_lado", misturar(tom, "#1c1620", 0.6), rugosidade=0.9,
+                                  emissao=brilho, forca=0.03),
+            # Brilho contido: forte, o halo lavava a pedra e o simbolo para branco.
+            "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#000000", rugosidade=1.0, emissao=brilho, forca=1.5),
+            "parede": base.material(f"R_{nome}_{sfx}_parede", "#000000", rugosidade=1.0, emissao=miolo, forca=0.9),
             "aura": base.material(f"R_{nome}_{sfx}_aura", misturar(tom, brilho, 0.1), rugosidade=0.8,
                                   emissao=brilho, forca=0.05),
-            "miolo": base.material(f"R_{nome}_{sfx}_miolo", "#000000", rugosidade=1.0, emissao=misturar(miolo, brilho, 0.55), forca=2.2),
+            "miolo": base.material(f"R_{nome}_{sfx}_miolo", "#000000", rugosidade=1.0, emissao=misturar(miolo, brilho, 0.55), forca=1.5),
             "racha": base.material(f"R_{nome}_{sfx}_racha", misturar(tom, "#000000", 0.6), rugosidade=0.9),
         }
     return {
