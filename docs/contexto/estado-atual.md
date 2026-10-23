@@ -12,13 +12,14 @@ Atualizado em: 23/10/2026
 - HUD placeholder aprovado pelo Vitor como provisório; o texto da magia lançada saiu (era do plano da IA por texto).
 - Magia por texto com IA **removida do jogo** (ADR-041): sem caixa de texto, porteiro, `Interpretador` ou tecla Q.
 - **Mago novo no jogo** (ADR-043): modelo da folha do Vitor com esqueleto, dedos de dois ossos e 5 animações; braços próprios em primeira pessoa com ondinha nos dedos. Mão aprovada pelo Vitor. Crítico: 4,5 → 6,0 → 6,5 → 6,5 → 7,0 (reprovado; pendências no diário: pernas e botas, poses, aba, braços parados a 45°).
-- Testes: 291/291. Crítico do HUD (só posição, tamanho e legibilidade): 7/10 reprovado na 2ª rodada; os 3 itens que ele exigiu foram feitos depois (sem nova rodada, para poupar cota).
+- **Runas v6 no jogo** (`runas_v4_acesas.glb`, gerada por `arte/personagens/runas/runas.py`): encaixe de quebra-cabeça, topo torto com pico, pedra acesa escura. Crítico: 5 → 6 → 6,5 (reprovado). Detalhes e pedidos dele no diário.
+- Testes: 297/297. Crítico do HUD (só posição, tamanho e legibilidade): 7/10 reprovado na 2ª rodada; os 3 itens que ele exigiu foram feitos depois (sem nova rodada, para poupar cota).
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
 
 - Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
 
 ## Próximo passo
-0. Refinar as runas (escolha do Vitor, 23/10/2026).
+0. Runas: o Vitor decide se a pedra acesa fica tingida (como a folha) ou cinza com cor só em volta do símbolo (pedido do crítico), e se segue mais uma rodada (abas maiores, chanfro) ou passa para o próximo modelo (galinha zumbi ou bigorna).
 1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
 2. Ajustar números (mana, recarga) a partir do que ele disser.
 3. Quando a referência do HUD chegar: aplicar o estilo nas peças que já estão no lugar.
