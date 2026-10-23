@@ -2151,6 +2151,10 @@ func _testar_mago_modelado_pela_folha() -> void:
 	_afirmar("mago: andar não corta o Conjurar no meio", anim.current_animation == "Conjurar")
 	mago.receber_dano(5.0, mago.global_position + Vector3.FORWARD, 0.0)
 	_afirmar("mago: levar dano toca Dano", anim.current_animation == "Dano")
+	# Cajado na mão direita (escolha do Vitor, 23/10/2026): o mago anda para
+	# -Z, então a direita dele é +X no espaço do próprio mago.
+	var cristal := corpo.find_child("CajadoCristal", true, false) as Node3D
+	_afirmar("mago: cajado na mão direita", cristal != null and (mago.global_transform.affine_inverse() * cristal.global_position).x > 0.1)
 
 	var maos: MaosPrimeiraPessoa = mago.get_node("PivotCabeca/CameraPrimeiraPessoa/Mao")
 	var anim1p := maos.find_child("AnimationPlayer", true, false) as AnimationPlayer

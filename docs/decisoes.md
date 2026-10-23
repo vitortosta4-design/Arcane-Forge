@@ -414,7 +414,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Problema:** a ADR-035 deixava o acabamento visual (Fase 5) para depois do teste com o amigo. O Vitor preferiu refinar os modelos agora, seguindo a referência à risca, a começar pelo mago, já dentro do jogo e com "uma mãozinha bonita e dedinhos com movimento suave e fofo". Animação fina fica para depois dos modelos (conversa de 23/10/2026: animar bem um modelo que ainda vai mudar é retrabalho).
 - **Escolha:** o mago passa a ser o modelo com esqueleto feito no Blender por script, pela folha do Vitor (`arte/personagens/mago/mago.py`, ~3.600 triângulos), com dois ossos por dedo e animações Parado, Andar, Conjurar, ErguerCajado e Dano; em primeira pessoa, um modelo próprio dos braços (`mago_1p.glb`, ~1.100 triângulos) com Parado1P (ondinha dos dedos) e Conjurar1P. O boneco feito em código saiu.
 - **Não muda:** low poly de propósito (ADR-007), mago tosco (ADR-019), cor chapada por face até as texturas pintadas pelo Vitor.
-- **Pendente do Vitor:** a folha põe o cajado na mão esquerda e a arte conceito, em primeira pessoa, na direita; hoje cada modelo segue a sua referência.
+- **Cajado na mão direita nos dois modelos** (escolha do Vitor em 23/10/2026, como na arte conceito; a folha o mostra na esquerda).
 - **Fácil de mudar?** Sim: o modelo é regerado pelo script.
 
 ---

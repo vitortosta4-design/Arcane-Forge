@@ -348,7 +348,7 @@ def corpo():
         (-0.1, 0.18, 0.4), (0.1, 0.18, 0.4), (0.0, 0.2, 0.33), (0.0, 0.13, 0.5), (0.0, 0.15, 0.36))], AZUL_ESC))
     # Pernas curtas e botas robustas com dobra bege no cano.
     pernas = {}
-    for s, nome in ((-1, "E"), (1, "D")):
+    for s, nome in ((-1, "D"), (1, "E")):
         x = s * 0.068
         perna = torno(f"Perna{nome}", [(0.04, 0.05), (0.046, 0.15)], CALCA, lados=8, centro=(x, 0, 0))
         bota = casco(f"Bota{nome}", [Vector(v) for v in (
@@ -436,7 +436,7 @@ def braco(lado):
     frente = (eixo.normalized() + Vector((s * 0.3, -0.25, 0.25))).normalized()
     cima = Vector((s * 0.25, -0.15, 1.0)).normalized()
     lado_v = frente.cross(cima).normalized() * (-s)
-    palma, dedos = luva(f"Mao{'E' if s < 0 else 'D'}", pulso, frente, cima, lado_v, escala=1.3, abertura=1.0, curva=0.35)
+    palma, dedos = luva(f"Mao{'D' if s < 0 else 'E'}", pulso, frente, cima, lado_v, escala=1.3, abertura=1.0, curva=0.35)
     return [manga, punho_o], palma, dedos, ombro, pulso
 
 
@@ -506,13 +506,15 @@ def montar():
     for o in p_chapeu + p_cabeca:
         o.matrix_world = escala @ o.matrix_world
     p_corpo, pernas = corpo()
-    braco_e = braco(-1)
-    braco_d = braco(1)
+    # O mago olha para -Y: a direita dele fica em -X (cajado na direita,
+    # como na arte conceito; escolha do Vitor em 23/10/2026).
+    braco_e = braco(1)
+    braco_d = braco(-1)
     p_cajado = cajado()
     pulso_d = braco_d[4]
     bpy.context.view_layer.update()
     for o in p_cajado:
-        o.matrix_world = Matrix.Translation(pulso_d + Vector((0.035, -0.045, -0.01))) @ Matrix.Rotation(math.radians(6), 4, "Y") @ o.matrix_world
+        o.matrix_world = Matrix.Translation(pulso_d + Vector((-0.035, -0.045, -0.01))) @ Matrix.Rotation(math.radians(6), 4, "Y") @ o.matrix_world
 
     bpy.ops.object.armature_add(location=(0, 0, 0))
     arm = nomear(bpy.context.active_object, "MagoEsqueleto")
@@ -535,12 +537,12 @@ def montar():
     for nome, b in (("E", braco_e), ("D", braco_d)):
         ombro, pulso = b[3], b[4]
         osso(f"Braco{nome}", tuple(ombro), tuple(pulso), "Tronco")
-        ossos_da_mao(eb, nome, pulso, b[2], Vector((-1 if nome == "E" else 1, 0, 0.4)), f"Braco{nome}")
-    for nome, x in (("E", -0.068), ("D", 0.068)):
+        ossos_da_mao(eb, nome, pulso, b[2], Vector((1 if nome == "E" else -1, 0, 0.4)), f"Braco{nome}")
+    for nome, x in (("E", 0.068), ("D", -0.068)):
         osso(f"Perna{nome}", (x, 0, 0.16), (x, 0, 0.02), "Quadril")
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    arm["leque_E"], arm["leque_D"] = 1, -1
+    arm["leque_E"], arm["leque_D"] = -1, 1
     copa_e_aba = [o for o in p_chapeu]
     prender(p_corpo, arm, "Quadril")
     prender(p_cabeca, arm, "Cabeca")
@@ -630,15 +632,15 @@ POSES = {
     "neutra": junta(SEGURA_D, dedos("E", curva=20, leque=24, polegar=-6)),
     # mão esquerda esticada à frente, dedos bem abertos (folha "conjurando")
     "conjurando": junta(SEGURA_D, dedos("E", curva=-12, leque=22, polegar=-10),
-                        {"dir_BracoE": (-0.25, -1.0, 0.12), "dir_MaoE": (-0.05, -0.7, 0.7), "dir_BracoD": (0.45, -0.35, -0.6),
-                         "Tronco": (0, 0, 12), "Cabeca": (-5, 0, -8), "Chapeu": (0, 0, 4), "PernaE": (-15, 0, 0), "PernaD": (15, 0, 0)}),
+                        {"dir_BracoE": (0.25, -1.0, 0.12), "dir_MaoE": (0.05, -0.7, 0.7), "dir_BracoD": (-0.45, -0.35, -0.6),
+                         "Tronco": (0, 0, -12), "Cabeca": (-5, 0, 8), "Chapeu": (0, 0, -4), "PernaE": (-15, 0, 0), "PernaD": (15, 0, 0)}),
     # cajado lá no alto (folha "erguendo o cajado")
     "erguendo": junta(SEGURA_D, dedos("E", curva=35),
-                      {"dir_BracoD": (0.35, -0.2, 1.0), "mundo_MaoD": True, "dir_BracoE": (-0.7, -0.2, -0.45),
-                       "Tronco": (-6, 0, 0), "Cabeca": (-8, 0, 0), "Chapeu": (-6, 0, 0), "PernaE": (0, 0, -8), "PernaD": (0, 0, 8)}),
+                      {"dir_BracoD": (-0.35, -0.2, 1.0), "mundo_MaoD": True, "dir_BracoE": (0.7, -0.2, -0.45),
+                       "Tronco": (-6, 0, -0), "Cabeca": (-8, 0, -0), "Chapeu": (-6, 0, -0), "PernaE": (0, 0, -8), "PernaD": (0, 0, 8)}),
     "andando": junta(SEGURA_D, dedos("E", curva=25),
-                     {"PernaE": (-40, 0, 0), "PernaD": (35, 0, 0), "dir_BracoE": (-0.45, 0.45, -0.75), "dir_BracoD": (0.5, -0.5, -0.7),
-                      "Tronco": (10, 0, -6), "Cabeca": (-6, 0, 4), "Chapeu": (-8, 0, -4), "loc_Raiz": (0, 0, 0.02)}),
+                     {"PernaE": (-40, 0, 0), "PernaD": (35, 0, 0), "dir_BracoE": (0.45, 0.45, -0.75), "dir_BracoD": (-0.5, -0.5, -0.7),
+                      "Tronco": (10, 0, 6), "Cabeca": (-6, 0, -4), "Chapeu": (-8, 0, 4), "loc_Raiz": (0, 0, 0.02)}),
 }
 
 
@@ -681,21 +683,21 @@ def animar(arm):
     gravar(arm, "Parado", quadros, acoes)
     # Andar (1 s): passada, braço oposto à perna, chapéu atrasado.
     lado_a = POSES["andando"]
-    lado_b = junta(SEGURA_D, dedos("E", curva=25), {"PernaE": (30, 0, 0), "PernaD": (-30, 0, 0), "dir_BracoE": (-0.5, -0.5, -0.7),
-                                                    "dir_BracoD": (0.45, 0.45, -0.75), "Tronco": (6, 0, 6), "Chapeu": (-4, 0, 6),
+    lado_b = junta(SEGURA_D, dedos("E", curva=25), {"PernaE": (30, 0, 0), "PernaD": (-30, 0, 0), "dir_BracoE": (0.5, -0.5, -0.7),
+                                                    "dir_BracoD": (-0.45, 0.45, -0.75), "Tronco": (6, 0, -6), "Chapeu": (-4, 0, -6),
                                                     "loc_Raiz": (0, 0, 0.015)})
-    meio = junta(SEGURA_D, dedos("E", curva=20), {"Tronco": (6, 0, 0), "Chapeu": (4, 0, 0), "loc_Raiz": (0, 0, -0.008)})
+    meio = junta(SEGURA_D, dedos("E", curva=20), {"Tronco": (6, 0, -0), "Chapeu": (4, 0, -0), "loc_Raiz": (0, 0, -0.008)})
     gravar(arm, "Andar", [(1, lado_a), (7, meio), (13, lado_b), (19, meio), (25, lado_a)], acoes)
     # Conjurar (0,6 s): antecipa (recolhe a mão fechando os dedos), estica a mão
     # com os dedos abertos em leque, segura e volta.
     recolhe = junta(SEGURA_D, dedos("E", curva=60, polegar=40),
-                    {"dir_BracoE": (-0.6, 0.35, -0.5), "Tronco": (0, 0, -8), "Cabeca": (4, 0, 0), "Chapeu": (6, 0, 0)})
+                    {"dir_BracoE": (0.6, 0.35, -0.5), "Tronco": (0, 0, 8), "Cabeca": (4, 0, -0), "Chapeu": (6, 0, -0)})
     gravar(arm, "Conjurar", [(1, POSES["neutra"]), (4, recolhe), (7, POSES["conjurando"]), (11, POSES["conjurando"]),
                              (15, junta(POSES["neutra"], dedos("E", curva=20))), (15, POSES["neutra"])], acoes)
     gravar(arm, "ErguerCajado", [(1, POSES["neutra"]), (7, POSES["erguendo"]), (15, POSES["erguendo"]), (22, POSES["neutra"])], acoes)
     # Dano (0,4 s): tranco para trás, chapéu atrasado, mãos abrem de susto.
-    susto = junta(SEGURA_D, dedos("E", curva=-15, leque=20), {"Tronco": (-14, 0, 0), "Cabeca": (-10, 0, 0), "Chapeu": (-12, 0, 0),
-                                                              "dir_BracoE": (-1.0, 0.1, 0.1), "dir_BracoD": (1.0, 0.1, 0.0),
+    susto = junta(SEGURA_D, dedos("E", curva=-15, leque=20), {"Tronco": (-14, 0, -0), "Cabeca": (-10, 0, -0), "Chapeu": (-12, 0, -0),
+                                                              "dir_BracoE": (1.0, 0.1, 0.1), "dir_BracoD": (-1.0, 0.1, 0.0),
                                                               "loc_Raiz": (0, 0.03, 0)})
     gravar(arm, "Dano", [(1, POSES["neutra"]), (3, susto), (10, POSES["neutra"])], acoes)
     return acoes

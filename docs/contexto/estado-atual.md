@@ -18,7 +18,7 @@ Atualizado em: 23/10/2026
 - Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
 
 ## Próximo passo
-0. Vitor olha o mago novo (prints e GIF em `evidencias/fase-2/mago_v2/`) e decide de que lado fica o cajado; depois, refinar o próximo modelo (galinha zumbi ou bigorna, escolha dele).
+0. Vitor decide se o crítico avalia de novo o mago e qual modelo refinar em seguida (galinha zumbi, bigorna ou runas).
 1. Vitor segue `docs/roteiro-de-teste.md` (reescrito para o ciclo da forja) e joga do começo ao fim no PC: achar runas, forjar 2 medalhões, usar na galinha, medir FPS com `ferramentas\medir_fps.bat`, e olhar se o HUD está legível.
 2. Ajustar números (mana, recarga) a partir do que ele disser.
 3. Quando a referência do HUD chegar: aplicar o estilo nas peças que já estão no lugar.
