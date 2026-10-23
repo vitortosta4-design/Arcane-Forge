@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 23/10/2026 (ADR-007 revisada)
+Última atualização: 23/10/2026 (ADR-044 adicionada, ADR-029 revisada)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -278,7 +278,7 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - O jogo aplica variações de tom e velocidade para multiplicar as gravações.
 
 ## ADR-029 · Voz entre jogadores pelo Discord
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026) · **Revisada pela ADR-044 (23/10/2026):** vale até a voz pelo jogo ser implementada, depois da Fase 3.
 
 - Conversa por voz entre os jogadores fica no Discord. O jogo não terá voz entre jogadores.
 - O jogo cuida apenas da voz que vira magia (tecla V, ADR-023) e do chat escrito (ADR-010).
@@ -425,6 +425,19 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Não muda:** low poly de propósito (ADR-007), mago tosco (ADR-019), cor chapada por face até as texturas pintadas pelo Vitor.
 - **Cajado na mão direita nos dois modelos** (escolha do Vitor em 23/10/2026, como na arte conceito; a folha o mostra na esquerda).
 - **Fácil de mudar?** Sim: o modelo é regerado pelo script.
+
+
+## ADR-044 · Voz entre jogadores pelo jogo, com efeitos de ambiente
+**Status:** Aprovada (23/10/2026, escolha do Vitor). Revisa a ADR-029.
+
+- **Problema:** com o Discord, a voz não sabe onde o mago está. Não dá para ter eco na caverna nem voz abafada debaixo d'água.
+- **Alternativas:** manter o Discord para sempre; voz por proximidade (descartada: com só 2 humanos na partida, atrapalha mais do que diverte); voz normal pelo jogo, com efeitos de ambiente.
+- **Escolha:** voz normal pelo jogo, sem proximidade, passando pelos mesmos efeitos de ambiente dos sons do jogo.
+- **Quando:** só depois da Fase 3 (cooperativo), quando a rede já existir. Até lá, a conversa continua pelo Discord (ADR-029 vale até então).
+- **Junto (Fase 6, áudio):** efeitos de ambiente em todos os sons do jogo, por barramentos de áudio do Godot: eco na caverna, abafado debaixo d'água com bolhas. Isso independe da voz.
+- **Requisitos aceitos:** fone de ouvido obrigatório (o Godot não cancela eco), botão para falar, ajuste de atraso testado com os dois jogando.
+- **Ressalva:** "debaixo d'água" pressupõe água em que se entra, que ainda não existe no plano. Entra só se essa mecânica for aprovada.
+- **Fácil de mudar?** Sim. Até a implementação, é só plano.
 
 ---
 
