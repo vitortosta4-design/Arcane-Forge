@@ -50,7 +50,7 @@ def criar_materiais():
     OLHO = base.material("Olho", "#000000", rugosidade=1.0, emissao="#ff7414", forca=0.9)
     CRISTAL = base.material("Cristal", "#3fc4ff", rugosidade=0.2, emissao="#36b8ff", forca=2.4)
     CALCA = base.material("Calca", "#262043", rugosidade=0.85)
-    MADEIRA = base.material("Madeira", "#6b412b", rugosidade=0.8)
+    MADEIRA = base.material("Madeira", "#8a5734", rugosidade=0.8)
     CABELO = base.material("Cabelo", "#6a3c24", rugosidade=0.85)
     DOURADO = base.material("Fivela", "#d9a24f", rugosidade=0.4, metal=0.6)
 
@@ -198,24 +198,25 @@ def chapeu():
     p = []
     # Aba larga e grossa, caindo nas laterais e na frente, com facetas
     # irregulares (folha: aba "mole" de chapéu de feiticeiro).
-    aba = torno("ChapeuAba", [(0.0, 0.0), (0.18, 0.004), (0.34, -0.036), (0.43, -0.07), (0.43, -0.09),
-                              (0.34, -0.06), (0.18, -0.022), (0.0, -0.02)], AZUL, lados=16, ruido=0.0, semente=11)
+    aba = torno("ChapeuAba", [(0.0, 0.0), (0.18, 0.004), (0.31, -0.032), (0.39, -0.062), (0.39, -0.082),
+                              (0.31, -0.056), (0.18, -0.022), (0.0, -0.02)], AZUL, lados=16, ruido=0.0, semente=11)
 
     def cair(c):
         r = math.hypot(c.x, c.y)
         a = math.atan2(c.y, c.x)
-        # cai mais nas laterais e um pouco na frente; atrás fica mais reta
-        queda = 0.06 * (r / 0.43) ** 2 * (0.7 + 0.4 * math.cos(2 * a) + 0.25 * math.sin(a))
+        # cai bem nas laterais; frente e costas quase retas, para os olhos
+        # continuarem aparecendo (crítico, 5ª rodada: aba grande e reta).
+        queda = 0.105 * (r / 0.39) ** 2.2 * (0.55 + 0.5 * math.cos(2 * a))
         return Vector((c.x, c.y, c.z - queda))
     deformar(aba, cair)
     aba.location = (0, 0, 0.705)
     p.append(aba)
     # Faixa bege fina perto da beirada de cima da aba (folha: acabamento bege
     # na borda). Mesma queda da aba, um pouco acima dela.
-    borda = torno("ChapeuAbaBorda", [(0.36, -0.03), (0.4, -0.055)], BEGE, lados=16, fechar=(False, False))
+    borda = torno("ChapeuAbaBorda", [(0.325, -0.028), (0.362, -0.05)], BEGE, lados=16, fechar=(False, False))
     m = borda.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.006
-    deformar(borda, lambda c: cair(c) + Vector((0, 0, 0.012)))
+    deformar(borda, lambda c: cair(c) + Vector((0, 0, 0.007)))
     borda.location = (0, 0, 0.705)
     p.append(borda)
     # Copa cônica facetada, com a ponta torta para o lado e para trás.
@@ -273,11 +274,13 @@ def cabeca():
 def corpo():
     p = []
     # Casaco em sino, longo até quase as botas e bem aberto embaixo (folha).
-    manto = torno("Manto", [(0.13, 0.46), (0.162, 0.4), (0.19, 0.3), (0.232, 0.2), (0.275, 0.11), (0.29, 0.075)],
+    # Barra na altura da canela (crítico, 5ª rodada: pernas e botas sumiam;
+    # na folha elas ocupam ~20% da altura).
+    manto = torno("Manto", [(0.13, 0.46), (0.162, 0.4), (0.19, 0.3), (0.228, 0.23), (0.262, 0.18), (0.276, 0.155)],
                   AZUL, lados=12, achatar=0.84, ruido=0.02, semente=7)
     p.append(manto)
     # Barra: faixa sólida e larga cor de areia (folha).
-    barra = torno("MantoBarra", [(0.293, 0.068), (0.283, 0.12)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
+    barra = torno("MantoBarra", [(0.279, 0.148), (0.268, 0.198)], BEGE, lados=12, achatar=0.85, fechar=(False, False))
     m = barra.modifiers.new("esp", "SOLIDIFY")
     m.thickness = 0.012
     p.append(barra)
@@ -287,18 +290,18 @@ def corpo():
         a = 2 * math.pi * (k + 0.5) / 7 + 0.25
         if abs(math.sin(a) + 1) < 0.15:
             continue
-        x, y = math.cos(a) * 0.285, math.sin(a) * 0.285 * 0.85
+        x, y = math.cos(a) * 0.271, math.sin(a) * 0.271 * 0.85
         n = Vector((math.cos(a), math.sin(a) * 0.85, 0.25)).normalized()
-        p.append(triangulo_na_superficie(f"MantoRecorte{k}", (x, y, 0.118), n, (0, 0, 1), 0.12, 0.05, BEGE, espessura=0.004))
+        p.append(triangulo_na_superficie(f"MantoRecorte{k}", (x, y, 0.196), n, (0, 0, 1), 0.11, 0.045, BEGE, espessura=0.004))
     # Frente: abre só da cintura para baixo (folha), com acabamento de areia.
     for s in (-1, 1):
-        p.append(tubo(f"FrenteAcab{s}", [(s * 0.01, -0.2, 0.26), (s * 0.05, -0.222, 0.17), (s * 0.1, -0.248, 0.08)],
+        p.append(tubo(f"FrenteAcab{s}", [(s * 0.01, -0.2, 0.26), (s * 0.04, -0.212, 0.21), (s * 0.075, -0.233, 0.158)],
                       0.022, BEGE, lados=4))
         # Gola em V de areia, do ombro até o broche.
         p.append(tubo(f"GolaV{s}", [(s * 0.1, -0.13, 0.46), (s * 0.05, -0.16, 0.41), (s * 0.005, -0.172, 0.37)],
                       0.017, BEGE, lados=4))
-    p.append(casco("FrenteFenda", [Vector(v) for v in ((-0.1, -0.245, 0.075), (0.1, -0.245, 0.075), (0, -0.2, 0.25),
-                                                       (0, -0.18, 0.075))], AZUL_ESC))
+    p.append(casco("FrenteFenda", [Vector(v) for v in ((-0.075, -0.232, 0.155), (0.075, -0.232, 0.155), (0, -0.2, 0.25),
+                                                       (0, -0.17, 0.155))], AZUL_ESC))
     # Capinha nos ombros com bicos e borda bege (folha: capelete pontudo).
     capa = torno("Capinha", [(0.118, 0.475), (0.168, 0.43), (0.2, 0.37), (0.205, 0.355)], AZUL_CLARO, lados=12,
                  achatar=0.86, fechar=(False, False))
@@ -332,16 +335,17 @@ def corpo():
     # Duas bolsas grandes na frente, com tampa e botão.
     for s in (-1, 1):
         cx = s * 0.13
-        p.append(caixa(f"Bolsa{s}", (cx, -0.178, 0.222), (0.1, 0.055, 0.098), COURO, chanfro=0.012))
+        p.append(caixa(f"Bolsa{s}", (cx, -0.176, 0.232), (0.1, 0.055, 0.082), COURO, chanfro=0.012))
         p.append(caixa(f"BolsaTampa{s}", (cx, -0.207, 0.252), (0.105, 0.016, 0.046), COURO_ESC, chanfro=0.004))
         p.append(caixa(f"BolsaBotao{s}", (cx, -0.217, 0.236), (0.02, 0.01, 0.024), DOURADO))
     # Bolsinha de lado, atrás (costas da folha).
     for s in (-1, 1):
         cx = s * 0.12
-        p.append(caixa(f"BolsaCostas{s}", (cx, 0.178, 0.222), (0.095, 0.05, 0.095), COURO, chanfro=0.01))
+        p.append(caixa(f"BolsaCostas{s}", (cx, 0.178, 0.232), (0.095, 0.05, 0.08), COURO, chanfro=0.01))
         p.append(caixa(f"BolsaCostasTampa{s}", (cx, 0.205, 0.25), (0.1, 0.014, 0.044), COURO_ESC, chanfro=0.004))
-    p.append(casco("BolsaCostasLosango", [Vector(v) for v in ((-0.12, 0.214, 0.25), (-0.1, 0.214, 0.225), (-0.12, 0.214, 0.2),
-                                                              (-0.14, 0.214, 0.225), (-0.12, 0.222, 0.225))], AZUL_CLARO))
+    # losango maior e cor de areia (crítico: o azul sumia de longe)
+    p.append(casco("BolsaCostasLosango", [Vector(v) for v in ((-0.12, 0.214, 0.262), (-0.088, 0.214, 0.23), (-0.12, 0.214, 0.198),
+                                                              (-0.152, 0.214, 0.23), (-0.12, 0.226, 0.23))], BEGE))
     # Capuz caído: uma peça só, achatada, em ponta sobre as costas (folha).
     p.append(casco("Capuz", [Vector(v) for v in (
         (-0.13, 0.08, 0.48), (0.13, 0.08, 0.48), (-0.15, 0.16, 0.45), (0.15, 0.16, 0.45),
@@ -350,13 +354,13 @@ def corpo():
     pernas = {}
     for s, nome in ((-1, "D"), (1, "E")):
         x = s * 0.068
-        perna = torno(f"Perna{nome}", [(0.04, 0.05), (0.046, 0.15)], CALCA, lados=8, centro=(x, 0, 0))
+        perna = torno(f"Perna{nome}", [(0.042, 0.05), (0.05, 0.21)], CALCA, lados=8, centro=(x, 0, 0))
         bota = casco(f"Bota{nome}", [Vector(v) for v in (
             (x - 0.056, -0.11, 0.0), (x + 0.056, -0.11, 0.0), (x - 0.056, 0.058, 0.0), (x + 0.056, 0.058, 0.0),
             (x - 0.05, -0.1, 0.05), (x + 0.05, -0.1, 0.05), (x - 0.055, 0.052, 0.09), (x + 0.055, 0.052, 0.09),
             (x - 0.05, -0.025, 0.09), (x + 0.05, -0.025, 0.09))], COURO)
         sola = caixa(f"BotaSola{nome}", (x, -0.026, 0.008), (0.116, 0.172, 0.016), COURO_ESC)
-        cano = torno(f"BotaCano{nome}", [(0.058, 0.075), (0.062, 0.105)], COURO_ESC, lados=8, centro=(x, 0, 0))
+        cano = torno(f"BotaCano{nome}", [(0.058, 0.085), (0.064, 0.125)], BEGE, lados=8, centro=(x, 0, 0))
         pernas[nome] = [perna, bota, sola, cano]
     return p, pernas
 
@@ -423,7 +427,8 @@ def braco(lado):
     """Manga larga em sino com punho bege e luva com dedos. lado: -1 esquerda, 1 direita."""
     s = lado
     ombro = Vector((s * 0.16, -0.01, 0.43))
-    punho = Vector((s * 0.335, -0.05, 0.335))
+    # ~47° abaixo da horizontal (crítico: braços em T; folha ~45°)
+    punho = Vector((s * 0.3, -0.05, 0.28))
     eixo = punho - ombro
     giro = Vector((0, 0, 1)).rotation_difference(eixo.normalized()).to_matrix().to_4x4()
     manga = torno(f"Manga{s}", [(0.055, 0.0), (0.072, eixo.length * 0.55), (0.092, eixo.length)], AZUL, lados=9,
@@ -447,10 +452,10 @@ def cajado():
     for i in range(10):
         t = i / 9
         pts.append((math.sin(t * 9) * 0.01 + random.uniform(-0.005, 0.005), math.cos(t * 7) * 0.008, -0.42 + t * 0.88))
-        raios.append(0.017 + 0.005 * math.sin(t * 13) + 0.003 * (1 - t))
+        raios.append(0.024 + 0.006 * math.sin(t * 13) + 0.004 * (1 - t))
     p = [tubo("CajadoHaste", pts, raios, MADEIRA, lados=6)]
     for k, z in enumerate((-0.2, 0.06, 0.34)):
-        p.append(torno(f"CajadoFaixa{k}", [(0.024, z), (0.024, z + 0.04)], BEGE, lados=6))
+        p.append(torno(f"CajadoFaixa{k}", [(0.033, z), (0.033, z + 0.045)], BEGE, lados=6))
     topo = Vector(pts[-1])
     for k in range(4):
         a = 2 * math.pi * k / 4 + 0.4
@@ -514,7 +519,7 @@ def montar():
     pulso_d = braco_d[4]
     bpy.context.view_layer.update()
     for o in p_cajado:
-        o.matrix_world = Matrix.Translation(pulso_d + Vector((-0.035, -0.045, -0.01))) @ Matrix.Rotation(math.radians(6), 4, "Y") @ o.matrix_world
+        o.matrix_world = Matrix.Translation(pulso_d + Vector((-0.035, -0.045, 0.1))) @ Matrix.Rotation(math.radians(6), 4, "Y") @ o.matrix_world
 
     bpy.ops.object.armature_add(location=(0, 0, 0))
     arm = nomear(bpy.context.active_object, "MagoEsqueleto")
@@ -633,11 +638,15 @@ POSES = {
     # mão esquerda esticada à frente, dedos bem abertos (folha "conjurando")
     "conjurando": junta(SEGURA_D, dedos("E", curva=-12, leque=22, polegar=-10),
                         {"dir_BracoE": (0.25, -1.0, 0.12), "dir_MaoE": (0.05, -0.7, 0.7), "dir_BracoD": (-0.45, -0.35, -0.6),
-                         "Tronco": (0, 0, -12), "Cabeca": (-5, 0, 8), "Chapeu": (0, 0, -4), "PernaE": (-15, 0, 0), "PernaD": (15, 0, 0)}),
+                         "Tronco": (-4, 0, -16), "Cabeca": (-5, 0, 10), "Chapeu": (0, 0, -6), "loc_Raiz": (0, 0, -0.032),
+                         # base larga: uma perna à frente e para fora, outra atrás (crítico: pés juntos)
+                         "dir_PernaE": (0.45, -0.55, -1.0), "dir_PernaD": (-0.4, 0.5, -1.0)}),
     # cajado lá no alto (folha "erguendo o cajado")
     "erguendo": junta(SEGURA_D, dedos("E", curva=35),
-                      {"dir_BracoD": (-0.35, -0.2, 1.0), "mundo_MaoD": True, "dir_BracoE": (0.7, -0.2, -0.45),
-                       "Tronco": (-6, 0, -0), "Cabeca": (-8, 0, -0), "Chapeu": (-6, 0, -0), "PernaE": (0, 0, -8), "PernaD": (0, 0, 8)}),
+                      {"dir_BracoD": (-0.12, -0.08, 1.0), "mundo_MaoD": True, "dir_BracoE": (0.8, -0.2, -0.3),
+                       "Tronco": (-10, 0, 0), "Cabeca": (-10, 0, 0), "Chapeu": (-8, 0, 0), "loc_Raiz": (0, 0, -0.018),
+                       # pés bem abertos e o cristal acima do chapéu (crítico, 5ª rodada)
+                       "dir_PernaE": (0.5, -0.1, -1.0), "dir_PernaD": (-0.5, -0.1, -1.0)}),
     "andando": junta(SEGURA_D, dedos("E", curva=25),
                      {"PernaE": (-40, 0, 0), "PernaD": (35, 0, 0), "dir_BracoE": (0.45, 0.45, -0.75), "dir_BracoD": (-0.5, -0.5, -0.7),
                       "Tronco": (10, 0, 6), "Cabeca": (-6, 0, -4), "Chapeu": (-8, 0, 4), "loc_Raiz": (0, 0, 0.02)}),
