@@ -1,0 +1,50 @@
+COMO USAR: abra o Claude no app do computador (com acesso a esta pasta: no
+Claude Code, abra o terminal nesta pasta e rode "claude"; no app Claude,
+conecte esta pasta). Copie tudo abaixo da linha e cole como primeira
+mensagem.
+--------------------------------------------------------------------------
+
+Oi, Claude. Meu nome é Matheus. Vou testar uma versão do Arcane Forge, um
+jogo que meu amigo Vitor está fazendo, e preciso que você me ajude a
+rodar os testes e montar um relatório para ele. Os arquivos estão nesta
+pasta.
+
+Regras:
+- Use só os arquivos desta pasta. Não instale nada, não baixe nada e não
+  mude configurações do Windows.
+- Antes de rodar cada arquivo .bat, leia o conteúdo dele e me diga em uma
+  frase o que ele faz.
+- O jogo (ArcaneForge.exe) e a medição de FPS abrem uma janela e precisam
+  de mim na frente do PC. Me avise antes de rodar e espere eu dizer "pode".
+- Fale comigo em português do Brasil, curto e direto.
+
+Passos:
+1. Confira se ArcaneForge.exe, ArcaneForge.pck, Medir_FPS.bat,
+   Coletar_info_PC.bat, coletar_info_pc.ps1 e LEIA-ME_Matheus.txt estão na pasta. Se faltar
+   algo, pare e me diga.
+2. Rode Coletar_info_PC.bat (ele chama coletar_info_pc.ps1, que só lê
+   informações do PC) e me mostre o resumo: placa de vídeo, processador e RAM.
+   Compare com o mínimo do jogo (placa RTX 2060 6 GB, processador Ryzen 5
+   3600 ou Intel i5-9400F, 16 GB de RAM) e diga se meu PC está acima,
+   igual ou abaixo, item por item.
+3. Peça para eu fechar jogos e programas pesados. Quando eu disser "pode",
+   rode Medir_FPS.bat (uns 70 segundos; eu não posso mexer no mouse).
+   Depois leia resultado_fps.txt e me explique em linguagem simples: a
+   meta é média de 60 FPS ou mais e "1% pior" de 45 ou mais na parte de
+   combate.
+4. Me passe o roteiro de jogo da parte 4 do LEIA-ME_Matheus.txt e espere eu
+   jogar. Quando eu voltar, me faça as 7 perguntas da parte 5, uma de cada
+   vez, e anote as respostas com as minhas palavras (sem enfeitar).
+5. Se eu disser que algo deu errado, leia o arquivo
+   %APPDATA%\Godot\app_userdata\Arcane Forge\logs\godot.log e copie para
+   o relatório as linhas com ERROR ou WARNING (no máximo umas 40).
+6. Monte o arquivo RELATORIO_PARA_O_VITOR.md nesta pasta com:
+   - data e hora do teste;
+   - o PC (conteúdo de info_pc.txt) e a comparação com o mínimo;
+   - o resultado de FPS completo (conteúdo de resultado_fps.txt);
+   - as minhas respostas, pergunta por pergunta;
+   - erros do log, se houver;
+   - qualquer coisa que você percebeu e que eu não falei, separada como
+     "observações do Claude".
+   Me mostre o relatório pronto e me diga quais arquivos mandar para o
+   Vitor (o relatório e os prints, se eu tiver tirado).

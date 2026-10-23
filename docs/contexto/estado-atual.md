@@ -20,6 +20,7 @@ Atualizado em: 23/10/2026 (mago 6ª rodada, runas pelo vetor)
 - Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
 
 ## Próximo passo
+- Matheus testa com `build/ArcaneForge_teste_Matheus.zip` (gerar de novo com `ferramentas/gerar_pacote_teste.sh`) e manda o RELATORIO_PARA_O_VITOR.md.
 - Vitor olha o mago aprovado (ramo `mago-criticas`) e decide se junta ao `main`.
 - Runas: montar as 8 quando os símbolos chegarem, trocar no jogo e acertar o brilho da pedra pelo print.
 0. Runas: o Vitor decide se a pedra acesa fica tingida (como a folha) ou cinza com cor só em volta do símbolo (pedido do crítico), e se segue mais uma rodada (abas maiores, chanfro) ou passa para o próximo modelo (galinha zumbi ou bigorna).

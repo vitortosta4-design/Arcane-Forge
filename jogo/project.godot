@@ -24,6 +24,7 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 
 Host="*res://scripts/rede/host.gd"
 GerenciadorSom="*res://scripts/som/gerenciador_som.gd"
+MedidorFps="*res://scripts/ferramentas/medidor_fps.gd"
 
 [input]
 

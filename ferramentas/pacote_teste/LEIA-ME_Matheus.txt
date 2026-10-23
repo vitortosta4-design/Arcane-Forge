@@ -1,0 +1,94 @@
+ARCANE FORGE · VERSÃO DE TESTE (23/10/2026)
+============================================
+
+Fala, Matheus! Este é o jogo que o Vitor está fazendo. Ainda é uma versão de
+teste: dá para jogar sozinho. O modo cooperativo (nós dois juntos) vem
+depois, e o seu PC vai ser o que hospeda a partida. Por isso os números do
+seu PC importam muito.
+
+Tempo total: uns 30 minutos.
+
+
+1. ANTES DE TUDO (2 minutos)
+----------------------------
+- Descompacte o .zip numa pasta qualquer (ex.: Área de Trabalho). Não rode
+  de dentro do .zip.
+- O Windows pode avisar "O Windows protegeu o computador". É porque o jogo
+  não tem assinatura digital (coisa paga). Clique em "Mais informações" e
+  depois em "Executar assim mesmo".
+- Os dois arquivos ArcaneForge.exe e ArcaneForge.pck precisam ficar juntos
+  na mesma pasta.
+
+
+2. INFORMAÇÕES DO PC (1 minuto)
+-------------------------------
+Dê dois cliques em Coletar_info_PC.bat. Ele só lê o nome da placa de
+vídeo, do processador, a memória e a versão do Windows, e salva em
+info_pc.txt nesta pasta.
+
+
+3. MEDIR O FPS (2 minutos, antes de jogar)
+------------------------------------------
+Feche jogos e programas pesados. Dê dois cliques em Medir_FPS.bat. O jogo
+abre sozinho, gira a câmera e solta bolas de fogo por uns 70 segundos, e
+fecha. NÃO mexa no mouse nem troque de janela enquanto roda. No fim, o
+resultado aparece e fica salvo em resultado_fps.txt.
+
+
+4. JOGAR (uns 15 minutos)
+-------------------------
+Dê dois cliques em ArcaneForge.exe.
+
+Controles:
+  W A S D / Espaço ... andar / pular
+  Mouse .............. olhar e mirar
+  1, 2, 3, 4 ......... usar o medalhão (a magia) daquele espaço
+  Clique esquerdo .... repetir o último medalhão usado
+  E .................. usar a bigorna (perto dela) e fechar a tela dela
+  C .................. primeira / terceira pessoa
+  F3 ................. mostra o FPS na tela
+  Esc ................ pausa (continuar, reiniciar, sair)
+
+Na tela da bigorna: clique nas runas para colocar (até 3: uma de forma e
+até duas de elemento) e aperte Espaço para martelar.
+
+O desafio:
+  1. Você começa com 2 medalhões (espaços 1 e 2) e 2 espaços vazios.
+  2. Ache 3 runas na clareira. Elas flutuam com a luz da cor delas. Encoste
+     para pegar.
+  3. Ache a caverna. A boca fica numa encosta, à direita de onde você nasce.
+     Entre nela.
+  4. Forje 2 medalhões diferentes na bigorna. Dicas para começar: fogo
+     sozinho, vida + fogo, arremesso + água. Combinação sem receita também
+     faz alguma coisa. Descobrir faz parte.
+  5. Saia e use as magias na galinha zumbi.
+  6. Feche o jogo, abra de novo e veja se as receitas que você descobriu
+     continuam no grimório (na tela da bigorna).
+
+
+5. O QUE O VITOR PRECISA SABER (responda do jeito que sair)
+-----------------------------------------------------------
+  1. Forjar é divertido? O que deu vontade de fazer de novo e o que foi chato?
+  2. Alguma magia forte ou fraca demais? A mana acabou rápido ou sobrou?
+     A recarga dos medalhões incomodou?
+  3. Achar as runas e a caverna foi fácil, difícil ou confuso?
+  4. Dá para ler a tela no meio da ação (vida, mana, runas, qual medalhão
+     está recarregando)?
+  5. Algo travou, atravessou parede, sumiu ou ficou estranho? Se sim, print.
+  6. O jogo ficou liso ou engasgando? (F3 mostra o FPS na tela.)
+  7. Uma nota de 0 a 10 e uma frase, do jeito que você escreveria uma
+     avaliação na Steam.
+
+
+6. O QUE MANDAR PARA O VITOR
+----------------------------
+  - info_pc.txt
+  - resultado_fps.txt
+  - suas respostas da parte 5 (texto ou áudio, tanto faz)
+  - prints, se tiver
+  - o registro do jogo, se algo deu errado:
+    %APPDATA%\Godot\app_userdata\Arcane Forge\logs\godot.log
+    (cole esse caminho na barra de endereço do Explorador de Arquivos)
+
+Se você usa o Claude no seu PC, tem um arquivo PROMPT_PARA_O_CLAUDE.txt
+nesta pasta: ele faz as partes 2, 3 e 6 por você e monta o relatório.
