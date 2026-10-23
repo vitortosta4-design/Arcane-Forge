@@ -17,7 +17,7 @@ O que mudou em relacao a runas.py:
   elemento, pedra tingida e borda com leve brilho.
 - Simbolos redesenhados no traco da referencia e centralizados pela massa da peca.
 
-Uso: python runas2.py -- SAIDA folha|comparar|exportar
+Uso: python runas.py -- SAIDA folha|comparar|exportar
 """
 import math
 import os
@@ -64,29 +64,48 @@ Z_DEGRAUS = (-0.5, -0.24, 0.2, 0.45)
 
 
 def silhueta(seed):
-    """Contorno (x, z) anti-horario no jeito da folha do Vitor: bloco quase
-    quadrado de quinas cortadas, com um calombo de quebra-cabeca em cada lado
-    (esquerda mais baixo, direita mais alto, um em cima e um embaixo). Na
-    combinacao as pecas se sobrepoem um pouco, como na folha."""
+    """Contorno (x, z) anti-horario de quebra-cabeca de verdade, como na
+    folha: dente quadrado na direita e reentrancia do mesmo tamanho na
+    esquerda, na mesma altura em todas as runas, para o dente de uma entrar na
+    outra quando ficam a PASSO de distancia. Topo e base com dentes retos de
+    tamanho e posicao diferentes em cada runa, e quinas cortadas variadas."""
     r = random.Random(seed)
     j = lambda a: r.uniform(-a, a)  # noqa: E731
-    pts = [
-        # base, com calombo para baixo
-        (-0.3 + j(0.03), -0.56 + j(0.02)), (-0.14 + j(0.02), -0.58), (-0.15, -0.7 + j(0.02)), (-0.02 + j(0.02), -0.74 + j(0.02)),
-        (0.13, -0.69 + j(0.02)), (0.12, -0.58), (0.32 + j(0.03), -0.56 + j(0.02)),
-        # direita, com calombo mais alto
-        (0.44 + j(0.02), -0.44), (0.45, -0.06), (0.6 + j(0.02), -0.04), (0.64, 0.08 + j(0.02)), (0.6 + j(0.02), 0.24),
-        (0.45, 0.25), (0.44 + j(0.02), 0.45),
-        # topo, com calombo para cima (quebrado e torto)
-        (0.3 + j(0.03), 0.56 + j(0.02)), (0.14, 0.57), (0.12 + j(0.02), 0.7 + j(0.02)), (-0.02 + j(0.02), 0.76 + j(0.02)),
-        (-0.15, 0.68 + j(0.02)), (-0.15, 0.57), (-0.32 + j(0.03), 0.55 + j(0.02)),
-        # esquerda, com calombo mais baixo
-        (-0.45 + j(0.02), 0.42), (-0.45, 0.06), (-0.6 + j(0.02), 0.04), (-0.64, -0.1 + j(0.02)), (-0.6 + j(0.02), -0.26),
-        (-0.45, -0.27), (-0.44 + j(0.02), -0.44),
-    ]
-    # Mais alta que larga e com a borda irregular, como a pedra lascada da
-    # folha: estica, afina e mexe cada ponto um pouco.
-    return [(x * 0.95 + j(0.012), z * 1.06 + j(0.012)) for x, z in pts]
+    dir_x, esq_x = 0.45, 0.45 - PASSO      # largura da peca = PASSO
+    dente = 0.16                           # quanto o dente sai (e a reentrancia entra)
+    za, zb = -0.17, 0.13                   # altura do dente (fixa: e o encaixe)
+    base_z, topo_z = -0.6 + j(0.03), 0.58 + j(0.03)
+
+    def dentes_horizontais(z, sinal, x_de, x_ate):
+        """Um ou dois dentes retos saindo do topo (sinal 1) ou da base (-1),
+        andando de x_de para x_ate. Cada dente fica na sua faixa, sem
+        sobrepor (contorno que se cruza faz o chanfro explodir)."""
+        pts = []
+        n = r.choice((1, 1, 2))
+        passo = (x_ate - x_de) / n
+        for k in range(n):
+            ini = x_de + passo * k
+            larg = abs(passo) * r.uniform(0.35, 0.6)
+            folga = abs(passo) - larg
+            x0 = ini + math.copysign(folga * r.uniform(0.2, 0.8), passo)
+            x1 = x0 + math.copysign(larg, passo)
+            h = r.uniform(0.07, 0.15) * sinal
+            pts += [(x0, z), (x0, z + h), (x1, z + h + j(0.015)), (x1, z)]
+        return pts
+
+    q1, q2, q3, q4 = (r.uniform(0.06, 0.13) for _ in range(4))   # quinas cortadas
+    pts = [(esq_x + q1, base_z)]
+    pts += dentes_horizontais(base_z, -1, esq_x + q1 + 0.05, dir_x - q2 - 0.05)
+    pts += [(dir_x - q2, base_z), (dir_x, base_z + q2)]
+    # direita: dente quadrado para fora
+    pts += [(dir_x, za), (dir_x + dente, za), (dir_x + dente, zb), (dir_x, zb)]
+    pts += [(dir_x, topo_z - q3), (dir_x - q3, topo_z)]
+    pts += dentes_horizontais(topo_z, 1, dir_x - q3 - 0.05, esq_x + q4 + 0.05)
+    pts += [(esq_x + q4, topo_z), (esq_x, topo_z - q4)]
+    # esquerda: reentrancia quadrada para dentro (o dente da vizinha entra aqui)
+    pts += [(esq_x, zb), (esq_x + dente, zb), (esq_x + dente, za), (esq_x, za)]
+    pts += [(esq_x, base_z + q1)]
+    return pts
 
 
 def centroide(pts):
@@ -441,16 +460,25 @@ def booleana(alvo, cortadores, autointersecao=True):
 
 
 # ---------------------------------------------------------------- materiais
+# Pedra acesa: escura e saturada (tijolo, cobalto, musgo...), com o brilho
+# so no simbolo (critica da v4: tons pastel pareciam "biscoito").
+PEDRA_ACESA = {"fogo": "#7a3322", "agua": "#24418c", "vida": "#335a30", "feroz": "#7a2622",
+               "gravitacao": "#4a2d86", "prende": "#7f5420", "arremesso": "#264c92", "quebrar": "#5a2c86"}
+
+
 def mats_runa(nome, acesa):
     brilho, miolo, tom = ELEMENTOS[nome]
-    tom = misturar(tom, "#565265", 0.12)
+    tom = PEDRA_ACESA[nome]
     sfx = "acesa" if acesa else "apagada"
     if acesa:
         return {
             "frente": [base.material(f"R_{nome}_{sfx}_frente{i}", c, rugosidade=0.85) for i, c in
-                       enumerate(misturas(tom, ("#ffffff", "#000000", "#ffffff"), (0.08, 0.12, 0.0)))],
-            "borda": base.material(f"R_{nome}_{sfx}_borda", misturar(tom, "#ffffff", 0.28), rugosidade=0.6,
-                                   emissao=brilho, forca=0.12),
+                       enumerate(misturas(tom, ("#000000", "#000000", "#000000"), (0.38, 0.46, 0.32)))],
+            # Escura no arquivo de propósito: o sol do jogo clareia cerca de 1,7x
+            # (medido no print: #7a3322 virava #dc724d, salmão). Assim a pedra
+            # chega no jogo perto do tom escuro e saturado da folha.
+            "borda": base.material(f"R_{nome}_{sfx}_borda", misturar(tom, "#000000", 0.18), rugosidade=0.6,
+                                   emissao=brilho, forca=0.08),
             "lado": base.material(f"R_{nome}_{sfx}_lado", misturar(tom, "#000000", 0.45), rugosidade=0.9,
                                   emissao=brilho, forca=0.06),
             "fundo": base.material(f"R_{nome}_{sfx}_fundo", "#000000", rugosidade=1.0, emissao=brilho, forca=2.4),

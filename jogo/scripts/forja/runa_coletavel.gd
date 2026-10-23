@@ -58,7 +58,9 @@ func _ready() -> void:
 
 	var luz := OmniLight3D.new()
 	luz.light_color = CORES.get(nome, Color.WHITE)
-	luz.light_energy = 1.0
+	# Fraca: forte, ela clareava a pedra acesa para salmão (a folha pede pedra
+	# escura e saturada, com o brilho só no símbolo).
+	luz.light_energy = 0.45
 	luz.omni_range = 3.5
 	# Na frente do símbolo, para iluminar a face entalhada, não as costas.
 	luz.position = Vector3(0, 0.2, 0.35)
