@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 23/10/2026 (ADR-039, estilo do HUD)
+Última atualização: 23/10/2026 (ADR-007 revisada)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -76,11 +76,12 @@ Este arquivo guarda só decisões. O histórico do que foi implementado está em
 - Qualquer gasto exige aprovação do Vitor.
 
 ## ADR-007 · Direção visual
-**Status:** Aprovada (20/10/2026)
+**Status:** Aprovada (20/10/2026). **Revisada em 23/10/2026 a pedido do Vitor.**
 
-- Low poly "feiozinho de propósito", engraçado ("aquilo é um pombo? kkkk").
+- **Low poly bonitinho:** meio termo entre o "feiozinho de propósito" original e o "refinado". Formas simples e poucos polígonos, mas bem acabadas, proporcionais e simpáticas: galinha tem cara de galinha, o mago é fofo e não tosco.
+- ~~Low poly "feiozinho de propósito", engraçado ("aquilo é um pombo? kkkk").~~ Substituído pela linha acima em 23/10/2026. O humor continua vindo das situações, das criaturas absurdas (ADR-019) e da animação, não de modelo malfeito.
 - Cores vibrantes, na linha de Fortnite: Salve o Mundo (2018).
-- Criaturas montadas proceduralmente a partir de formas simples e peças modulares. O visual tosco faz parte da identidade.
+- Criaturas montadas a partir de formas simples e peças modulares.
 
 ### Referência visual: `docs/referencias/arte-conceito-01.png` (adicionada em 20/10/2026)
 Arte conceitual gerada por IA a pedido do Vitor.
@@ -245,11 +246,11 @@ Arte conceitual gerada por IA a pedido do Vitor.
 
 - **Problema:** depois de ver os primeiros prints do canto de atmosfera (ADR-030) comparados com a referência visual, o Vitor achou o resultado limitado demais pela GTX 1050 2GB e quer o jogo mais "cheio" — o suficiente para chegar perto da referência.
 - **Escolha:** o novo PC de referência (piso mínimo) passa a ser: **CPU Ryzen 5 3600 ou Intel i5-9400F (6 núcleos), GPU RTX 2060 6GB, 16GB de RAM.** O PC antigo do Vitor (Pentium G5400, GTX 1050 2GB) deixa de ser o piso oficial, mas continua sendo testado informalmente como "PC fraco" de referência, já que ainda é o hardware que o Vitor tem em mãos para jogar e testar.
-- **O que isso libera (pedido do Vitor: só iluminação/efeitos/densidade de cena, mantendo o visual tosco/low poly do ADR-007 e o tom absurdo do ADR-019 — ele não quer modelos mais detalhados, só o jogo "parecendo mais" com a referência em luz, cor e atmosfera):**
+- **O que isso libera (pedido do Vitor: só iluminação/efeitos/densidade de cena, mantendo o low poly do ADR-007 e o tom absurdo do ADR-019 — ele não quer modelos mais detalhados, só o jogo "parecendo mais" com a referência em luz, cor e atmosfera):**
   - Névoa volumétrica, iluminação global em tempo real (SDFGI do Godot) e mais luzes com sombra simultâneas (ADR-025, revisado).
   - Brilho (glow) mais forte nas magias e fontes de luz.
   - Cenas mais densas: mais inimigos, projéteis e efeitos ao mesmo tempo (os limites da seção 5 da proposta técnica podem subir, mas isso é ajuste de game design, não decidido aqui — fica para quando o Vitor pedir especificamente).
-- **O que continua igual:** ADR-007 (low poly "feiozinho de propósito") e ADR-019 (inimigos absurdos) não mudam. Mais luz e efeito, não mais polígono.
+- **O que continua igual:** ADR-007 (low poly, hoje "bonitinho", revisado em 23/10/2026) e ADR-019 (inimigos absurdos) não mudam. Mais luz e efeito, não mais polígono.
 - **Risco aceito:** o jogo pode ficar pesado demais para o Pentium G5400/GTX 1050 que o Vitor tem agora. Ele sabe disso e decidiu aceitar, priorizando o resultado visual. Se algum dia o jogo for compartilhado com alguém que só tem hardware mais fraco, um "modo Baixo" de verdade (ADR-025) precisa ser testado nessa máquina antes.
 - **Consequências práticas:** `docs/proposta-tecnica.md` (seção 8) e a nota "Requisito mínimo de hardware" neste arquivo foram atualizadas. SDFGI e névoa volumétrica ainda não foram ligados no código nesta sessão — são mudanças de Environment inteiras, melhor testadas com FPS real no PC do Vitor (uma sessão na nuvem sem GPU não mede isso direito). O que já foi feito nesta sessão: brilho (glow) e sombra mais visíveis no canto de atmosfera, dentro do que dava para confirmar com o render por software (ver `docs/contexto/diario.md`).
 - **Fácil de mudar?** Sim, é um número de referência; pode subir ou descer de novo facilmente.

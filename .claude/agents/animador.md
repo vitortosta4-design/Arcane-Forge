@@ -68,7 +68,7 @@ Notas de 0 a 5 em seis eixos, separados: **arte**, **legibilidade**, **resposta*
 ## Regras
 - Nunca confunda ausência de erro técnico com qualidade artística. Nunca invente gravação, medida ou observação.
 - Preserve o que já foi validado; não troque resposta por enfeite; não pague desempenho sem ganho que se veja.
-- Hardware mínimo RTX 2060 (ADR-031); low poly de propósito (ADR-007) e mago tosco (ADR-019): a graça vem do movimento, não de polígono.
+- Hardware mínimo RTX 2060 (ADR-031); low poly bonitinho (ADR-007) e inimigos absurdos (ADR-019): a graça vem do movimento, não de polígono.
 - A animação lê o estado do jogo e nunca muda regra (dano, mana, colisão ficam no Host).
 - Sem complexidade antecipada; sem erro calado (`push_warning` quando faltar animação ou nó).
 - Quando a intenção artística não der para decidir, pergunte (o Vitor opina bem em visual).

@@ -42,7 +42,7 @@ A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvime
 - Sempre que houver dúvida se o visual está no caminho, abra essa imagem, compare com um print do jogo e pergunte: **o que falta para chegar lá?**
 - Responda levando em conta as limitações já aprovadas (ADR-007, ADR-025 revisado e ADR-031): poucos polígonos, hardware mínimo RTX 2060 6 GB (névoa volumétrica, iluminação global em tempo real e mais luzes com sombra agora são permitidas, medindo FPS).
 - Toda entrega visual inclui, no relatório ao Vitor, essa comparação: o que já se parece com a referência, o que ainda falta e o que não dá para alcançar no hardware mínimo.
-- A densidade de detalhe e de polígonos da imagem não é objetivo. O tom absurdo dos inimigos e o mago tosco de propósito (ADR-007, ADR-019) continuam valendo.
+- A densidade de detalhe e de polígonos da imagem não é objetivo. O estilo é "low poly bonitinho" (ADR-007, revisada em 23/10/2026): poucos polígonos, mas bem acabado e simpático, nunca tosco. O tom absurdo dos inimigos (ADR-019) continua valendo.
 
 ## Pedir aprovação do Vitor antes de
 - Mudar uma decisão aprovada em `docs/decisoes.md`.
