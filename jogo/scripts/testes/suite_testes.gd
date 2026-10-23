@@ -109,6 +109,7 @@ func _ready() -> void:
 	await _testar_hud_no_layout_da_adr_039()
 	await _testar_ciclo_da_forja_do_comeco_ao_fim()
 	await _testar_mago_modelado_pela_folha()
+	await _testar_runa_sem_luz_estourada()
 	await _testar_bigorna_comeca_neutra_com_um_rosto_so()
 	await _testar_bigorna_troca_de_expressao_com_animacao()
 	await _testar_bigorna_raiva_brilha_mais_e_luz_respira()
@@ -2189,4 +2190,21 @@ func _testar_mago_modelado_pela_folha() -> void:
 		maos.conjurar()
 		_afirmar("mãos 1P: conjurar toca Conjurar1P", anim1p.current_animation == "Conjurar1P")
 	mago.queue_free()
+	await get_tree().process_frame
+
+
+## A luz embutida no .glb das runas vem do Blender com força 16 e alcance de
+## 4 km e deixava a runa branca no jogo (achado em 23/10/2026).
+func _testar_runa_sem_luz_estourada() -> void:
+	var runa := RunaColetavel.new()
+	runa.nome = "fogo"
+	add_child(runa)
+	await get_tree().process_frame
+	var luzes := runa.find_children("*", "OmniLight3D", true, false)
+	var ok := not luzes.is_empty()
+	for l in luzes:
+		if (l as OmniLight3D).light_energy > 1.5 or (l as OmniLight3D).omni_range > 5.0:
+			ok = false
+	_afirmar("runa: nenhuma luz estourada (força até 1,5 e alcance até 5 m)", ok)
+	runa.queue_free()
 	await get_tree().process_frame

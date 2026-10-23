@@ -2,10 +2,10 @@ class_name RunaColetavel
 extends Area3D
 ## Runa largada no mapa (ADR-035): flutua, gira, brilha na cor dela e vai
 ## para a mochila de quem encostar. Visual: a runa acesa do lote 3c
-## (assets/modelos/runas/runas_v3_acesas.glb), aumentada para dar para ver
+## (assets/modelos/runas/runas_v4_acesas.glb), aumentada para dar para ver
 ## de longe; a luz pontual sem sombra é o "farol" que chama o jogador.
 
-const MODELO := preload("res://assets/modelos/runas/runas_v3_acesas.glb")
+const MODELO := preload("res://assets/modelos/runas/runas_v4_acesas.glb")
 const CORES := {
 	"fogo": Color("ff7a1a"), "agua": Color("3aa0ff"), "feroz": Color("d8343c"),
 	"vida": Color("5fd36a"), "prende": Color("b7a6ff"), "arremesso": Color("ffd23a"),
@@ -45,6 +45,12 @@ func _ready() -> void:
 		_visual.add_child(no)
 		_visual.scale = Vector3.ONE * ESCALA
 		_garantir_cor_do_brilho(no)
+		# A luz que vem dentro do .glb chega com força 16 e alcance de 4 km (o
+		# Blender exporta em watts) e estourava a runa para branco. A luz da
+		# runa é a OmniLight criada abaixo; a do modelo fica só como um toque.
+		for luz_modelo in no.find_children("*", "OmniLight3D", true, false):
+			(luz_modelo as OmniLight3D).light_energy = 0.3
+			(luz_modelo as OmniLight3D).omni_range = 0.6
 		add_child(_visual)
 	else:
 		push_warning("RunaColetavel: o modelo não tem o nó 'Runa_%s_acesa'; a runa fica invisível (só a coleta funciona)." % nome)

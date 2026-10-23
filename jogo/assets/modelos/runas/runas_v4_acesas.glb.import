@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://doph8afvyvp47"
-path="res://.godot/imported/runas_v3_acesas.glb-650b27a4a2d39fd6af14ff7bd099e96b.scn"
+uid="uid://csrpcwgb4huf6"
+path="res://.godot/imported/runas_v4_acesas.glb-9070a7a927693b6f254b46110694e93d.scn"
 
 [deps]
 
-source_file="res://assets/modelos/runas/runas_v3_acesas.glb"
-dest_files=["res://.godot/imported/runas_v3_acesas.glb-650b27a4a2d39fd6af14ff7bd099e96b.scn"]
+source_file="res://assets/modelos/runas/runas_v4_acesas.glb"
+dest_files=["res://.godot/imported/runas_v4_acesas.glb-9070a7a927693b6f254b46110694e93d.scn"]
 
 [params]
 
