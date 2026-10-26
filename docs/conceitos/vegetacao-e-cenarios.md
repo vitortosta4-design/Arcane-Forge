@@ -14,7 +14,7 @@
 | Oito territórios com nomes (Véu de Eldora, Muspelheim, Jotunheim, Terras Ocas, Substrato de Cristal, Mar de Âmbar, Jardins do Zênite, Brejo dos Ecos) | Não existe lista de territórios aprovada. O mapa é montado por módulos feitos à mão (clareira, ruína, ponte, caverna, pântano), sorteados a cada expedição (ADR-018). Até a Fase 4 o mapa é fixo: clareira, caverna da forja e uma área nova. Os nomes foram retirados: Muspelheim e Jotunheim vêm da mitologia nórdica e já são muito usados em outros jogos. |
 | Acabamento "low poly refinado" | "Low poly bonitinho": meio termo entre tosco e refinado, formas simples, bem acabadas e simpáticas (ADR-007). |
 | Verdes naturais e contidos (oliva, musgo), saturação só em destaques | Paleta saturada e vibrante, na linha de Fortnite: Salve o Mundo e da arte conceito (`docs/referencias/arte-conceito-01.png`): luz dourada, sombras azuladas, verdes vivos. A auditoria visual mediu que o problema do cenário era claridade demais, não saturação demais. A raridade mágica se controla com brilho, partículas e forma, não tirando cor do cenário. |
-| Imagem enviada no ChatGPT "aprovada como referência do bioma inicial" | Ainda não é referência. Precisa ser conferida com a arte conceito e salva em `docs/referencias/` com nome padronizado. |
+| Imagem enviada no ChatGPT "aprovada como referência do bioma inicial" | Referência aprovada em 26/10/2026: `docs/referencias/vegetacao-clareira-01.png`, com os limites listados na seção 9. |
 | Próximas etapas e ordem de produção | Prioridade é decidida pelo Claude como gestor, dentro do plano de fases (ADR-035). |
 
 ---
@@ -103,6 +103,6 @@ Algo em torno de 15 a 20 peças reutilizáveis, sem ser meta: pinheiros, folhas 
 
 ## 9. Pendências
 
-- Conferir a imagem de vegetação gerada no ChatGPT contra a arte conceito e decidir se vira referência oficial.
+- Referência aprovada em 26/10/2026: docs/referencias/vegetacao-clareira-01.png (segunda rodada no ChatGPT, revisada pelo Claude). Vale para cor, luz, nível de detalhe low poly (copas facetadas, grama em tufos, pedras e cogumelos) e catálogo de peças. Não vale para a silhueta dos pinheiros (saíram cones quase iguais; resolver na folha de pinheiros da Fase 5), nem para a árvore retorcida da ruína (não apareceu), nem para os quadrados repetidos no chão de terra (artefato da geração).
 - Folha de referência dos pinheiros, quando a Fase 5 chegar.
 - Decidir quais regiões futuras existem, se alguma, e seus nomes.

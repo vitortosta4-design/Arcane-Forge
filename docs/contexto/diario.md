@@ -187,3 +187,4 @@ Depois de subir o piso para RTX 2060 (ADR-031), ajustei `arena_teste.tscn` (Envi
 
 ## 25/10/2026 · Conceito de vegetação e cenários
 - Novo `docs/conceitos/vegetacao-e-cenarios.md`: brainstorming do Vitor com o ChatGPT, revisado pelo Claude contra as decisões. Corrigidos: "oito territórios" com nomes (não aprovados), "low poly refinado" (vale o bonitinho, ADR-007), verdes apagados (vale a paleta saturada da arte conceito), imagem tratada como referência aprovada (pendente de conferência) e cronograma próprio (prioridade segue a ADR-035). Status: conceito com grande chance de virar realidade, para a Fase 5.
+- **Referência de vegetação aprovada (26/10/2026):** `docs/referencias/vegetacao-clareira-01.png` (2ª rodada no ChatGPT, revisada pelo Claude); limites do que vale em `docs/conceitos/vegetacao-e-cenarios.md`, seção 9.
