@@ -190,7 +190,7 @@ Objetivo: chegar o quanto antes ao ciclo jogável (explorar, achar runas, chegar
 **Fase 2 · Ciclo da forja, jogando sozinho** (grande, é o coração do jogo)
 - Livro de receitas em arquivo de dados legível. Uma runa de elemento sozinha vira projétil; forma + elemento sem receita dá a versão básica e engraçada; receitas especiais têm modelo próprio.
 - Primeira leva: 6 runas (formas: arremesso, vida, prende; elementos: fogo, água, feroz) e cerca de 8 receitas especiais, aproveitando o piloto (molotov, corrente, galinha) e os componentes existentes. Exemplos: fogo = bola de fogo rápida; vida + fogo = golem de fogo lento; vida + feroz = leão; arremesso + fogo = molotov arcano; prende + fogo = correntes em brasa saindo do chão.
-- Até 3 runas por forja: uma forma e até dois elementos.
+- Até 3 runas por forja: uma forma e até dois elementos. **Revisto pela ADR-046:** a expedição começa com 2 runas; a 3ª libera com 10 partidas.
 - Runas em pontos fixos da clareira, contador no HUD.
 - Caverna provisória ligada à clareira, com a bigorna viva aprovada.
 - Interface da bigorna: escolher runas, martelar, a bigorna reage (treme, faísca) e sai um medalhão provisório (disco na cor do elemento, com o símbolo).
@@ -209,9 +209,13 @@ Objetivo: chegar o quanto antes ao ciclo jogável (explorar, achar runas, chegar
 
 **Marco · Primeiro teste com o amigo:** sessão de 20 minutos, roteiro curto e 5 perguntas. Fecha os critérios pendentes da Fase 1. O resultado decide se a forja é ajustada antes de seguir.
 
-**Fase 4 · Expedição mínima** (médio)
+**Fase 4 · Expedição mínima** (médio, desenho na ADR-046)
 - Começo, meio e fim: chefe simples, 3 estátuas de reviver, carregar o corpo, derrota (ADR-014, ADR-015).
-- Baús com runas (e um mímico), 2 ou 3 inimigos absurdos novos.
+- Ciclo de dia até a noite; território do chefe que acorda ao entrar ou ao anoitecer.
+- O Núcleo: pegar, fugir até a forja com chefe e minions atrás, efeitos caóticos em quem carrega, bigorna digere e enfraquece o chefe, duelo final.
+- Brasa Arcana como objetivo secundário.
+- Bigorna começa com 2 runas; contador de partidas (3ª runa em 10) e de vitórias (cor do manto) salvos no PC.
+- Baús com runas, consumíveis e um mímico; 2 ou 3 inimigos absurdos novos (minions do chefe entre eles).
 - Mapa ainda fixo: clareira, caverna e uma área nova.
 - Fecha com o segundo teste com o amigo.
 

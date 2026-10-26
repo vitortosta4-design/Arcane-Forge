@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 23/10/2026 (ADR-044 adicionada, ADR-029 revisada)
+Última atualização: 25/10/2026 (ADR-046 adicionada: objetivo da expedição e progressão)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -448,6 +448,45 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Escolha:** tronco ~30% mais longo e pernas à mostra (~16% da altura, meio-termo entre casaco longo e pernas visíveis), cabeça e chapéu do mesmo tamanho. O jogo reduz a escala do modelo (2,4 → 2,05) para a altura total no mundo ficar igual à de antes, e a velocidade em que a passada casa com o chão foi para 4,8 m/s.
 - **Fica de fora (pendência aceita pelo crítico):** abertura frontal com lapelas e casaco esvoaçando (pede pintura de peso no manto).
 - **Fácil de mudar?** Sim: o mapa vertical `_MAPA_Z` em `arte/personagens/mago/mago.py`.
+## ADR-046 · Objetivo da expedição: o Núcleo, o chefe e a progressão
+**Status:** Aprovada (25/10/2026, escolhas do Vitor em conversa). Revisa a ADR-035 (runas na bigorna) e completa as ADR-014, 015 e 034.
+
+- **Problema:** a expedição tinha começo e chefe, mas não um objetivo claro de vitória, e a progressão entre partidas (ADR-034) era fraca.
+- **Caminho escolhido:** "partida primeiro". Cada expedição diferente e engraçada, com progressão leve. Biomas novos, se vierem, são variedade, não escada de poder (o oposto do Stonewood/Plankerton do Fortnite: Salve o Mundo).
+
+**A expedição**
+- Ciclo de dia: de dia explorar (runas, baús, Crumi, Brasa Arcana) e forjar; à noite o chefe acorda sozinho, mais forte.
+- O chefe vive num território visível de longe e guarda o **Núcleo** (nome provisório), um pedaço de magia caótica.
+- Entrar no território acorda o chefe (como em Elden Ring). Ir cedo: chefe mais fraco, menos medalhões. Ir tarde: mais medalhões, chefe mais forte. A dupla escolhe o risco.
+- Sinais de hora: território no horizonte, céu muda de cor perto da noite, rugido no pôr do sol, marca no minimapa.
+- Pego o Núcleo, a dupla foge até a forja. Quem carrega não conjura; o outro protege. Chefe e minions perseguem; os minions não param de vir (dentro do limite de entidades). Se o Núcleo cair, os minions o levam de volta.
+- **O Núcleo apronta** em quem o carrega: efeitos caóticos aleatórios e engraçados (ex.: soluço de teleporte curto, gravidade invertida por 2 s, cuspir uma galinha).
+- Na caverna, a bigorna "digere" o Núcleo enquanto a dupla defende. Quando termina, enfraquece o chefe e começa o duelo final.
+- **Vitória:** derrotar o chefe. **Derrota:** os dois caírem (revive pela ADR-014).
+- A fuga é o clímax (uns 5 de 20 minutos), não a partida inteira. Exploração e descoberta continuam sendo o centro; o caminho até a forja é livre e as magias forjadas servem de ferramenta.
+
+**Objetivo secundário: a Brasa Arcana**
+- Fogo mágico, não fogo de verdade. A forja começa fria e funciona no básico; recuperar a Brasa a acende de vez: forjar fica mais rápido e a recarga dos medalhões menor, naquela expedição. É bônus, nunca obrigação.
+
+**Baús**
+- Runas (somem no fim da expedição, ADR-034), consumíveis (poção de vida, poção de mana, item de reviver da ADR-014) e o mímico.
+
+**Progressão que fica**
+- **Runas na bigorna:** a expedição começa com 2 runas (uma forma e um elemento). A 3ª libera para sempre com 10 partidas jogadas, vencidas ou não; a 4ª com 30. O que a 4ª runa é (forma ou elemento extra) fica **adiado** até haver runas para testar.
+- **Nível do mago:** sobe só vencendo chefes; o nível define a cor do manto (como os magos de O Senhor dos Anéis). Nem toda vitória troca a cor. Proposta inicial: 6 níveis, mudando em 1, 3, 6, 10 e 15 vitórias; números ajustados jogando.
+- **Derrota:** não perde nada; só não sobe de nível.
+- **Grimório:** receitas descobertas, como já estava.
+- **Saiu:** cajado com materiais (escolha do Vitor, para não modelar peças agora). Sem XP: o nível é a contagem de vitórias.
+
+**Skins (possibilidade futura, não decisão de venda)**
+- Toda skin terá uma área do manto reservada para a cor do nível, pintada em tons de cinza e tingida pelo jogo. Cada skin é feita uma vez só, não uma por nível.
+
+**Animação (régua para o animador, ADR-042)**
+- Referência de sensação: Fall Guys, mas engraçado sem ser caricato. Chapéu, manto e cachecol balançam com leve atraso; corpo amassa um pouco no pulo e na aterrissagem; boneco mole só em pancada grande (explosão). Só visual: o host decide a posição do mago, o boneco mole é enfeite por cima, para os dois PCs verem o mesmo.
+
+- **Consequências:** a bigorna passa de "até 3 runas" (ADR-035) para "começa com 2, abre a 3ª com 10 partidas". O jogo precisa guardar no PC o número de partidas jogadas e de chefes vencidos (junto do grimório). As "melhorias permanentes da forja" da ADR-034 passam a ser os espaços de runa. Fase 4 da `proposta-tecnica.md` atualizada.
+- **Fácil de mudar?** Sim. Números (partidas, níveis, duração) são ajustes; a estrutura Núcleo, fuga e duelo é a parte mais cara de trocar depois da Fase 4.
+
 ---
 
 ## Status da descoberta
