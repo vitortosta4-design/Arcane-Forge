@@ -52,6 +52,7 @@ A imagem `docs/referencias/arte-conceito-01.png` é o **objetivo do desenvolvime
 - Ampliar o escopo da fase atual.
 
 ## Regras de trabalho
+- No início de toda sessão, antes de ler ou criar qualquer arquivo, rode `git fetch` e `git status`. Se o main local estiver atrás do remoto, faça `git pull` antes de continuar. Nunca conclua que um arquivo não existe sem essa checagem.
 - Nada está pronto sem teste. Mudança visual só está pronta depois de rodar o jogo e guardar um print em `evidencias/fase-N/`.
 - Nunca inventar resultado de teste nem esconder limitação.
 - Commits pequenos, só de alterações verificadas, mensagens em português.
