@@ -7,9 +7,12 @@ extends Node3D
 @onready var _caverna: Caverna = $Caverna
 @onready var _forja_ui: ForjaUI = $ForjaUI
 @onready var _menu_pausa: Node = $MenuPausa
+@onready var _clareira: Clareira = $Clareira
+@onready var _eventos_ambientais: GerenciadorEventosAmbientais = $EventosAmbientais
 
 
 func _ready() -> void:
 	_hud.configurar(_mago)
 	_forja_ui.configurar(_mago, _caverna.forja, _hud)
 	_menu_pausa.configurar(_mago, _forja_ui)
+	_eventos_ambientais.configurar(_clareira)

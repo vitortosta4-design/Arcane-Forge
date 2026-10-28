@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 25/10/2026 (ADR-046 adicionada: objetivo da expedição e progressão)
+Última atualização: 28/10/2026 (ADR-047 adicionada: sistema de eventos ambientais raros, árvore gigante)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -488,6 +488,21 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Fácil de mudar?** Sim. Números (partidas, níveis, duração) são ajustes; a estrutura Núcleo, fuga e duelo é a parte mais cara de trocar depois da Fase 4.
 
 ---
+
+## ADR-047 · Sistema de eventos ambientais raros, começando pela árvore gigante
+**Status:** Aprovada (28/10/2026, pedido do Vitor)
+
+- **Problema:** o Vitor pediu um sistema de "eventos ambientais raros" preparado para receber vários eventos no futuro, com o primeiro deles sendo uma árvore gigante (20-30 m) que atravessa o mapa andando. Isso não estava na Fase 2 (ADR-035: ciclo da forja jogando sozinho), então é ampliação de escopo — registrada aqui porque o próprio pedido do Vitor já é a aprovação dela.
+- **Escolha:**
+  - Lista única e fácil de editar (`jogo/scripts/eventos/eventos_ambientais.gd`, `EventosAmbientais.LISTA`): cada evento é só um `id`, uma `chance_por_partida` (0 a 1) e o caminho da cena que sabe se tocar. Cadastrar um evento novo é acrescentar uma entrada; quem sorteia não precisa saber o que cada evento faz por dentro.
+  - `GerenciadorEventosAmbientais` (host) sorteia, para cada evento da lista, se ele acontece nesta partida e em que instante (janela de 45 s a 9 min, aproximação do Claude como gestor, já que a Fase 4 ainda não tem relógio de expedição de verdade). Calcula a rota: uma linha reta cruzando perto de um jogador (na direção em que ele está indo) ou de uma runa, com as duas pontas a 60 m do cruzamento, fora da área de luta, dentro da neblina.
+  - A árvore (`ArvoreGigante`) é sólida (empurra jogador, inimigo e caixa por colisão física, `AnimatableBody3D`) mas indiferente: não entra em nenhum grupo de dano nem tem `receber_dano`, então nem o Host nem o Validador acham o que fazer com ela, e nada acontece — igual a uma pedra do cenário, sem precisar de nenhuma regra de exceção. As raízes baixas são andáveis; o tronco, vertical, acima delas, não é chão em nenhum ângulo, então não dá para escalar além das raízes sem nenhuma regra especial (é só física normal).
+  - LOD nativo do Godot (`visibility_range_begin/end`): perto, modelo detalhado (tronco, 5 raízes-perna que animam o passo, copa de esferas); além de 48 m, troca por uma silhueta de 3 formas, para não pesar na GTX 1050.
+  - Tremor de câmera e rangido grave (`jogo/assets/som/arvore_rangendo.wav`, síntese própria como os outros sons, ADR-026) a cada passo, só em quem estiver a até 22 m.
+  - Desaparece encolhendo e afundando nos últimos 14 m da rota, dentro da neblina, e some de vez quando a rota termina.
+- **Modelo provisório, sem folha aprovada:** a skill `personagem-low-poly` exige uma folha de referência do Vitor antes de modelar qualquer personagem ou criatura pelo Blender. Como ainda não existe essa folha para a árvore, o modelo desta entrega é feito só por geometria em código (como as árvores e pedras da própria `Clareira`), não pelo pipeline do Blender — compatível com a regra da skill (nenhum modelo Blender foi feito sem folha) e com a prioridade 2 do CLAUDE.md (ciclo jogável com visual provisório primeiro, acabamento depois). Se o Vitor aprovar o resultado, o próximo passo é gerar essa folha e refazer a árvore pela skill, com esqueleto de verdade.
+- **Arquitetura:** segue a regra de ouro (proposta técnica, seção 2) — quem decide (sorteio, rota, instante) é sempre o host; jogando sozinho isso é a mesma máquina que mostra, mas a decisão já está isolada numa classe própria (`GerenciadorEventosAmbientais`) para a Fase 3 só precisar replicar o resultado, não reescrever a lógica.
+- **Fácil de mudar?** Sim: a lista de eventos é a única coisa que cresce; cada evento novo é uma cena própria.
 
 ## Status da descoberta
 Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026.

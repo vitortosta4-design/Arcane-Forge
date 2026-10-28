@@ -2,7 +2,7 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 23/10/2026 (mago 6ª rodada, runas pelo vetor)
+Atualizado em: 28/10/2026 (gigante da árvore, 1ª rodada com esqueleto: reprovado)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035).
@@ -18,8 +18,10 @@ Atualizado em: 23/10/2026 (mago 6ª rodada, runas pelo vetor)
 - Fase 1 continua com dois critérios abertos que dependem do Vitor (canto de atmosfera e 10 minutos de jogo).
 
 - Equipe tem agora o **animador** (ADR-042), além do crítico. Primeira auditoria de animação feita (`docs/auditoria-animacao.md`): galinha zumbi sem aviso de ataque nem reação a dano (crítico), mago lançando sem preparação, pé da galinha invocada patinando. Nada corrigido ainda: aguarda o Vitor autorizar a ordem de trabalho.
+- **Gigante da árvore (ADR-047), 1ª rodada pela skill `personagem-low-poly`** (28/10/2026): modelo em Blender com esqueleto de verdade (`arte/personagens/gigante_arvore/gigante_arvore.py`, 1.652 triângulos) e animações `Parado`/`Andar` (sem `Atacar`/`Dano`, decisão: a árvore não ataca nem reage a dano), integrado no jogo (`jogo/scripts/eventos/arvore_gigante.gd` troca o visual procedural por `gigante_arvore.glb`). **Reprovado**: os braços existem no script mas não aparecem na silhueta (ficam colados e escondidos dentro do tronco), que é o traço mais marcante da folha do Vitor. Testes 307/308 (igual ao estado anterior, falha conhecida não relacionada). Prints em `evidencias/fase-2/eventos-ambientais/` (`gigante_frente.png`, `gigante_lado.png`, `gigante_costas.png`, mais 2 do jogo — esses saíram escuros/contraluz, não são boa evidência de cor). Pergunta de prioridade abaixo.
 
 ## Próximo passo
+- **Gigante da árvore:** decidir com o Vitor se vale investir mais uma rodada agora (separar/afastar os braços do tronco de verdade, conferir se o resto da silhueta bate com a folha) ou se isso espera, já que é fora da Fase 2 (ADR-047 já registra que é ampliação de escopo).
 - Matheus testa com `build/ArcaneForge_teste_Matheus.zip` (gerar de novo com `ferramentas/gerar_pacote_teste.sh`) e manda o RELATORIO_PARA_O_VITOR.md.
 - Vitor olha o mago aprovado (ramo `mago-criticas`) e decide se junta ao `main`.
 - Runas: montar as 8 quando os símbolos chegarem, trocar no jogo e acertar o brilho da pedra pelo print.

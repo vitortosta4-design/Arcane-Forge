@@ -129,6 +129,12 @@ func _ready() -> void:
 	await _testar_forja_martela_gasta_runas_e_anota_no_grimorio()
 	await _testar_forja_recusa_sem_runas_ou_com_barra_cheia()
 	await _testar_runa_no_mapa_vai_para_a_mochila()
+	# Eventos ambientais raros (ADR-047)
+	_testar_lista_de_eventos_ambientais_tem_chances_e_cenas_validas()
+	await _testar_arvore_gigante_nao_entra_no_grupo_recebe_dano()
+	await _testar_arvore_gigante_anda_em_direcao_ao_destino()
+	await _testar_arvore_gigante_e_removida_ao_fim_da_rota()
+	_testar_rota_do_evento_passa_perto_de_um_ponto_conhecido()
 
 	print("")
 	if _falhas == 0:
@@ -2233,4 +2239,79 @@ func _testar_runa_sem_luz_estourada() -> void:
 			ok = false
 	_afirmar("runa: nenhuma luz estourada (força até 1,5 e alcance até 5 m)", ok)
 	runa.queue_free()
+
+
+# --- Eventos ambientais raros (ADR-047) -----------------------------------
+
+func _testar_lista_de_eventos_ambientais_tem_chances_e_cenas_validas() -> void:
+	var ok_chances := true
+	var ok_cenas := true
+	for dados in EventosAmbientais.LISTA:
+		var chance: float = dados.get("chance_por_partida", -1.0)
+		if chance < 0.0 or chance > 1.0:
+			ok_chances = false
+		if not ResourceLoader.exists(dados.get("cena", "")):
+			ok_cenas = false
+	_afirmar("eventos ambientais: toda chance_por_partida está entre 0 e 1", ok_chances)
+	_afirmar("eventos ambientais: toda cena cadastrada existe de verdade", ok_cenas)
+
+
+func _testar_arvore_gigante_nao_entra_no_grupo_recebe_dano() -> void:
+	var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
+	add_child(arvore)
+	arvore.iniciar(Vector3.ZERO, Vector3(0, 0, -40))
 	await get_tree().process_frame
+	_afirmar("árvore gigante não entra no grupo recebe_dano (magia não a afeta)", not arvore.is_in_group("recebe_dano"))
+	_afirmar("árvore gigante não tem receber_dano (nada reage nela)", not arvore.has_method("receber_dano"))
+	arvore.queue_free()
+
+
+func _testar_arvore_gigante_anda_em_direcao_ao_destino() -> void:
+	var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
+	add_child(arvore)
+	var destino := Vector3(0, 0, -40)
+	arvore.iniciar(Vector3.ZERO, destino)
+	await get_tree().process_frame
+	var distancia_antes: float = arvore.global_position.distance_to(destino)
+	for i in 10:
+		arvore._physics_process(1.0)
+	var distancia_depois: float = arvore.global_position.distance_to(destino)
+	_afirmar("árvore gigante anda devagar em direção ao destino", distancia_depois < distancia_antes)
+	arvore.queue_free()
+
+
+func _testar_arvore_gigante_e_removida_ao_fim_da_rota() -> void:
+	var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
+	add_child(arvore)
+	arvore.iniciar(Vector3.ZERO, Vector3(0, 0, -40))
+	await get_tree().process_frame
+	for i in 40:
+		arvore._physics_process(1.0)
+	_afirmar("árvore gigante desaparece sozinha ao terminar a rota", arvore.is_queued_for_deletion())
+
+
+## A rota precisa cruzar perto de um ponto que os jogadores provavelmente
+## vão usar; sem nenhum mago na cena, os únicos pontos conhecidos são as
+## runas da clareira (Clareira.PONTOS_RUNA), então a rota tem que passar
+## perto de alguma delas.
+func _testar_rota_do_evento_passa_perto_de_um_ponto_conhecido() -> void:
+	var gerenciador := GerenciadorEventosAmbientais.new()
+	add_child(gerenciador)
+	var rota: Array = gerenciador._calcular_rota()
+	var origem_2d := Vector2(rota[0].x, rota[0].z)
+	var destino_2d := Vector2(rota[1].x, rota[1].z)
+	var menor_distancia := INF
+	for ponto in Clareira.PONTOS_RUNA:
+		var p: Vector2 = ponto[1]
+		menor_distancia = minf(menor_distancia, _distancia_ponto_ao_segmento(p, origem_2d, destino_2d))
+	_afirmar("rota do evento passa perto de alguma runa (desvio até %d m)" % [GerenciadorEventosAmbientais.DESVIO_MAX_DO_CAMINHO_M],
+		menor_distancia <= GerenciadorEventosAmbientais.DESVIO_MAX_DO_CAMINHO_M + 0.5)
+	gerenciador.queue_free()
+
+
+func _distancia_ponto_ao_segmento(ponto: Vector2, a: Vector2, b: Vector2) -> float:
+	var direcao := b - a
+	if direcao.length() < 0.001:
+		return ponto.distance_to(a)
+	var t := clampf((ponto - a).dot(direcao) / direcao.length_squared(), 0.0, 1.0)
+	return ponto.distance_to(a + direcao * t)

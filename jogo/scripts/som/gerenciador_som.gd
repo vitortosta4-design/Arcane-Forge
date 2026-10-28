@@ -12,6 +12,7 @@ const LIMITE_SONS_SIMULTANEOS := 16
 const SomTiro := preload("res://assets/som/tiro.wav")
 const SomExplosao := preload("res://assets/som/explosao.wav")
 const SomGalinha := preload("res://assets/som/galinha_zumbi.wav")
+const SomArvore := preload("res://assets/som/arvore_rangendo.wav")
 
 var _tocadores_ativos: Array[AudioStreamPlayer3D] = []
 
@@ -50,3 +51,7 @@ func tocar_explosao(posicao: Vector3) -> void:
 
 func tocar_galinha(posicao: Vector3) -> void:
 	tocar(SomGalinha, posicao)
+
+
+func tocar_arvore(posicao: Vector3) -> void:
+	tocar(SomArvore, posicao, "Efeitos", 0.05)

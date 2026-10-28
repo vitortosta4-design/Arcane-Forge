@@ -24,6 +24,9 @@ const MASCARA_MIRA := 1 | 4 | 16
 var _cooldown_restante := 0.0
 var _entrada_bloqueada := false
 var _reducao_escudo := 0.0
+## Tremor de câmera (eventos ambientais, ADR-047): decai até zero sozinho,
+## não acumula além do pedido mais forte em andamento.
+var _tremor_camera := 0.0
 var estados := ControladorEstados.new()
 ## Runas carregadas na expedição (recomeçam a cada uma, ADR-034).
 var runas: Array[String] = []
@@ -112,6 +115,23 @@ func _physics_process(delta: float) -> void:
 	var velocidade_horizontal := Vector2(velocity.x, velocity.z).length()
 	_corpo_visivel.animar(delta, velocidade_horizontal, is_on_floor())
 	_mao.animar(delta, velocidade_horizontal, is_on_floor())
+	_atualizar_tremor_camera(delta)
+
+
+## Tremor por "roll" da cabeça (rotation.z): o olhar (rotation.x, do mouse)
+## nunca é tocado aqui, então o tremor nunca desalinha a mira.
+func _atualizar_tremor_camera(delta: float) -> void:
+	if _tremor_camera > 0.001:
+		_pivot_cabeca.rotation.z = randf_range(-1.0, 1.0) * _tremor_camera * 0.05
+		_tremor_camera = move_toward(_tremor_camera, 0.0, delta * 1.2)
+	elif _pivot_cabeca.rotation.z != 0.0:
+		_pivot_cabeca.rotation.z = 0.0
+
+
+## Chamado por algo grande perto do jogador (ex.: o passo da árvore
+## gigante, ADR-047). Guarda só o pedido mais forte em andamento.
+func tremor_camera(intensidade: float) -> void:
+	_tremor_camera = maxf(_tremor_camera, intensidade)
 
 
 func _multiplicador_velocidade() -> float:

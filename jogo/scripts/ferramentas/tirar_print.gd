@@ -63,6 +63,16 @@ func _process(delta: float) -> bool:
 						galinha.receber_dano(float(_args["ferir-galinha"]), galinha.global_position + Vector3.BACK, 0.0)
 				else:
 					push_warning("tirar_print: --galinha pedido, mas a cena não tem GalinhaZumbi.")
+			if _args.has("arvore_gigante"):
+				# Evento ambiental raro (ADR-047): só para a evidência visual,
+				# sem esperar o sorteio de verdade. Formato: 6 números
+				# "ox,oy,oz,dx,dy,dz" (origem e destino da rota).
+				var numeros := str(_args["arvore_gigante"]).split(",")
+				var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
+				current_scene.add_child(arvore)
+				arvore.iniciar(
+					Vector3(float(numeros[0]), float(numeros[1]), float(numeros[2])),
+					Vector3(float(numeros[3]), float(numeros[4]), float(numeros[5])))
 			if _args.has("camera"):
 				# Câmera livre (por exemplo para ver o mago de frente).
 				var camera := Camera3D.new()

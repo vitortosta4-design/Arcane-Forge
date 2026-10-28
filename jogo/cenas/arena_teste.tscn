@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://cenas/modulos/clareira.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://cenas/ambiente/canto_atmosfera.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://cenas/menu_pausa.tscn" id="10"]
+[ext_resource type="Script" path="res://scripts/eventos/gerenciador_eventos_ambientais.gd" id="12"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_arena"]
 sky_top_color = Color(0.22, 0.45, 0.85, 1)
@@ -96,3 +97,6 @@ script = ExtResource("7")
 script = ExtResource("11")
 
 [node name="MenuPausa" parent="." instance=ExtResource("10")]
+
+[node name="EventosAmbientais" type="Node" parent="."]
+script = ExtResource("12")
