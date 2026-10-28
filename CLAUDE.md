@@ -1,9 +1,18 @@
 # Instruções para o Claude Code · Arcane Forge
 
+## Pergunta-guia (pedido do Vitor, 28/10/2026)
+Em toda tarefa, responda antes de agir: como entregar o melhor para este projeto, superando a expectativa do Vitor, gastando o mínimo de tokens possível?
+- Gaste no que o Vitor vê (resultado, acabamento, prova com print). Economize no caminho (leitura, exploração, tentativa e erro).
+- Leia o mínimo: busque com grep o trecho que interessa em vez de abrir arquivos inteiros. Não releia o que já está no contexto.
+- Acertar de primeira sai mais barato que três rodadas. Dúvida de gosto visual: uma pergunta a/b/c ao Vitor antes de produzir.
+- Agentes só quando o ganho de qualidade pagar o custo. O crítico avalia a entrega final, não cada ajuste interno.
+- Relatórios curtos, sem repetir o que o print já mostra.
+- Quando qualidade e economia brigarem, não corte calado: diga ao Vitor o que cada opção entrega e custa, e decidam juntos.
+
 ## Antes de qualquer tarefa
 1. Leia `docs/contexto/estado-atual.md` (onde paramos e qual é o próximo passo).
-2. Leia `docs/decisoes.md` (decisões aprovadas, não rediscutir sem motivo forte).
-3. Leia `docs/proposta-tecnica.md` (arquitetura e plano da fase atual).
+2. Consulte em `docs/decisoes.md` só as ADRs ligadas à tarefa (busque por número ou assunto). Leia inteiro só se a tarefa mexer em várias decisões.
+3. Consulte em `docs/proposta-tecnica.md` só a seção do plano da fase atual e os limites da seção 5.
 4. Confira em que fase o projeto está e trabalhe só dentro dela.
 - `docs/contexto/diario.md` é o histórico. Não leia inteiro: procure nele só quando precisar de um detalhe antigo.
 
