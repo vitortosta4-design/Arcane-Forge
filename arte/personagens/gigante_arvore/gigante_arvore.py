@@ -51,6 +51,11 @@ MEIA_LARGURA_QUADRIL = 2.1
 MEIA_LARGURA_CINTURA = 1.55
 MEIA_LARGURA_PEITO = 2.3
 MEIA_LARGURA_OMBRO = 3.0
+# Pulso bem mais afastado do eixo que o ombro (folha: braco se abre ao
+# descer, nao fica colado no tronco - 1a rodada errou isso e o braco
+# sumiu na silhueta, "torso liso"). Mais baixo tambem, perto do joelho.
+MEIA_LARGURA_PULSO = 5.9
+PULSO_Z_V2 = 8.8
 SEPARACAO_PERNAS = 2.3     # distancia do centro a cada quadril (postura bem aberta, como a folha)
 
 
@@ -257,13 +262,14 @@ def tronco_e_bracos():
     bracos = {}
     for s, nome in ((-1, "E"), (1, "D")):
         ombro = Vector((s * MEIA_LARGURA_OMBRO, 0, OMBRO_Z))
-        # Braco reto (folha v2: "bracos mais retos"), descendo quase na
-        # vertical ate perto da cintura, com um leve chegamento ao corpo
-        # (a folha nao mostra um "T" aberto, o cotovelo fica mais perto).
-        pulso = Vector((s * (MEIA_LARGURA_OMBRO - 0.15), -0.1, PULSO_Z))
+        # Braco se abre ao descer (pulso bem mais afastado do eixo que o
+        # ombro), para nao colar no tronco e sumir na silhueta (erro da 1a
+        # rodada). Cor mais clara (TroncoClaro, igual a canela) para separar
+        # por valor do tronco escuro, nao so por distancia.
+        pulso = Vector((s * MEIA_LARGURA_PULSO, -0.3, PULSO_Z_V2))
         eixo = pulso - ombro
         giro = Vector((0, 0, 1)).rotation_difference(eixo.normalized()).to_matrix().to_4x4()
-        braco_o = torno(f"Braco{nome}", [(1.15, 0.0), (0.95, eixo.length * 0.55), (0.78, eixo.length)], TRONCO,
+        braco_o = torno(f"Braco{nome}", [(1.3, 0.0), (1.15, eixo.length * 0.55), (0.95, eixo.length)], TRONCO_CLARO,
                         lados=8, ruido=0.05, semente=40 + s)
         braco_o.matrix_world = Matrix.Translation(ombro) @ giro
         mao = mao_grossa(f"Mao{nome}", pulso, eixo.normalized(), Vector((0, 0, 1)), s)
@@ -281,16 +287,16 @@ def mao_grossa(prefixo, pulso, frente, cima, lado_sinal):
     c = Vector(cima) - f * Vector(cima).dot(f)
     c.normalize()
     l = f.cross(c).normalized() * lado_sinal
-    centro = Vector(pulso) + f * 0.45
-    p = [casco(f"{prefixo}Punho", [centro + f * ex * 0.45 + l * math.cos(a) * 0.82 + c * math.sin(a) * 0.65
+    centro = Vector(pulso) + f * 0.55
+    p = [casco(f"{prefixo}Punho", [centro + f * ex * 0.55 + l * math.cos(a) * 1.0 + c * math.sin(a) * 0.8
                                    for ex in (-1, 1) for a in (0, 1.26, 2.51, 3.77, 5.03)], TRONCO_CLARO)]
     for i in range(4):
         t = (i - 1.5) / 1.5
-        base_dedo = centro + f * 0.4 + l * t * 0.72
+        base_dedo = centro + f * 0.5 + l * t * 0.88
         direcao = (f * 1.1 + l * t * 0.6 - c * 0.2).normalized()
-        meio = base_dedo + direcao * 0.75
-        ponta = meio + direcao * 0.6
-        p.append(tubo(f"{prefixo}Dedo{i}", [base_dedo, meio, ponta], [0.4, 0.36, 0.18], TRONCO_CLARO, lados=6))
+        meio = base_dedo + direcao * 0.95
+        ponta = meio + direcao * 0.75
+        p.append(tubo(f"{prefixo}Dedo{i}", [base_dedo, meio, ponta], [0.52, 0.46, 0.22], TRONCO_CLARO, lados=6))
     return p
 
 
