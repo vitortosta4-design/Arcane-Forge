@@ -2,6 +2,7 @@ extends SceneTree
 ## Vitrine da galinha v4 na luz da clareira: invocada (esquerda) e zumbi
 ## (direita), no tamanho do jogo. Gera os prints de cada animação e o vídeo.
 ##
+## Rodar com --fixed-fps 30 (o tempo da vitrine conta quadros).
 ## Print:  --acao Parado|Andar|Bicar|Dano|Morrer --tempo s --vista frente|34 --saida X.png
 ##         (dispara a ação pelo VisualGalinha e fotografa depois de --tempo s)
 ## Vídeo:  --video (rodar com --write-movie e --fixed-fps 30): parado, entram
@@ -86,16 +87,14 @@ func _video() -> void:
 	await _esperar(2.2)
 
 
-## Espera em quadros, movendo quem anda. No vídeo (--fixed-fps 30) cada quadro
-## vale 1/30 s; no print, o tempo real entre quadros.
+## Espera em quadros, movendo quem anda. Rodar sempre com --fixed-fps 30:
+## cada quadro vale 1/30 s, então o instante do print não depende da
+## lentidão do render em software.
 func _esperar(segundos: float) -> void:
 	var restante := segundos
-	var antes := Time.get_ticks_usec()
 	while restante > 0.0:
 		await process_frame
-		var agora := Time.get_ticks_usec()
-		var dt := 1.0 / 30.0 if _args.has("video") else (agora - antes) / 1e6
-		antes = agora
+		var dt := 1.0 / 30.0
 		restante -= dt
 		for g in _galinhas:
 			var andando := g.has_meta("andando")

@@ -290,15 +290,18 @@ def pose_andar(t):
     # Cabeca firme (galinha estabiliza a cabeca) com um leve bate-cabeca.
     p["Pescoco"] = (-8 + 6 * math.sin(4 * math.pi * fase), -4 * ginga, -5 * ginga)
     p["Cabeca"] = (-2 - 3 * math.sin(4 * math.pi * fase + 1), 0, 0)
-    bater = 18 * max(0.0, math.sin(4 * math.pi * fase - 0.6))
-    p["AsaE"] = (0, 0, -10 - bater)
-    p["AsaD"] = (0, 0, 10 + bater)
+    bater = 22 * max(0.0, math.sin(4 * math.pi * fase - 0.6))
+    p["AsaE"] = (0, 0, 4 + bater)     # Z positivo na AsaE abre para fora
+    p["AsaD"] = (0, 0, -4 - bater)
     p["Cauda"] = (10 * math.sin(4 * math.pi * fase - 1.5), 8 * lado, 0)
     return p
 
 
 def pose_bicar(t):
-    tremer = 2.5 * math.sin(t * 2 * math.pi * 18) if 0.22 < t < AVISO_BICADA_S else 0.0
+    # Aviso (ate 0,4 s): agacha, recolhe o pescoco no peito, abre asas e cauda
+    # e treme (10 Hz, legivel a 30 FPS). Bote ate 0,47 s: o pescoco avanca
+    # para a frente e para baixo; a cabeca quase nao gira (crista em cima).
+    tremer = math.sin(t * 2 * math.pi * 10) if 0.2 < t < AVISO_BICADA_S else 0.0
     agachar = [(0.0, (0, 0, 0)), (0.22, (1, 1, 1)), (AVISO_BICADA_S, (1, 1, 1)),
                (ACERTO_BICADA_S, (0, 0, 0)), (0.9, (0, 0, 0))]
     bote = [(0.0, (0, 0, 0)), (AVISO_BICADA_S, (0, 0, 0)), (ACERTO_BICADA_S, (1, 1, 1)),
@@ -306,12 +309,12 @@ def pose_bicar(t):
     a = curva(t, agachar)[0]
     b = curva(t, bote)[0]
     return {
-        "Corpo": (-12 * a + 32 * b, 0, 0),
-        "loc_Corpo": (0, -0.04 * a - 0.03 * b, -0.03 * a + 0.07 * b),
-        "Pescoco": (-28 * a + 40 * b + tremer, 0, 0),
-        "Cabeca": (-12 * a + 22 * b, 0, 0),
-        "AsaE": (0, 0, -22 * a - 8 * b), "AsaD": (0, 0, 22 * a + 8 * b),
-        "Cauda": (22 * a - 10 * b, 0, 0),
+        "Corpo": (-15 * a + 3 * tremer + 24 * b, 0, 0),
+        "loc_Corpo": (0, -0.06 * a - 0.04 * b, -0.03 * a + 0.12 * b),
+        "Pescoco": (-40 * a + 6 * tremer + 36 * b, 0, 0),
+        "Cabeca": (-8 * a - 6 * b, 0, 0),
+        "AsaE": (0, 0, 45 * a + 10 * b), "AsaD": (0, 0, -45 * a - 10 * b),
+        "Cauda": (35 * a - 10 * b, 0, 0),
         "CoxaE": (6 * a - 8 * b, 0, 0), "CoxaD": (6 * a - 8 * b, 0, 0),
         "PeE": (-6 * a + 8 * b, 0, 0), "PeD": (-6 * a + 8 * b, 0, 0),
     }
@@ -319,32 +322,34 @@ def pose_bicar(t):
 
 def pose_dano(t):
     # Tranco: joga para tras em 0,05 s e volta balancando ate 0,35 s.
-    u = t / 0.05 if t < 0.05 else math.exp(-(t - 0.05) * 11) * math.cos((t - 0.05) * 30)
+    u = t / 0.033 if t < 0.033 else math.exp(-(t - 0.033) * 11) * math.cos((t - 0.033) * 30)
     return {
         "Corpo": (-20 * u, 0, 5 * u), "loc_Corpo": (0, 0.03 * u, -0.05 * u),
         "Pescoco": (-30 * u, 0, -8 * u), "Cabeca": (-10 * u, 12 * u, 0),
-        "AsaE": (0, 0, -45 * abs(u)), "AsaD": (0, 0, 45 * abs(u)),
+        "AsaE": (0, 0, 45 * abs(u)), "AsaD": (0, 0, -45 * abs(u)),
         "Cauda": (30 * u, 0, 0),
     }
 
 
 def pose_morrer(t):
-    # Pulinho de susto, tomba de lado e fica de pernas para cima; um chute no fim.
+    # Pulinho de susto, tomba de lado ate quase de costas (140 graus) e fica de
+    # pernas abertas para o ceu: perna curta (15 cm) so aparece acima do corpo
+    # assim. Quique ao bater no chao e um chute no fim.
     susto = curva(t, [(0.0, (0,)), (0.12, (1,)), (0.3, (0,))])[0]
     tombo = curva(t, [(0.0, (0,)), (0.18, (0,)), (0.5, (1.06,)), (0.62, (0.98,)), (0.72, (1,))])[0]
     pernas = curva(t, [(0.0, (0,)), (0.35, (0,)), (0.6, (1,))])[0]
     chute = curva(t, [(0.0, (0,)), (0.95, (0,)), (1.02, (1,)), (1.12, (0,)), (1.18, (0.5,)), (1.25, (0,))])[0]
-    rolar = 88 * tombo
+    rolar = 140 * tombo
     return {
         "Raiz": (0, 0, rolar),
         "loc_Raiz": (0, 0.12 * susto, 0),
         "Corpo": (-8 * susto, 0, 0),
-        "Pescoco": (-25 * susto + 10 * tombo, 0, 8 * tombo),
-        "Cabeca": (0, -15 * tombo, 10 * tombo),
-        "AsaE": (0, 0, -60 * susto - 20 * tombo), "AsaD": (0, 0, 60 * susto + 50 * tombo),
+        "Pescoco": (-25 * susto + 10 * tombo, 0, -20 * tombo),
+        "Cabeca": (0, -15 * tombo, -15 * tombo),
+        "AsaE": (0, 0, 60 * susto + 35 * tombo), "AsaD": (0, 0, -60 * susto - 35 * tombo),
         "Cauda": (25 * susto, 0, 0),
-        "CoxaE": (20 * chute, 0, 92 * pernas), "CoxaD": (0, 0, 92 * pernas),
-        "PeE": (-30 * pernas - 25 * chute, 0, 0), "PeD": (-30 * pernas, 0, 0),
+        "CoxaE": (25 * chute, 0, 52 * pernas), "CoxaD": (0, 0, 28 * pernas),
+        "PeE": (-35 * pernas - 30 * chute, 0, 0), "PeD": (-35 * pernas, 0, 0),
     }
 
 
@@ -360,10 +365,12 @@ def corrigir_chao_morrer(arm):
         cena.frame_set(f)
         dg = bpy.context.evaluated_depsgraph_get()
         menor = min((o.evaluated_get(dg).matrix_world @ v.co).z for o in malhas for v in o.data.vertices)
-        if menor < 0:
-            b = arm.pose.bones["Raiz"]
-            b.location[1] -= menor
-            b.keyframe_insert("location", frame=f)
+        # Quique pequeno logo depois de bater no chao (0,5 a 0,64 s).
+        t = f / FPS
+        quique = 0.045 * math.sin(math.pi * (t - 0.5) / 0.14) if 0.5 < t < 0.64 else 0.0
+        b = arm.pose.bones["Raiz"]
+        b.location[1] += max(0.0, -menor) + quique
+        b.keyframe_insert("location", frame=f)
     arm.animation_data.action = None
     for tr in trilhas:
         tr.mute = False

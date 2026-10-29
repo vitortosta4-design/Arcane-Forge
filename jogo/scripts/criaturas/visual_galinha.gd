@@ -27,9 +27,13 @@ const TEMPO_CORPO_NO_CHAO_S := 2.2
 const COR_ZUMBI := Color(0.62, 0.74, 0.55)
 const COR_OLHO_ZUMBI := Color(0.75, 1.0, 0.35)
 ## Penas da cauda que a zumbi já perdeu.
-const PENAS_FALTANDO_ZUMBI := ["Pena_1", "Pena_3"]
-const COR_PENA_SOLTA := Color(0.98, 0.85, 0.6)
-const COR_PENA_SOLTA_ZUMBI := Color(0.66, 0.72, 0.58)
+## Tirar a de cima e uma do meio deixa o recorte da cauda "mordido".
+const PENAS_FALTANDO_ZUMBI := ["Pena_0", "Pena_2"]
+## Penas soltas da cor do corpo de quem apanhou.
+const COR_PENA_SOLTA := Color(0.98, 0.8, 0.56)
+const COR_PENA_SOLTA_ZUMBI := Color(0.6, 0.66, 0.5)
+## Congelada rápida ao levar o golpe, para o impacto ter peso.
+const PAUSA_IMPACTO_S := 0.05
 
 var zumbi := false
 
@@ -84,17 +88,29 @@ func bicar() -> void:
 func levar_dano() -> void:
 	if _morta:
 		return
-	_tocar_acao("Dano")
 	_soltar_penas(9)
+	# No meio da bicada o dano dela ainda vai sair: a Bicar continua na tela
+	# para o que se vê bater com a regra; só as penas e a pausa mostram o golpe.
+	if _acao != "Bicar":
+		_tocar_acao("Dano")
+	_anim.speed_scale = 0.0
+	var pausa := create_tween()
+	pausa.tween_interval(PAUSA_IMPACTO_S)
+	pausa.tween_callback(func(): _anim.speed_scale = 1.0)
 
 
 func morrer() -> void:
 	if _morta:
 		return
 	_morta = true
-	rotation.z = 0.0
+	create_tween().tween_property(self, "rotation:z", 0.0, 0.1)
 	_tocar_acao("Morrer")
 	_soltar_penas(16)
+	# Nos últimos 0,3 s deitada, encolhe acelerando e solta um punhado de penas.
+	var sumir := create_tween()
+	sumir.tween_interval(TEMPO_CORPO_NO_CHAO_S - 0.3)
+	sumir.tween_callback(_soltar_penas.bind(6))
+	sumir.tween_property(self, "scale", Vector3.ZERO, 0.28).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_BACK)
 
 
 func _process(delta: float) -> void:
@@ -103,7 +119,7 @@ func _process(delta: float) -> void:
 		return
 	# Andar torto da zumbi: corpo caído para um lado, balançando fora do passo.
 	var andando := _anim != null and _anim.current_animation == "Andar"
-	var alvo := 0.14 + 0.07 * sin(_tempo * 3.1) if andando else 0.06
+	var alvo := 0.2 + 0.1 * sin(_tempo * 3.1) if andando else 0.07
 	rotation.z = lerpf(rotation.z, alvo, minf(1.0, delta * 6.0))
 
 
@@ -138,7 +154,7 @@ func _fator_manco() -> float:
 	for apoio in APOIOS_ANDAR:
 		if fase >= apoio.x and fase <= apoio.y:
 			return 1.0
-	return 1.35 if fase < 0.5 else 0.8
+	return 1.5 if fase < 0.5 else 0.7
 
 
 func _virar_zumbi() -> void:
@@ -174,24 +190,24 @@ func _soltar_penas(quantidade: int) -> void:
 	penas.one_shot = true
 	penas.emitting = false
 	penas.amount = quantidade
-	penas.lifetime = 1.1
+	penas.lifetime = 1.3
 	penas.explosiveness = 0.95
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.13, 0.22)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = COR_PENA_SOLTA_ZUMBI if zumbi else COR_PENA_SOLTA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	quad.material = mat
-	penas.mesh = quad
+	penas.mesh = _malha_pena()
+	penas.color = COR_PENA_SOLTA_ZUMBI if zumbi else COR_PENA_SOLTA
+	penas.hue_variation_min = -0.03
+	penas.hue_variation_max = 0.03
+	penas.scale_amount_min = 0.6
+	penas.scale_amount_max = 1.3
 	penas.direction = Vector3.UP
 	penas.spread = 70.0
 	penas.initial_velocity_min = 1.2
 	penas.initial_velocity_max = 2.4
-	penas.gravity = Vector3(0, -2.2, 0)
-	penas.damping_min = 1.5
-	penas.damping_max = 2.5
-	penas.angular_velocity_min = -360.0
-	penas.angular_velocity_max = 360.0
+	penas.gravity = Vector3(0, -2.0, 0)
+	# Amortecimento alto: sobem rápido e descem flutuando, girando no ar.
+	penas.damping_min = 2.5
+	penas.damping_max = 4.0
+	penas.angular_velocity_min = -300.0
+	penas.angular_velocity_max = 300.0
 	penas.angle_min = 0.0
 	penas.angle_max = 360.0
 	penas.particle_flag_rotate_y = true
@@ -200,3 +216,21 @@ func _soltar_penas(quantidade: int) -> void:
 	penas.position = Vector3(0, 0.55, 0)
 	penas.emitting = true
 	penas.finished.connect(penas.queue_free)
+
+
+## Pena em losango alongado (ponta fina embaixo), dos dois lados.
+static func _malha_pena() -> ArrayMesh:
+	var pontos := PackedVector3Array([
+		Vector3(0, 0.09, 0), Vector3(0.028, 0.03, 0), Vector3(0, -0.07, 0),
+		Vector3(0, 0.09, 0), Vector3(0, -0.07, 0), Vector3(-0.028, 0.03, 0),
+	])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = pontos
+	var malha := ArrayMesh.new()
+	malha.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	malha.surface_set_material(0, mat)
+	return malha
