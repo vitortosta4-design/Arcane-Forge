@@ -51,11 +51,11 @@ MEIA_LARGURA_QUADRIL = 2.1
 MEIA_LARGURA_CINTURA = 1.55
 MEIA_LARGURA_PEITO = 2.3
 MEIA_LARGURA_OMBRO = 3.0
-# Pulso bem mais afastado do eixo que o ombro (folha: braco se abre ao
-# descer, nao fica colado no tronco - 1a rodada errou isso e o braco
-# sumiu na silhueta, "torso liso"). Mais baixo tambem, perto do joelho.
-MEIA_LARGURA_PULSO = 5.9
-PULSO_Z_V2 = 8.8
+# Pulso afastado do eixo que o ombro (folha: braco se abre ao descer,
+# nao fica colado no tronco - 1a rodada errou isso). 2a rodada exagerou
+# (5.9, "muito afastado" - pedido do Vitor); 3a rodada: meio-termo.
+MEIA_LARGURA_PULSO = 5.0
+PULSO_Z_V2 = 6.6
 SEPARACAO_PERNAS = 2.3     # distancia do centro a cada quadril (postura bem aberta, como a folha)
 
 
@@ -231,20 +231,23 @@ def perna(lado):
     x_quadril = s * SEPARACAO_PERNAS
     x_pe = s * (SEPARACAO_PERNAS + 0.9)
     p = []
-    p.append(torno(f"Coxa{s}", [(1.95, QUADRIL_Z), (1.55, 9.6), (1.25, JOELHO_Z)], TRONCO, lados=8,
+    # Pernas mais finas (1a/2a rodada: "muito largas" - coxas de 1,95 quase
+    # encostavam uma na outra no meio). Pe mais grosso/presente ("muito
+    # finos"): base maior e raizes-dedo bem mais robustas.
+    p.append(torno(f"Coxa{s}", [(1.35, QUADRIL_Z), (1.1, 9.6), (0.92, JOELHO_Z)], TRONCO, lados=8,
                     centro=(x_quadril, 0, 0), ruido=0.05, semente=10 + s))
-    p.append(torno(f"Canela{s}", [(1.25, JOELHO_Z + 0.3), (1.05, 3.6), (0.85, TORNOZELO_Z)], TRONCO_CLARO, lados=8,
+    p.append(torno(f"Canela{s}", [(0.92, JOELHO_Z + 0.3), (0.8, 3.6), (0.68, TORNOZELO_Z)], TRONCO_CLARO, lados=8,
                     centro=(x_pe, 0, 0), ruido=0.05, semente=20 + s))
     # Pe: base larga achatada (sola) de onde saem 2 raizes-dedo grossas, uma
     # para a frente e outra ligeiramente de lado, como a folha (vista de
     # perfil mostra 1 clara + 1 atras).
-    p.append(torno(f"PeBase{s}", [(0.85, TORNOZELO_Z), (1.3, 0.5), (1.45, 0.15)], TRONCO_ESCURO, lados=8,
+    p.append(torno(f"PeBase{s}", [(0.68, TORNOZELO_Z), (1.55, 0.5), (1.85, 0.15)], TRONCO_ESCURO, lados=8,
                     centro=(x_pe, 0, 0), ruido=0.06, semente=30 + s))
-    for k, (dx, dy, comp) in enumerate(((0.4, -1.7, 2.1), (-0.6, -1.0, 1.7))):
-        base_pt = Vector((x_pe, 0, 0.6))
-        ponta = base_pt + Vector((dx, dy, -0.5))
+    for k, (dx, dy, comp) in enumerate(((0.5, -2.0, 2.4), (-0.75, -1.2, 2.0))):
+        base_pt = Vector((x_pe, 0, 0.65))
+        ponta = base_pt + Vector((dx, dy, -0.55))
         p.append(tubo(f"PeDedo{s}_{k}", [base_pt, base_pt + (ponta - base_pt) * 0.5, ponta],
-                       [0.68, 0.55, 0.3], TRONCO_ESCURO, lados=6))
+                       [0.9, 0.75, 0.42], TRONCO_ESCURO, lados=6))
     return p
 
 
@@ -322,12 +325,15 @@ def copa():
     e ao redor do topo da cabeca, como a folha (nao cobre o rosto)."""
     p = []
     rnd = random.Random(7)
-    centro_copa = Vector((0, 0.1, TOPO_CABECA_Z + 1.6))
+    # Copa "muito pequena" (pedido do Vitor): blocos ~1,4x maiores e cacho
+    # mais espalhado, para pesar na silhueta como na folha (quase do
+    # tamanho dos ombros).
+    centro_copa = Vector((0, 0.1, TOPO_CABECA_Z + 2.1))
     posicoes = [
-        (-1.7, 0.3, 0.2, 1.7), (1.7, 0.3, 0.2, 1.7), (0.0, -0.2, 0.9, 1.55),
-        (-1.0, 0.6, -0.3, 1.45), (1.0, 0.6, -0.3, 1.45), (0.0, 0.8, 1.3, 1.4),
-        (-0.5, -0.1, 1.7, 1.25), (0.5, -0.1, 1.7, 1.25), (0.0, 0.3, 2.5, 1.15),
-        (-2.0, 0.9, -0.9, 1.1), (2.0, 0.9, -0.9, 1.1),
+        (-2.4, 0.4, 0.3, 2.4), (2.4, 0.4, 0.3, 2.4), (0.0, -0.3, 1.3, 2.15),
+        (-1.4, 0.8, -0.4, 2.0), (1.4, 0.8, -0.4, 2.0), (0.0, 1.1, 1.8, 1.9),
+        (-0.7, -0.1, 2.4, 1.7), (0.7, -0.1, 2.4, 1.7), (0.0, 0.4, 3.5, 1.55),
+        (-2.8, 1.2, -1.3, 1.5), (2.8, 1.2, -1.3, 1.5),
     ]
     for i, (dx, dy, dz, r) in enumerate(posicoes):
         subdiv = 1 if r > 1.5 else 0
