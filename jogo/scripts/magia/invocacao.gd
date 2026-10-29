@@ -24,6 +24,10 @@ var _vida_atual: float
 var _cooldown_ataque := 0.0
 var _tempo_ate_disparo := 0.0
 var _morta := false
+## Só no corpo "ave": a bicada tem aviso (VisualGalinha) antes do dano.
+var _galinha: VisualGalinha
+var _bicada_restante_s := -1.0
+var _alvo_bicada: Node3D
 
 @onready var _mesh: MeshInstance3D = $MeshInstance3D
 
@@ -67,6 +71,7 @@ func definir_corpo(corpo: String, material: String) -> void:
 	var visual := CorposInvocacao.criar(corpo, Validador.cor_para_material(material), material)
 	visual.name = "Corpo"
 	add_child(visual)
+	_galinha = visual as VisualGalinha
 
 
 func _physics_process(delta: float) -> void:
@@ -74,6 +79,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_cooldown_ataque = maxf(0.0, _cooldown_ataque - delta)
+	_avancar_bicada(delta)
 
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
@@ -98,7 +104,14 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		if _cooldown_ataque <= 0.0:
 			_cooldown_ataque = INTERVALO_ATAQUE_S
-			Host.aplicar_dano(alvo, dano_contato, global_position, 1.0)
+			if _galinha:
+				_comecar_bicada(alvo)
+			else:
+				Host.aplicar_dano(alvo, dano_contato, global_position, 1.0)
+	elif _bicada_restante_s >= 0.0:
+		# Parada no meio da bicada (o alvo fugiu do alcance durante o aviso).
+		velocity.x = 0.0
+		velocity.z = 0.0
 	else:
 		var direcao := (alvo.global_position - global_position)
 		direcao.y = 0.0
@@ -108,6 +121,27 @@ func _physics_process(delta: float) -> void:
 		look_at(global_position + direcao, Vector3.UP)
 
 	move_and_slide()
+	if _galinha:
+		_galinha.atualizar_andar(Vector2(velocity.x, velocity.z).length())
+
+
+## Bicada da galinha: o dano só sai quando o bico chega (depois do aviso de
+## 0,4 s); se o alvo saiu do alcance nesse meio-tempo, ela erra.
+func _comecar_bicada(alvo: Node3D) -> void:
+	_alvo_bicada = alvo
+	_bicada_restante_s = VisualGalinha.TEMPO_ACERTO_BICADA_S
+	_galinha.bicar()
+
+
+func _avancar_bicada(delta: float) -> void:
+	if _bicada_restante_s < 0.0:
+		return
+	_bicada_restante_s -= delta
+	if _bicada_restante_s > 0.0:
+		return
+	_bicada_restante_s = -1.0
+	if is_instance_valid(_alvo_bicada) and global_position.distance_to(_alvo_bicada.global_position) <= ALCANCE_ATAQUE:
+		Host.aplicar_dano(_alvo_bicada, dano_contato, global_position, 1.0)
 
 
 func _talvez_disparar(alvo: Node3D, delta: float) -> void:
@@ -149,6 +183,8 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 		velocity += direcao * empurrao
 	if _vida_atual <= 0.0:
 		_morrer()
+	elif _galinha:
+		_galinha.levar_dano()
 
 
 func _expirar() -> void:
@@ -159,4 +195,10 @@ func _expirar() -> void:
 func _morrer() -> void:
 	_morta = true
 	remove_from_group("recebe_dano")
-	queue_free()
+	if _galinha == null:
+		queue_free()
+		return
+	# A galinha tomba de pernas para cima antes de sumir.
+	$CollisionShape3D.set_deferred("disabled", true)
+	_galinha.morrer()
+	get_tree().create_timer(VisualGalinha.TEMPO_CORPO_NO_CHAO_S).timeout.connect(queue_free)

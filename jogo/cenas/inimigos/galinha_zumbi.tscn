@@ -1,23 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/inimigos/galinha_zumbi.gd" id="1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_galinha"]
 radius = 0.3
 height = 0.6
-
-[sub_resource type="SphereMesh" id="SphereMesh_corpo"]
-radius = 0.3
-height = 0.6
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pena"]
-albedo_color = Color(0.75, 0.8, 0.6, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_bico"]
-size = Vector3(0.15, 0.1, 0.25)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bico"]
-albedo_color = Color(0.95, 0.75, 0.15, 1)
 
 [node name="GalinhaZumbi" type="CharacterBody3D"]
 collision_layer = 4
@@ -29,13 +16,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 shape = SubResource("CapsuleShape3D_galinha")
 
 [node name="CorpoVisivel" type="Node3D" parent="."]
-
-[node name="Corpo" type="MeshInstance3D" parent="CorpoVisivel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
-mesh = SubResource("SphereMesh_corpo")
-surface_material_override/0 = SubResource("StandardMaterial3D_pena")
-
-[node name="Bico" type="MeshInstance3D" parent="CorpoVisivel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -0.35)
-mesh = SubResource("BoxMesh_bico")
-surface_material_override/0 = SubResource("StandardMaterial3D_bico")

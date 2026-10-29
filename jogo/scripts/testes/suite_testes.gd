@@ -98,6 +98,12 @@ func _ready() -> void:
 	_testar_validador_descarta_projetil_dentro_de_projetil()
 	_testar_validador_limita_tamanho_das_listas()
 	await _testar_galinha_cega_nao_persegue_nem_bica()
+	_testar_galinha_tem_esqueleto_e_animacoes()
+	await _testar_pe_da_galinha_nao_patina_no_andar()
+	await _testar_bicada_so_machuca_depois_do_aviso()
+	await _testar_bicada_erra_se_o_mago_foge_no_aviso()
+	await _testar_galinha_zumbi_e_variante_do_mesmo_modelo()
+	await _testar_galinha_morta_tomba_e_depois_some()
 	await _testar_mago_cego_ve_a_tela_escura()
 	await _testar_teleporte_faz_um_puf_na_saida_e_na_chegada()
 	await _testar_teleporte_da_clarao_na_tela_do_mago()
@@ -1525,6 +1531,106 @@ func _testar_validador_limita_tamanho_das_listas() -> void:
 	_afirmar("ficha com 51 componentes fica com no máximo 8", v["componentes"].size() == Validador.MAXIMO_COMPONENTES)
 	var p: Dictionary = Validador.validar_ficha({"componentes": [{"tipo": "projetil", "ao_impactar": efeitos}]})["componentes"][0]
 	_afirmar("projétil com 50 efeitos fica com no máximo 4", p["ao_impactar"].size() == Validador.MAXIMO_EFEITOS_DE_IMPACTO)
+
+
+## Galinha v4 (arte/personagens/galinha/galinha.py): mesma malha do piloto,
+## com os 11 ossos e as 5 animações pedidas.
+func _testar_galinha_tem_esqueleto_e_animacoes() -> void:
+	var modelo: Node3D = VisualGalinha.MODELO.instantiate()
+	var esqueleto: Skeleton3D = modelo.find_children("*", "Skeleton3D", true, false)[0]
+	var ossos := ["Raiz", "Corpo", "Pescoco", "Cabeca", "AsaE", "AsaD", "CoxaE", "CoxaD", "PeE", "PeD", "Cauda"]
+	_afirmar("galinha tem os 11 ossos", ossos.all(func(o): return esqueleto.find_bone(o) >= 0) and esqueleto.get_bone_count() == 11)
+	var anim: AnimationPlayer = modelo.find_child("AnimationPlayer", true, false)
+	_afirmar("galinha tem Parado, Andar, Bicar, Dano e Morrer",
+		["Parado", "Andar", "Bicar", "Dano", "Morrer"].all(func(a): return anim.has_animation(a)))
+	var triangulos := 0
+	for malha in modelo.find_children("*", "MeshInstance3D", true, false):
+		for s in malha.mesh.get_surface_count():
+			triangulos += malha.mesh.surface_get_array_index_len(s) / 3
+	_afirmar("galinha manteve os 1.148 triângulos do piloto (tem %d)" % triangulos, triangulos == 1148)
+	modelo.free()
+
+
+## Andando para a frente na velocidade em que o Andar foi gravado, o tornozelo
+## apoiado tem que ficar parado no chão (só sobra resíduo de interpolação).
+func _testar_pe_da_galinha_nao_patina_no_andar() -> void:
+	var modelo: Node3D = VisualGalinha.MODELO.instantiate()
+	add_child(modelo)
+	var anim: AnimationPlayer = modelo.find_child("AnimationPlayer", true, false)
+	var esqueleto: Skeleton3D = modelo.find_children("*", "Skeleton3D", true, false)[0]
+	anim.get_animation("Andar").loop_mode = Animation.LOOP_LINEAR
+	anim.play("Andar")
+	var pe := esqueleto.find_bone("PeE")
+	var passo := 1.0 / 600.0
+	var anterior := Vector3.INF
+	var pior := 0.0
+	var apoio_s := 0.0
+	for i in 480:
+		anim.advance(passo)
+		modelo.position.z = VisualGalinha.VELOCIDADE_ANDAR_MODELO * passo * (i + 1)
+		var p := modelo.transform * esqueleto.transform * esqueleto.get_bone_global_pose(pe).origin
+		if anterior != Vector3.INF and p.y < 0.0201 and anterior.y < 0.0201:
+			pior = maxf(pior, Vector2(p.x - anterior.x, p.z - anterior.z).length() / passo)
+			apoio_s += passo
+		anterior = p
+	_afirmar("pé da galinha encosta no chão no Andar", apoio_s > 0.05)
+	_afirmar("pé apoiado quase parado (%.2f m/s com o chão a %.1f m/s)" % [pior, VisualGalinha.VELOCIDADE_ANDAR_MODELO],
+		pior < 0.5)
+	modelo.queue_free()
+
+
+func _testar_bicada_so_machuca_depois_do_aviso() -> void:
+	var chao := _chao_em(Vector3(440, 0, 0))
+	var mago := _mago_em(Vector3(440, 0, 0))
+	var galinha := _galinha_em(Vector3(440.8, 0, 0))
+	await get_tree().create_timer(VisualGalinha.AVISO_BICADA_S - 0.05).timeout
+	_afirmar("bicada não machuca durante o aviso de 0,4 s", mago.vida_atual == mago.vida_maxima)
+	await get_tree().create_timer(0.25).timeout
+	_afirmar("bicada machuca quando o bico chega", mago.vida_atual < mago.vida_maxima)
+	for n in [mago, galinha, chao]:
+		n.queue_free()
+
+
+func _testar_bicada_erra_se_o_mago_foge_no_aviso() -> void:
+	var chao := _chao_em(Vector3(460, 0, 0))
+	var mago := _mago_em(Vector3(460, 0, 0))
+	var galinha := _galinha_em(Vector3(460.8, 0, 0))
+	await get_tree().create_timer(0.15).timeout
+	mago.global_position = Vector3(456, 0, 0)
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("bicada erra quem saiu do alcance durante o aviso", mago.vida_atual == mago.vida_maxima)
+	for n in [mago, galinha, chao]:
+		n.queue_free()
+
+
+func _testar_galinha_zumbi_e_variante_do_mesmo_modelo() -> void:
+	var galinha := _galinha_em(Vector3(480, 0, 0))
+	await get_tree().process_frame
+	var visual: VisualGalinha = galinha.find_children("*", "VisualGalinha", true, false)[0]
+	_afirmar("galinha zumbi usa o modelo da galinha, marcado como zumbi", visual.zumbi)
+	var escondidas := VisualGalinha.PENAS_FALTANDO_ZUMBI.all(func(n): return not visual.find_child(n, true, false).visible)
+	_afirmar("galinha zumbi está sem 2 penas da cauda", escondidas)
+	var cabeca: MeshInstance3D = visual.find_child("MalhaCabeca", true, false)
+	var olho_aceso := false
+	for s in cabeca.mesh.get_surface_count():
+		var mat := cabeca.get_surface_override_material(s) as StandardMaterial3D
+		olho_aceso = olho_aceso or (mat != null and mat.emission_enabled)
+	_afirmar("olhos da galinha zumbi brilham", olho_aceso)
+	var invocada: VisualGalinha = CorposInvocacao.criar("ave", Color.WHITE)
+	_afirmar("galinha invocada usa o mesmo modelo, sem pintura de zumbi", invocada is VisualGalinha and not invocada.zumbi)
+	invocada.free()
+	galinha.queue_free()
+
+
+func _testar_galinha_morta_tomba_e_depois_some() -> void:
+	var galinha := _galinha_em(Vector3(500, 0, 0))
+	await get_tree().process_frame
+	galinha.receber_dano(999.0, galinha.global_position + Vector3.BACK, 0.0)
+	await get_tree().create_timer(0.5).timeout
+	_afirmar("galinha morta fica no chão tombando (não some na hora)", is_instance_valid(galinha))
+	_afirmar("galinha morta deixa de ser alvo", is_instance_valid(galinha) and not galinha.is_in_group("inimigo"))
+	await get_tree().create_timer(VisualGalinha.TEMPO_CORPO_NO_CHAO_S).timeout
+	_afirmar("galinha morta some depois de deitada", not is_instance_valid(galinha))
 
 
 ## Estado "cego": o último que faltava da proposta técnica (seção 3).
