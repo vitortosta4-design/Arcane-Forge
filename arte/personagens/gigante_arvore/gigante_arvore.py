@@ -51,14 +51,24 @@ MEIA_LARGURA_QUADRIL = 2.1
 MEIA_LARGURA_CINTURA = 1.55
 MEIA_LARGURA_PEITO = 2.3
 MEIA_LARGURA_OMBRO = 3.0
-# 4a rodada (critico, 3/10 reprovado): perna tinha que ser o elemento
-# robusto e o braco afinar com leve cotovelo, nao o contrario. Cotovelo
-# um pouco mais aberto que o ombro, pulso volta para perto do corpo e
-# para a metade da coxa (nao mais perto do joelho).
-MEIA_LARGURA_COTOVELO = 4.4
-COTOVELO_Z = 14.2
-MEIA_LARGURA_PULSO = 3.8
-PULSO_Z_V2 = 9.8
+# 5a rodada: medido por pixel na folha (nao mais "de olho"), ver
+# docs/contexto/diario.md 29/10/2026. Na folha o ombro fica a 61% da
+# altura total e a ponta da mao a so 7% (quase no tornozelo!) - nas
+# rodadas 2-4 o pulso nunca passou de 34-38%, por isso nunca bateu com
+# a silhueta por mais que a largura mudasse. O braco tambem nao desce
+# reto: ele se abre bastante por volta de 20-23% da altura (ponto mais
+# largo, aqui chamado "cotovelo" mesmo sem ser um cotovelo classico) e
+# so depois volta para perto do corpo na ponta. So o comprimento/forma
+# do braco mudou nesta rodada (variavel isolada, pedido do Vitor);
+# ombro, perna, pe, torso, rosto e copa ficam como estavam na 4a.
+MEIA_LARGURA_COTOVELO = 5.6
+COTOVELO_Z = 5.3
+# O pulso medido (7% = 1,85 m) ficaria colado/dentro da perna; afastado
+# o minimo para nao atravessar a canela (perna ali tem raio ~0,75 m a
+# 3,2 m do eixo - ver perna()), mantendo a leitura de "desce quase ate
+# o tornozelo" sem geometria se cruzando.
+MEIA_LARGURA_PULSO = 4.4
+PULSO_Z_V2 = 2.6
 SEPARACAO_PERNAS = 2.3     # distancia do centro a cada quadril (postura bem aberta, como a folha)
 
 
@@ -268,11 +278,10 @@ def tronco_e_bracos():
     bracos = {}
     for s, nome in ((-1, "E"), (1, "D")):
         ombro = Vector((s * MEIA_LARGURA_OMBRO, -0.1, OMBRO_Z))
-        # Cotovelo um pouco mais aberto e a frente que o ombro (leve dobra,
-        # pedido do critico); pulso volta para perto do corpo, na metade
-        # da coxa, mais fino que a perna o tempo todo.
-        cotovelo = Vector((s * MEIA_LARGURA_COTOVELO, -0.5, COTOVELO_Z))
-        pulso = Vector((s * MEIA_LARGURA_PULSO, -0.2, PULSO_Z_V2))
+        # Perfil lateral da folha: o braco tambem vem para a frente do
+        # corpo na parte de baixo, nao so para o lado (medido no perfil).
+        cotovelo = Vector((s * MEIA_LARGURA_COTOVELO, -2.8, COTOVELO_Z))
+        pulso = Vector((s * MEIA_LARGURA_PULSO, -1.2, PULSO_Z_V2))
         braco_o = tubo(f"Braco{nome}", [ombro, cotovelo, pulso], [0.95, 0.82, 0.62], TRONCO_CLARO, lados=8)
         eixo_mao = (pulso - cotovelo).normalized()
         mao = mao_grossa(f"Mao{nome}", pulso, eixo_mao, Vector((0, 0, 1)), s)
