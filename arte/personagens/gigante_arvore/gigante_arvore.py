@@ -51,11 +51,14 @@ MEIA_LARGURA_QUADRIL = 2.1
 MEIA_LARGURA_CINTURA = 1.55
 MEIA_LARGURA_PEITO = 2.3
 MEIA_LARGURA_OMBRO = 3.0
-# Pulso afastado do eixo que o ombro (folha: braco se abre ao descer,
-# nao fica colado no tronco - 1a rodada errou isso). 2a rodada exagerou
-# (5.9, "muito afastado" - pedido do Vitor); 3a rodada: meio-termo.
-MEIA_LARGURA_PULSO = 5.0
-PULSO_Z_V2 = 6.6
+# 4a rodada (critico, 3/10 reprovado): perna tinha que ser o elemento
+# robusto e o braco afinar com leve cotovelo, nao o contrario. Cotovelo
+# um pouco mais aberto que o ombro, pulso volta para perto do corpo e
+# para a metade da coxa (nao mais perto do joelho).
+MEIA_LARGURA_COTOVELO = 4.4
+COTOVELO_Z = 14.2
+MEIA_LARGURA_PULSO = 3.8
+PULSO_Z_V2 = 9.8
 SEPARACAO_PERNAS = 2.3     # distancia do centro a cada quadril (postura bem aberta, como a folha)
 
 
@@ -231,51 +234,48 @@ def perna(lado):
     x_quadril = s * SEPARACAO_PERNAS
     x_pe = s * (SEPARACAO_PERNAS + 0.9)
     p = []
-    # Pernas mais finas (1a/2a rodada: "muito largas" - coxas de 1,95 quase
-    # encostavam uma na outra no meio). Pe mais grosso/presente ("muito
-    # finos"): base maior e raizes-dedo bem mais robustas.
-    p.append(torno(f"Coxa{s}", [(1.35, QUADRIL_Z), (1.1, 9.6), (0.92, JOELHO_Z)], TRONCO, lados=8,
+    # 4a rodada (critico): perna tem que ser o elemento robusto do corpo,
+    # mais grossa que o braco (antes estava invertido). Pe largo e
+    # espalhado (3 raizes-dedo, nao 2), para dar "base de apoio" visual a
+    # uma criatura de 26 m.
+    p.append(torno(f"Coxa{s}", [(1.7, QUADRIL_Z), (1.4, 9.6), (1.15, JOELHO_Z)], TRONCO, lados=8,
                     centro=(x_quadril, 0, 0), ruido=0.05, semente=10 + s))
-    p.append(torno(f"Canela{s}", [(0.92, JOELHO_Z + 0.3), (0.8, 3.6), (0.68, TORNOZELO_Z)], TRONCO_CLARO, lados=8,
+    p.append(torno(f"Canela{s}", [(1.15, JOELHO_Z + 0.3), (0.98, 3.6), (0.8, TORNOZELO_Z)], TRONCO_CLARO, lados=8,
                     centro=(x_pe, 0, 0), ruido=0.05, semente=20 + s))
-    # Pe: base larga achatada (sola) de onde saem 2 raizes-dedo grossas, uma
-    # para a frente e outra ligeiramente de lado, como a folha (vista de
-    # perfil mostra 1 clara + 1 atras).
-    p.append(torno(f"PeBase{s}", [(0.68, TORNOZELO_Z), (1.55, 0.5), (1.85, 0.15)], TRONCO_ESCURO, lados=8,
+    p.append(torno(f"PeBase{s}", [(0.8, TORNOZELO_Z), (1.7, 0.5), (2.0, 0.15)], TRONCO_ESCURO, lados=8,
                     centro=(x_pe, 0, 0), ruido=0.06, semente=30 + s))
-    for k, (dx, dy, comp) in enumerate(((0.5, -2.0, 2.4), (-0.75, -1.2, 2.0))):
+    for k, (dx, dy) in enumerate(((0.3, -2.3), (1.4, -1.3), (-1.3, -1.1))):
         base_pt = Vector((x_pe, 0, 0.65))
         ponta = base_pt + Vector((dx, dy, -0.55))
         p.append(tubo(f"PeDedo{s}_{k}", [base_pt, base_pt + (ponta - base_pt) * 0.5, ponta],
-                       [0.9, 0.75, 0.42], TRONCO_ESCURO, lados=6))
+                       [0.95, 0.8, 0.45], TRONCO_ESCURO, lados=6))
     return p
 
 
 def tronco_e_bracos():
-    """Tronco (quadril->ombro) e os 2 bracos retos e curtos, com maos de
-    dedos grossos na ponta (folha v2: bracos nao alcancam mais o joelho)."""
+    """Tronco (quadril->ombro), bem mais arredondado (peito/cintura/quadril
+    com volume, nao mais "poste reto" - critico 4a rodada), e os 2 bracos
+    com leve cotovelo, agora mais finos que a perna e mais curtos (pulso
+    na metade da coxa, nao perto do joelho)."""
     p = {}
     p["Tronco"] = [torno("TroncoCorpo", [(MEIA_LARGURA_QUADRIL, QUADRIL_Z), (MEIA_LARGURA_CINTURA, CINTURA_Z),
                                          (MEIA_LARGURA_PEITO, PEITO_Z), (MEIA_LARGURA_PEITO * 0.92, OMBRO_Z)],
-                         TRONCO, lados=10, achatar=0.82, ruido=0.045, semente=1)]
+                         TRONCO, lados=10, achatar=0.95, ruido=0.045, semente=1)]
     # Pescoco curto, mesma casca.
     p["Tronco"].append(torno("Pescoco", [(MEIA_LARGURA_PEITO * 0.92, OMBRO_Z), (1.15, PESCOCO_Z)], TRONCO,
-                             lados=10, achatar=0.85, ruido=0.03, semente=2))
+                             lados=10, achatar=0.9, ruido=0.03, semente=2))
 
     bracos = {}
     for s, nome in ((-1, "E"), (1, "D")):
-        ombro = Vector((s * MEIA_LARGURA_OMBRO, 0, OMBRO_Z))
-        # Braco se abre ao descer (pulso bem mais afastado do eixo que o
-        # ombro), para nao colar no tronco e sumir na silhueta (erro da 1a
-        # rodada). Cor mais clara (TroncoClaro, igual a canela) para separar
-        # por valor do tronco escuro, nao so por distancia.
-        pulso = Vector((s * MEIA_LARGURA_PULSO, -0.3, PULSO_Z_V2))
-        eixo = pulso - ombro
-        giro = Vector((0, 0, 1)).rotation_difference(eixo.normalized()).to_matrix().to_4x4()
-        braco_o = torno(f"Braco{nome}", [(1.3, 0.0), (1.15, eixo.length * 0.55), (0.95, eixo.length)], TRONCO_CLARO,
-                        lados=8, ruido=0.05, semente=40 + s)
-        braco_o.matrix_world = Matrix.Translation(ombro) @ giro
-        mao = mao_grossa(f"Mao{nome}", pulso, eixo.normalized(), Vector((0, 0, 1)), s)
+        ombro = Vector((s * MEIA_LARGURA_OMBRO, -0.1, OMBRO_Z))
+        # Cotovelo um pouco mais aberto e a frente que o ombro (leve dobra,
+        # pedido do critico); pulso volta para perto do corpo, na metade
+        # da coxa, mais fino que a perna o tempo todo.
+        cotovelo = Vector((s * MEIA_LARGURA_COTOVELO, -0.5, COTOVELO_Z))
+        pulso = Vector((s * MEIA_LARGURA_PULSO, -0.2, PULSO_Z_V2))
+        braco_o = tubo(f"Braco{nome}", [ombro, cotovelo, pulso], [0.95, 0.82, 0.62], TRONCO_CLARO, lados=8)
+        eixo_mao = (pulso - cotovelo).normalized()
+        mao = mao_grossa(f"Mao{nome}", pulso, eixo_mao, Vector((0, 0, 1)), s)
         p[f"Braco{nome}"] = [braco_o]
         p[f"Mao{nome}"] = mao
         bracos[nome] = (ombro, pulso)
@@ -283,23 +283,23 @@ def tronco_e_bracos():
 
 
 def mao_grossa(prefixo, pulso, frente, cima, lado_sinal):
-    """Mao sem ossos de dedo: punho largo e 4 "toquinhos" grossos em leque,
-    rigidos (giram juntos com a mao - pedido: "maos de dedos grossos",
-    sem precisar de articulacao fina, ja que a arvore so anda)."""
+    """Mao de 4 dedos-raiz claramente separados (critico 4a rodada: "pa
+    chapada sem dedos separados") - punho bem menor que antes e dedos mais
+    compridos e abertos em leque, lendo como raiz, nao bloco."""
     f = Vector(frente).normalized()
     c = Vector(cima) - f * Vector(cima).dot(f)
     c.normalize()
     l = f.cross(c).normalized() * lado_sinal
-    centro = Vector(pulso) + f * 0.55
-    p = [casco(f"{prefixo}Punho", [centro + f * ex * 0.55 + l * math.cos(a) * 1.0 + c * math.sin(a) * 0.8
+    centro = Vector(pulso) + f * 0.3
+    p = [casco(f"{prefixo}Punho", [centro + f * ex * 0.3 + l * math.cos(a) * 0.55 + c * math.sin(a) * 0.45
                                    for ex in (-1, 1) for a in (0, 1.26, 2.51, 3.77, 5.03)], TRONCO_CLARO)]
     for i in range(4):
         t = (i - 1.5) / 1.5
-        base_dedo = centro + f * 0.5 + l * t * 0.88
-        direcao = (f * 1.1 + l * t * 0.6 - c * 0.2).normalized()
-        meio = base_dedo + direcao * 0.95
-        ponta = meio + direcao * 0.75
-        p.append(tubo(f"{prefixo}Dedo{i}", [base_dedo, meio, ponta], [0.52, 0.46, 0.22], TRONCO_CLARO, lados=6))
+        base_dedo = centro + f * 0.25 + l * t * 1.15
+        direcao = (f * 1.3 + l * t * 0.9 - c * 0.15).normalized()
+        meio = base_dedo + direcao * 1.05
+        ponta = meio + direcao * 0.85
+        p.append(tubo(f"{prefixo}Dedo{i}", [base_dedo, meio, ponta], [0.46, 0.38, 0.2], TRONCO_CLARO, lados=6))
     return p
 
 
@@ -309,14 +309,16 @@ def cabeca_e_rosto():
     p.append(esfera("Cabeca", centro, (1.35, 1.25, (TOPO_CABECA_Z - QUEIXO_Z) / 2 + 0.15), TRONCO, seg=9, aneis=7))
     # Olhos: ovais deitados, suaves (folha v2), levados um pouco para a
     # frente para nao sumir dentro da cabeca facetada.
+    # Olhos e boca maiores (critico 4a rodada: "rosto quase ilegivel de
+    # frente, so dois pontinhos").
     for s in (-1, 1):
-        p.append(esfera(f"Olho{s}", (s * 0.55, -1.15, centro.z + 0.15), (0.3, 0.1, 0.17), OLHO, seg=7, aneis=5))
+        p.append(esfera(f"Olho{s}", (s * 0.58, -1.18, centro.z + 0.15), (0.4, 0.13, 0.24), OLHO, seg=7, aneis=5))
     # Boca em V curvo (sorriso calmo, folha v2) - feita com um tubo fino
     # curvado em vez de reta, para ler como sorriso de longe.
-    pts_boca = [Vector((-0.6, -1.1, centro.z - 0.5)), Vector((-0.25, -1.24, centro.z - 0.72)),
-                Vector((0.0, -1.28, centro.z - 0.8)), Vector((0.25, -1.24, centro.z - 0.72)),
-                Vector((0.6, -1.1, centro.z - 0.5))]
-    p.append(tubo("Boca", pts_boca, 0.14, BOCA, lados=6, fechar=False))
+    pts_boca = [Vector((-0.75, -1.1, centro.z - 0.5)), Vector((-0.3, -1.26, centro.z - 0.78)),
+                Vector((0.0, -1.3, centro.z - 0.88)), Vector((0.3, -1.26, centro.z - 0.78)),
+                Vector((0.75, -1.1, centro.z - 0.5))]
+    p.append(tubo("Boca", pts_boca, 0.2, BOCA, lados=6, fechar=False))
     return p
 
 
@@ -342,8 +344,10 @@ def copa():
         p.append(icosfera(f"Copa{i}", centro, (r, r, r), cor, subdiv=subdiv,
                           rot=(rnd.uniform(0, math.pi), rnd.uniform(0, math.pi), rnd.uniform(0, math.pi))))
     # Um galho fino com 2 folhas saindo do topo (como a folha mostra).
-    topo = centro_copa + Vector((0.3, -0.2, 2.6))
-    p.append(tubo("GalhoTopo", [centro_copa + Vector((0, 0, 1.8)), topo], [0.09, 0.03], TRONCO, lados=5))
+    # Empurrado mais para cima (copa maior na 3a/4a rodada enterrava o
+    # galho dentro do cacho - critico apontou que sumiu).
+    topo = centro_copa + Vector((0.3, -0.2, 4.1))
+    p.append(tubo("GalhoTopo", [centro_copa + Vector((0, 0, 2.7)), topo], [0.11, 0.035], TRONCO, lados=5))
     for k, d in enumerate(((0.35, -0.1, 0.3), (-0.15, 0.25, 0.4))):
         p.append(casco(f"FolhaTopo{k}", [topo, topo + Vector(d) + Vector((0, 0, -0.05)),
                                          topo + Vector(d) * 0.5 + Vector((0, 0, 0.2))], COPA_CLARA))
@@ -355,7 +359,9 @@ def ninho(centro_copa):
     da copa. Poucos triangulos (menos de 40 ao todo); se um dia pesar,
     e o primeiro candidato a cortar (nao e o foco do personagem)."""
     p = []
-    base_ninho = centro_copa + Vector((1.1, 0.5, 2.0))
+    # Deslocado para a borda do cacho maior (3a/4a rodada), senao fica
+    # enterrado dentro dos blocos da copa.
+    base_ninho = centro_copa + Vector((2.0, 0.6, 2.7))
     p.append(torno("Ninho", [(0.55, 0.0), (0.62, 0.1), (0.5, 0.22)], NINHO, lados=8, fechar=(True, False),
                    ruido=0.12, semente=99, centro=tuple(base_ninho)))
     corpo_passaro = base_ninho + Vector((0.0, 0.0, 0.3))
