@@ -3,15 +3,14 @@ extends RefCounted
 ## Corpo visível das criaturas invocadas, pelo campo "corpo" da ficha
 ## (Validador.CORPOS_VALIDOS). Antes todas eram a mesma bola colorida.
 ##
-## - ave: a galinha do piloto de modelagem (assets/modelos/galinha.glb), com
-##   esqueleto e animação de andar;
+## - ave: a galinha v4 com esqueleto e animações (VisualGalinha), a mesma
+##   da galinha zumbi;
 ## - quadrupede, bolha, verme: provisórios montados em código, com silhueta
 ##   própria (juba, braços de pedra, gomos) e olhos esbugalhados (ADR-019),
 ##   até o Vitor mandar as folhas de referência e a skill personagem-low-poly
 ##   fazer os modelos de verdade (leão, golem).
 ## A frente é -Z, igual ao look_at da criatura.
 
-const GALINHA := preload("res://assets/modelos/galinha.glb")
 const COR_OLHO := Color(1, 1, 1)
 const COR_PUPILA := Color(0.05, 0.05, 0.07)
 
@@ -35,17 +34,7 @@ static func criar(corpo: String, cor: Color, material := "") -> Node3D:
 
 
 static func _ave() -> Node3D:
-	var raiz := Node3D.new()
-	var galinha := GALINHA.instantiate() as Node3D
-	# O modelo do Blender olha para +Z; a criatura anda para -Z.
-	galinha.rotation.y = PI
-	raiz.add_child(galinha)
-	var anim := galinha.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	if anim and anim.has_animation("Andar"):
-		anim.get_animation("Andar").loop_mode = Animation.LOOP_LINEAR
-		anim.play("Andar")
-	raiz.position.y = -0.5
-	return raiz
+	return VisualGalinha.criar(false)
 
 
 static func _malha(st: SurfaceTool) -> Node3D:

@@ -6,6 +6,8 @@ const GRAVIDADE := 9.8
 const ALCANCE_ATAQUE := 1.2
 const DANO_BICADA := 5.0
 const INTERVALO_ATAQUE_S := 1.0
+## Tamanho da zumbi em relação ao modelo da galinha (VisualGalinha): ~0,9 m.
+const ESCALA_VISUAL := 0.62
 
 @export var vida := 30.0
 
@@ -18,8 +20,10 @@ const ALTURA_BARRA_VIDA := 1.0
 var _cooldown_ataque := 0.0
 var _morta := false
 var estados := ControladorEstados.new()
-
-@onready var _mesh: Node3D = $CorpoVisivel
+var _visual: VisualGalinha
+## Bicada em andamento: o dano só sai quando o bico chega (aviso de 0,4 s).
+var _bicada_restante_s := -1.0
+var _alvo_bicada: Node3D
 
 
 func _ready() -> void:
@@ -27,6 +31,9 @@ func _ready() -> void:
 	add_to_group("recebe_dano")
 	add_to_group("inimigo")
 	add_child(estados)
+	_visual = VisualGalinha.criar(true)
+	_visual.scale = Vector3.ONE * ESCALA_VISUAL
+	$CorpoVisivel.add_child(_visual)
 
 
 func aplicar_estado(nome_estado: String, duracao_s: float) -> void:
@@ -39,6 +46,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_cooldown_ataque = maxf(0.0, _cooldown_ataque - delta)
+	_avancar_bicada(delta)
 
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
@@ -49,10 +57,12 @@ func _physics_process(delta: float) -> void:
 	# Cego não acha ninguém: fica parado, sem perseguir nem atacar.
 	if estados.esta_cego():
 		alvo = null
+		_bicada_restante_s = -1.0
 	if alvo == null:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
+		_visual.atualizar_andar(0.0)
 		return
 
 	var distancia := global_position.distance_to(alvo.global_position)
@@ -61,17 +71,37 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		if _cooldown_ataque <= 0.0:
 			_cooldown_ataque = INTERVALO_ATAQUE_S
+			# O cacarejo sai no começo do aviso: é a deixa para o jogador fugir.
 			GerenciadorSom.tocar_galinha(global_position)
-			Host.aplicar_dano(alvo, DANO_BICADA, global_position, 1.0)
-	else:
+			_alvo_bicada = alvo
+			_bicada_restante_s = VisualGalinha.TEMPO_ACERTO_BICADA_S
+			_visual.bicar()
+	elif _bicada_restante_s < 0.0:
 		var direcao := (alvo.global_position - global_position)
 		direcao.y = 0.0
 		direcao = direcao.normalized()
 		velocity.x = direcao.x * VELOCIDADE * estados.multiplicador_velocidade()
 		velocity.z = direcao.z * VELOCIDADE * estados.multiplicador_velocidade()
 		look_at(global_position + direcao, Vector3.UP)
+	else:
+		# Parada no meio da bicada (o alvo fugiu do alcance durante o aviso).
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 	move_and_slide()
+	_visual.atualizar_andar(Vector2(velocity.x, velocity.z).length())
+
+
+## Se o mago saiu do alcance durante o aviso, a bicada erra.
+func _avancar_bicada(delta: float) -> void:
+	if _bicada_restante_s < 0.0:
+		return
+	_bicada_restante_s -= delta
+	if _bicada_restante_s > 0.0:
+		return
+	_bicada_restante_s = -1.0
+	if is_instance_valid(_alvo_bicada) and global_position.distance_to(_alvo_bicada.global_position) <= ALCANCE_ATAQUE:
+		Host.aplicar_dano(_alvo_bicada, DANO_BICADA, global_position, 1.0)
 
 
 func _encontrar_mago_mais_proximo() -> Node3D:
@@ -98,6 +128,8 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 		velocity += direcao * empurrao
 	if _vida_atual <= 0.0:
 		_morrer()
+	else:
+		_visual.levar_dano()
 
 
 ## Fração da vida que sobra (0 a 1), só para leitura do HUD.
@@ -108,6 +140,7 @@ func fracao_vida() -> float:
 func _morrer() -> void:
 	_morta = true
 	remove_from_group("recebe_dano")
-	var tween := create_tween()
-	tween.tween_property(_mesh, "scale", Vector3.ZERO, 0.3)
-	tween.tween_callback(queue_free)
+	remove_from_group("inimigo")
+	$CollisionShape3D.set_deferred("disabled", true)
+	_visual.morrer()
+	get_tree().create_timer(VisualGalinha.TEMPO_CORPO_NO_CHAO_S).timeout.connect(queue_free)
