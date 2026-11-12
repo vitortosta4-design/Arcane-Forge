@@ -1,0 +1,3 @@
+quadro 19 (0.633s): pico 0.38
+quadro 20 (0.667s): pico 0.18
+quadro 21 (0.700s): pico 0.03

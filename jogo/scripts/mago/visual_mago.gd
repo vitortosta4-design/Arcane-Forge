@@ -19,6 +19,10 @@ const ESCALA := 2.05
 ## patinar no chão.
 const VELOCIDADE_DO_PASSO := 4.8  # passada ~1,5x maior com as pernas novas (era 3,2)
 const MISTURA_S := 0.15
+## Durante a preparação a animação Conjurar toca acelerada: em 0,1 s ela já
+## recolheu o braço (quadro 4 de 24) e está no meio do bote, que é quando a
+## magia sai. Depois volta ao ritmo normal para segurar a pose e assentar.
+const RITMO_PREPARO := 2.0
 const COR_CRISTAL := Color(0.3, 0.62, 1.0)
 
 var _anim: AnimationPlayer
@@ -64,8 +68,18 @@ func animar(_delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
 		_anim.speed_scale = 1.0
 
 
+## Clique: começa já a recolher o braço (antecipação), em ritmo dobrado.
 func conjurar() -> void:
 	_tocar_acao("Conjurar")
+	if _anim and _acao == "Conjurar":
+		_anim.speed_scale = RITMO_PREPARO
+
+
+## A magia saiu: o resto da animação (braço esticado, volta) toca no ritmo
+## normal. Se o mago levou dano no meio, a animação já é outra: não mexe.
+func soltar_magia() -> void:
+	if _anim and _acao == "Conjurar":
+		_anim.speed_scale = 1.0
 
 
 ## O mago levou dano: tranco para trás e as mãos abrem de susto.

@@ -9,6 +9,11 @@ const SENSIBILIDADE_MOUSE := 0.0025
 const LIMITE_OLHAR_CIMA_BAIXO := deg_to_rad(85)
 const COOLDOWN_CONJURACAO_S := 0.5
 const REGEN_MANA_POR_S := 5.0
+## Preparação do lançamento (auditoria de animação, defeito 2): no clique o
+## corpo já recolhe o braço (resposta imediata) e a magia sai 0,1 s depois
+## (3 quadros a 30 FPS), no meio do bote. Curta de propósito: mais que isso
+## o jogador sente atraso. Mana, recarga e animação começam no clique.
+const PREPARACAO_S := 0.1
 
 @export var vida_maxima := 100.0
 @export var mana_maxima := 100.0
@@ -22,6 +27,9 @@ const ALCANCE_MIRA_M := 80.0
 const MASCARA_MIRA := 1 | 4 | 16
 
 var _cooldown_restante := 0.0
+## Ficha já paga e validada, esperando o fim da preparação para sair.
+var _ficha_preparada: Dictionary = {}
+var _preparo_restante := 0.0
 var _entrada_bloqueada := false
 var _reducao_escudo := 0.0
 ## Tremor de câmera (eventos ambientais, ADR-047): decai até zero sozinho,
@@ -92,6 +100,7 @@ func _physics_process(delta: float) -> void:
 	_cooldown_restante = maxf(0.0, _cooldown_restante - delta)
 	_regenerar_mana(delta)
 	barra.avancar(delta)
+	_avancar_preparacao(delta)
 
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
@@ -198,15 +207,38 @@ func _conjurar_ficha(ficha: Dictionary) -> bool:
 	if not Host.gastar_mana(self, custo):
 		return false
 	_cooldown_restante = COOLDOWN_CONJURACAO_S
+	_ficha_preparada = ficha_validada
+	_preparo_restante = PREPARACAO_S
+	_corpo_visivel.conjurar()
+	_mao.conjurar()
+	return true
+
+
+func esta_preparando_magia() -> bool:
+	return not _ficha_preparada.is_empty()
+
+
+func _avancar_preparacao(delta: float) -> void:
+	if _ficha_preparada.is_empty():
+		return # normal: nenhuma magia a caminho
+	_preparo_restante -= delta
+	if _preparo_restante <= 0.0:
+		_soltar_magia()
+
+
+## Fim da preparação: a magia sai da mão. A mira é lida agora, não no
+## clique, então quem virou a câmera nesses 0,1 s acerta onde está olhando.
+func _soltar_magia() -> void:
+	var ficha := _ficha_preparada
+	_ficha_preparada = {}
 	var mira := ponto_de_disparo()
 	var origem: Vector3 = mira[0]
 	var direcao: Vector3 = mira[1]
 	GerenciadorSom.tocar_tiro(origem)
-	_corpo_visivel.conjurar()
-	_mao.conjurar()
-	Executor.executar_ficha(ficha_validada, origem, direcao, self, get_tree().current_scene)
-	conjurou.emit(ficha_validada.get("legenda", ""))
-	return true
+	_corpo_visivel.soltar_magia()
+	_mao.soltar_magia()
+	Executor.executar_ficha(ficha, origem, direcao, self, get_tree().current_scene)
+	conjurou.emit(ficha.get("legenda", ""))
 
 
 ## De onde a magia sai e para onde vai: sai da mão (primeira pessoa) ou do

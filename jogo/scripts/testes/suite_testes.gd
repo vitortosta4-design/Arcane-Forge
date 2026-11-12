@@ -141,6 +141,8 @@ func _ready() -> void:
 	await _testar_arvore_gigante_anda_em_direcao_ao_destino()
 	await _testar_arvore_gigante_e_removida_ao_fim_da_rota()
 	_testar_rota_do_evento_passa_perto_de_um_ponto_conhecido()
+	# Auditoria de animação (ordem de trabalho autorizada em 12/11/2026)
+	await _testar_mago_prepara_antes_de_lancar()
 
 	print("")
 	if _falhas == 0:
@@ -2242,7 +2244,8 @@ func _testar_ciclo_da_forja_do_comeco_ao_fim() -> void:
 	_afirmar("ciclo: o jato d'água acerta e molha a galinha", usou_jato and galinha.estados.esta_molhado())
 	await get_tree().create_timer(0.6).timeout # cooldown entre conjurações
 	var usou_golem: bool = mago.usar_medalhao(int(golem["espaco"]))
-	await get_tree().physics_frame
+	# A magia sai depois da preparação do lançamento (0,1 s).
+	await get_tree().create_timer(mago.PREPARACAO_S + 0.1).timeout
 	_afirmar("ciclo: o medalhão do golem invoca a criatura", usou_golem and get_tree().get_nodes_in_group("criatura_invocada").size() > criaturas_antes)
 	# O golem é lento: espera ele chegar e bater na galinha (até 8 s de física).
 	for i in Engine.physics_ticks_per_second * 8:
@@ -2421,3 +2424,35 @@ func _distancia_ponto_ao_segmento(ponto: Vector2, a: Vector2, b: Vector2) -> flo
 		return ponto.distance_to(a)
 	var t := clampf((ponto - a).dot(direcao) / direcao.length_squared(), 0.0, 1.0)
 	return ponto.distance_to(a + direcao * t)
+
+
+## Auditoria de animação, defeito 2: no clique o corpo já começa a recolher
+## o braço, mas a magia só sai depois de uma preparação curta (0,1 s).
+func _testar_mago_prepara_antes_de_lancar() -> void:
+	var cena: PackedScene = load("res://cenas/mago.tscn")
+	var roteiro_projetil: Script = load("res://scripts/magia/projetil.gd")
+	var contar := func() -> int:
+		return get_children().filter(func(n): return n.get_script() == roteiro_projetil).size()
+	var mago := cena.instantiate()
+	add_child(mago)
+	await get_tree().process_frame
+	var visual: VisualMago = mago.get_node("CorpoVisivel")
+	var antes: int = contar.call()
+	_afirmar("preparo: o clique é aceito", mago.usar_medalhao(0))
+	_afirmar("preparo: mana e recarga contam já no clique", mago.mana_atual < mago.mana_maxima and not mago.barra.pronto(0))
+	_afirmar("preparo: no clique a magia ainda não saiu", mago.esta_preparando_magia() and contar.call() == antes)
+	_afirmar("preparo: o corpo responde no mesmo instante (animação Conjurar acelerada)",
+		visual._anim.current_animation == "Conjurar" and is_equal_approx(visual._anim.speed_scale, VisualMago.RITMO_PREPARO))
+	var quadros := 0
+	while mago.esta_preparando_magia() and quadros < 60:
+		await get_tree().physics_frame
+		quadros += 1
+	var espera_s := float(quadros) / Engine.physics_ticks_per_second
+	_afirmar("preparo: a magia sai em no máximo 0,15 s (saiu em %.3f s)" % espera_s, espera_s <= 0.15 and contar.call() == antes + 1)
+	_afirmar("preparo: depois de soltar, a animação volta ao ritmo normal",
+		visual._anim.current_animation == "Conjurar" and is_equal_approx(visual._anim.speed_scale, 1.0))
+	for n in get_children():
+		if n.get_script() == roteiro_projetil:
+			n.queue_free()
+	mago.queue_free()
+	await get_tree().process_frame

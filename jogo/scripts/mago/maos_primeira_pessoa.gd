@@ -62,11 +62,20 @@ func animar(delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
 		_brilho.visible = _brilho_restante > 0.0
 
 
+## Clique: a mão recolhe fechando os dedos (antecipação), em ritmo dobrado
+## para o leque abrir junto com a saída da magia.
 func conjurar() -> void:
 	if _anim and _anim.has_animation("Conjurar1P"):
+		_anim.speed_scale = VisualMago.RITMO_PREPARO
 		_anim.play("Conjurar1P", 0.05)
 	else:
 		push_warning("MaosPrimeiraPessoa: sem a animação 'Conjurar1P'.")
+
+
+## A magia saiu: brilho na palma e o resto da animação no ritmo normal.
+func soltar_magia() -> void:
+	if _anim:
+		_anim.speed_scale = 1.0
 	_brilho_restante = DURACAO_BRILHO_S
 
 
