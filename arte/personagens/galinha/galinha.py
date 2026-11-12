@@ -51,8 +51,11 @@ PIVOS = {   # cabeca do osso (pivo); todos apontam para cima (+Z)
     "Corpo": (0, 0.02, 0.26),
     "Pescoco": (0, -0.10, 0.47),
     "Cabeca": (0, -0.13, 0.56),
-    "AsaE": (0.20, -0.06, 0.40),
-    "AsaD": (-0.20, -0.06, 0.40),
+    # Pivo no ombro: canto de cima e de dentro da asa (medido na malha: x 0,167
+    # a 0,178, z 0,426). Assim a asa abre como dobradica presa ao corpo, em vez
+    # de girar pelo meio e parecer um remo solto (critico, 12/11/2026).
+    "AsaE": (0.172, 0.05, 0.42),
+    "AsaD": (-0.172, 0.05, 0.42),
     "Cauda": (0, 0.20, 0.40),
     "CoxaE": (PERNA_X, PERNA_Y, QUADRIL_Z),
     "CoxaD": (-PERNA_X, PERNA_Y, QUADRIL_Z),
@@ -226,7 +229,8 @@ def pose_parado(t):
     return {
         "Corpo": (1.5 * resp, 0, 0), "loc_Corpo": (0, 0.006 * resp, 0),
         "Pescoco": (-2 * resp, 0, 0), "Cabeca": cabeca,
-        "AsaE": (0, 0, -3 - 2 * resp), "AsaD": (0, 0, 3 + 2 * resp),
+        # Em repouso a asa fica colada no corpo (so abre 1,5 grau na respiracao).
+        "AsaE": (0, 0, 0.75 + 0.75 * resp), "AsaD": (0, 0, -0.75 - 0.75 * resp),
         "Cauda": (4 * math.sin(2 * math.pi * t / 1.6 - 0.8), 3 * math.sin(2 * math.pi * t / 3.2), 0),
     }
 
@@ -298,35 +302,43 @@ def pose_andar(t):
 
 
 def pose_bicar(t):
-    # Aviso (ate 0,4 s): agacha, recolhe o pescoco no peito, abre asas e cauda
-    # e treme (10 Hz, legivel a 30 FPS). Bote ate 0,47 s: o pescoco avanca
-    # para a frente e para baixo; a cabeca quase nao gira (crista em cima).
-    tremer = math.sin(t * 2 * math.pi * 10) if 0.2 < t < AVISO_BICADA_S else 0.0
-    agachar = [(0.0, (0, 0, 0)), (0.22, (1, 1, 1)), (AVISO_BICADA_S, (1, 1, 1)),
-               (ACERTO_BICADA_S, (0, 0, 0)), (0.9, (0, 0, 0))]
+    # Aviso (ate 0,4 s), refeito para ler de FRENTE, que e como o jogador ve
+    # (critico, 12/11/2026: a cabeca tombava para tras e sumiam crista e cara):
+    # a galinha se estica para cima e abre bem as asas, como bicho que quer
+    # parecer maior (pedido do Vitor: asas mais abertas como aviso). O pescoco
+    # recua pouco e a cabeca compensa, entao olhos e crista continuam a vista.
+    # As asas batem tremendo (10 Hz, legivel a 30 FPS). Bote ate 0,47 s: o
+    # pescoco avanca para a frente e para baixo e as asas fecham de uma vez.
+    tremer = math.sin(t * 2 * math.pi * 10) if 0.16 < t < AVISO_BICADA_S else 0.0
+    armar = [(0.0, (0, 0, 0)), (0.16, (1, 1, 1)), (AVISO_BICADA_S, (1, 1, 1)),
+             (ACERTO_BICADA_S, (0, 0, 0)), (0.9, (0, 0, 0))]
     bote = [(0.0, (0, 0, 0)), (AVISO_BICADA_S, (0, 0, 0)), (ACERTO_BICADA_S, (1, 1, 1)),
             (0.56, (1, 1, 1)), (0.9, (0, 0, 0))]
-    a = curva(t, agachar)[0]
+    a = curva(t, armar)[0]
     b = curva(t, bote)[0]
+    asa = 82 * a + 9 * tremer * a + 12 * b
     return {
-        "Corpo": (-15 * a + 3 * tremer + 24 * b, 0, 0),
-        "loc_Corpo": (0, -0.06 * a - 0.04 * b, -0.03 * a + 0.12 * b),
-        "Pescoco": (-40 * a + 6 * tremer + 36 * b, 0, 0),
-        "Cabeca": (-8 * a - 6 * b, 0, 0),
-        "AsaE": (0, 0, 45 * a + 10 * b), "AsaD": (0, 0, -45 * a - 10 * b),
+        "Corpo": (-9 * a + 2 * tremer + 24 * b, 0, 0),
+        "loc_Corpo": (0, 0.06 * a - 0.04 * b, -0.02 * a + 0.12 * b),
+        "Pescoco": (-16 * a + 3 * tremer + 36 * b, 0, 0),
+        "Cabeca": (14 * a - 6 * b, 0, 0),
+        "AsaE": (0, 0, asa), "AsaD": (0, 0, -asa),
         "Cauda": (35 * a - 10 * b, 0, 0),
-        "CoxaE": (6 * a - 8 * b, 0, 0), "CoxaD": (6 * a - 8 * b, 0, 0),
-        "PeE": (-6 * a + 8 * b, 0, 0), "PeD": (-6 * a + 8 * b, 0, 0),
+        # O corpo sobe 6 cm (o topo da perna fica 6,5 cm dentro dele, entao nao
+        # aparece vao) e os pes nao saem do chao.
+        "CoxaE": (-8 * b, 0, 0), "CoxaD": (-8 * b, 0, 0),
+        "PeE": (8 * b, 0, 0), "PeD": (8 * b, 0, 0),
     }
 
 
 def pose_dano(t):
-    # Tranco: joga para tras em 0,05 s e volta balancando ate 0,35 s.
+    # Tranco: joga para tras em 0,05 s e volta balancando ate 0,35 s. O corpo
+    # recua 9 cm (mais de 10% da altura; antes 5 cm lia como solucao).
     u = t / 0.033 if t < 0.033 else math.exp(-(t - 0.033) * 11) * math.cos((t - 0.033) * 30)
     return {
-        "Corpo": (-20 * u, 0, 5 * u), "loc_Corpo": (0, 0.03 * u, -0.05 * u),
-        "Pescoco": (-30 * u, 0, -8 * u), "Cabeca": (-10 * u, 12 * u, 0),
-        "AsaE": (0, 0, 45 * abs(u)), "AsaD": (0, 0, -45 * abs(u)),
+        "Corpo": (-28 * u, 0, 6 * u), "loc_Corpo": (0, 0.04 * u, -0.09 * u),
+        "Pescoco": (-30 * u, 0, -8 * u), "Cabeca": (-4 * u, 12 * u, 0),
+        "AsaE": (0, 0, 60 * abs(u)), "AsaD": (0, 0, -60 * abs(u)),
         "Cauda": (30 * u, 0, 0),
     }
 

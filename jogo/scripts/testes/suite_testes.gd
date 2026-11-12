@@ -152,6 +152,8 @@ func _ready() -> void:
 	_testar_som_do_martelo_e_curto_e_mono()
 	await _testar_apanhar_no_aviso_cancela_a_bicada()
 	_testar_martelo_bate_com_a_face()
+	await _testar_galinha_aviso_abre_as_asas_e_mostra_a_cara()
+	await _testar_galinha_dano_congela_ja_recuada()
 	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
@@ -2658,3 +2660,46 @@ func _testar_sons_mais_baixos_e_suaves() -> void:
 	var novos := get_children().filter(func(n): return n is AudioStreamPlayer3D and not n.get_instance_id() in antes)
 	_afirmar("som: a explosão toca com o desconto dela", novos.size() == 1 and is_equal_approx(novos[0].volume_db, GerenciadorSom.VOLUME_DB["explosao"]))
 	await get_tree().process_frame
+
+
+## Rodada da galinha de 12/11 (crítico 6,5): o aviso da bicada tem que ler de
+## frente. Medido nos ossos: as asas abrem mais de 70 graus, o corpo sobe e a
+## cabeça não tomba para trás mais que 15 graus (olhos e crista à vista).
+func _testar_galinha_aviso_abre_as_asas_e_mostra_a_cara() -> void:
+	var g := VisualGalinha.criar(false)
+	add_child(g)
+	await get_tree().process_frame
+	var esq: Skeleton3D = g.find_child("Skeleton3D", true, false)
+	var asa := esq.find_bone("AsaE")
+	var cabeca := esq.find_bone("Cabeca")
+	var corpo := esq.find_bone("Corpo")
+	var pose_de := func(osso: int) -> Transform3D: return esq.get_bone_global_pose(osso)
+	var asa_parada: Basis = pose_de.call(asa).basis
+	var cabeca_parada: Transform3D = pose_de.call(cabeca)
+	var corpo_parado: Transform3D = pose_de.call(corpo)
+	_afirmar("galinha: em repouso a asa fica colada (menos de 3 graus aberta)",
+		rad_to_deg(esq.get_bone_pose_rotation(asa).get_angle()) < 3.0)
+	g.bicar()
+	# Espera o aviso armar (ele segura a pose de 0,16 s a 0,4 s).
+	await get_tree().create_timer(0.27).timeout
+	var abertura := rad_to_deg(asa_parada.get_rotation_quaternion().angle_to(pose_de.call(asa).basis.get_rotation_quaternion()))
+	_afirmar("galinha: no aviso as asas abrem bem (%.0f graus)" % abertura, abertura > 70.0)
+	var tombo := rad_to_deg(cabeca_parada.basis.get_rotation_quaternion().angle_to(pose_de.call(cabeca).basis.get_rotation_quaternion()))
+	_afirmar("galinha: no aviso a cabeça não tomba para trás (%.0f graus)" % tombo, tombo < 15.0)
+	_afirmar("galinha: no aviso o corpo se estica para cima", pose_de.call(corpo).origin.y > corpo_parado.origin.y + 0.04)
+	g.queue_free()
+
+
+func _testar_galinha_dano_congela_ja_recuada() -> void:
+	var g := VisualGalinha.criar(false)
+	add_child(g)
+	await get_tree().process_frame
+	var esq: Skeleton3D = g.find_child("Skeleton3D", true, false)
+	var corpo := esq.find_bone("Corpo")
+	var antes: Vector3 = esq.get_bone_global_pose(corpo).origin
+	g.levar_dano()
+	g._anim.advance(0.0)
+	await get_tree().process_frame
+	var recuo: float = esq.get_bone_global_pose(corpo).origin.distance_to(antes)
+	_afirmar("galinha: a pausa do golpe pega o corpo já recuado (%.1f cm)" % (recuo * 100.0), is_zero_approx(g._anim.speed_scale) and recuo > 0.07)
+	g.queue_free()

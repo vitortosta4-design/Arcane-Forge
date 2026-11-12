@@ -24,16 +24,18 @@ const TEMPO_ACERTO_BICADA_S := 0.47
 ## Quanto tempo o corpo fica deitado (Morrer dura 1,3 s) antes de sumir.
 const TEMPO_CORPO_NO_CHAO_S := 2.2
 
-const COR_ZUMBI := Color(0.62, 0.74, 0.55)
+## Pálida e fria (crítico, 12/11/2026: o verde oliva sumia na grama verde).
+const COR_ZUMBI := Color(0.74, 0.88, 0.8)
 const COR_OLHO_ZUMBI := Color(0.75, 1.0, 0.35)
 ## Penas da cauda que a zumbi já perdeu.
 ## Tirar a de cima e uma do meio deixa o recorte da cauda "mordido".
 const PENAS_FALTANDO_ZUMBI := ["Pena_0", "Pena_2"]
 ## Penas soltas da cor do corpo de quem apanhou.
 const COR_PENA_SOLTA := Color(0.98, 0.8, 0.56)
-const COR_PENA_SOLTA_ZUMBI := Color(0.6, 0.66, 0.5)
+const COR_PENA_SOLTA_ZUMBI := Color(0.74, 0.8, 0.76)
 ## Congelada rápida ao levar o golpe, para o impacto ter peso.
 const PAUSA_IMPACTO_S := 0.05
+const PICO_DANO_S := 0.033
 
 var zumbi := false
 
@@ -95,6 +97,12 @@ func levar_dano(interrompe_bicada := false) -> void:
 	# para o que se vê bater com a regra; só as penas e a pausa mostram o golpe.
 	if _acao != "Bicar" or interrompe_bicada:
 		_tocar_acao("Dano")
+		# A pausa do golpe congela a galinha já jogada para trás (o pico do
+		# tranco fica aos 0,033 s da animação). Congelar no quadro zero era
+		# congelar a pose neutra: o golpe não aparecia.
+		# Sem mistura: com a animação parada a mistura também não anda.
+		_anim.play("Dano", 0.0)
+		_anim.seek(PICO_DANO_S, true)
 	_anim.speed_scale = 0.0
 	var pausa := create_tween()
 	pausa.tween_interval(PAUSA_IMPACTO_S)
@@ -183,7 +191,7 @@ func _virar_zumbi() -> void:
 			elif original.resource_name == "G_Preto":
 				pass
 			else:
-				mat.albedo_color = (original.albedo_color * COR_ZUMBI).lerp(Color(0.5, 0.52, 0.48), 0.25)
+				mat.albedo_color = (original.albedo_color * COR_ZUMBI).lerp(Color(0.74, 0.76, 0.84), 0.35)
 			malha.set_surface_override_material(s, mat)
 
 
