@@ -190,7 +190,7 @@ func mudar_expressao(nova: String) -> bool:
 func _criar_martelo() -> void:
 	_martelo = Node3D.new()
 	_martelo.name = "Martelo"
-	_martelo.position = PONTO_BATIDA + Vector3(CABO_M, 0.25, 0.0)
+	_martelo.position = PONTO_BATIDA + Vector3(CABO_M, 0.41, 0.0)
 	_martelo.scale = Vector3.ZERO
 	_martelo.visible = false
 	add_child(_martelo)
@@ -211,12 +211,14 @@ func _criar_martelo() -> void:
 	cabo.rings = 0
 	_peca_martelo("Cabo", cabo, madeira, Vector3(-CABO_M * 0.5, 0, 0), Vector3(0, 0, PI * 0.5))
 	var cabeca := BoxMesh.new()
-	cabeca.size = Vector3(0.5, 0.5, 0.82)
+	# Cabeça em pé: o lado comprido acompanha o golpe, então quem bate na
+	# mesa é a face do martelo (antes estava deitada e batia de lado).
+	cabeca.size = Vector3(0.5, 0.82, 0.5)
 	_peca_martelo("Cabeca", cabeca, pedra, Vector3(-CABO_M, 0, 0), Vector3.ZERO)
 	var faixa := BoxMesh.new()
-	faixa.size = Vector3(0.56, 0.56, 0.14)
-	_peca_martelo("FaixaA", faixa, lava, Vector3(-CABO_M, 0, 0.22), Vector3.ZERO)
-	_peca_martelo("FaixaB", faixa, lava, Vector3(-CABO_M, 0, -0.22), Vector3.ZERO)
+	faixa.size = Vector3(0.56, 0.14, 0.56)
+	_peca_martelo("FaixaA", faixa, lava, Vector3(-CABO_M, 0.22, 0), Vector3.ZERO)
+	_peca_martelo("FaixaB", faixa, lava, Vector3(-CABO_M, -0.22, 0), Vector3.ZERO)
 	var pomo := BoxMesh.new()
 	pomo.size = Vector3.ONE * 0.22
 	_peca_martelo("Pomo", pomo, pedra, Vector3(0.05, 0, 0), Vector3(PI * 0.25, 0, PI * 0.25))

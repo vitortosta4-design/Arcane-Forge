@@ -151,6 +151,8 @@ func _ready() -> void:
 	await _testar_forja_martelar_dispara_o_martelo_e_o_som()
 	_testar_som_do_martelo_e_curto_e_mono()
 	await _testar_apanhar_no_aviso_cancela_a_bicada()
+	_testar_martelo_bate_com_a_face()
+	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
 	print("")
@@ -2621,3 +2623,38 @@ func _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada() -> void:
 	_afirmar("bote: a bicada acerta mesmo assim", mago.vida_atual < mago.vida_maxima)
 	for n in [mago, galinha, chao]:
 		n.queue_free()
+
+
+## Pedido do Vitor (12/11): o martelo batia de lado. A cabeça fica em pé, com
+## o lado comprido na direção do golpe, e a face de baixo encosta na mesa.
+func _testar_martelo_bate_com_a_face() -> void:
+	var b: BigornaViva = load("res://cenas/forja/bigorna_viva.tscn").instantiate()
+	add_child(b)
+	var cabeca: MeshInstance3D = b.get_node("Martelo/Cabeca")
+	var tamanho: Vector3 = (cabeca.mesh as BoxMesh).size
+	_afirmar("martelo: a cabeça é mais comprida na direção do golpe", tamanho.y > tamanho.x and tamanho.y > tamanho.z)
+	# Com o martelo deitado (fim do golpe), a face de baixo fica na mesa.
+	var face_y: float = b.get_node("Martelo").position.y + cabeca.position.y - tamanho.y * 0.5
+	_afirmar("martelo: a face de baixo encosta no ponto da batida", absf(face_y - BigornaViva.PONTO_BATIDA.y) < 0.02)
+	b.free()
+
+
+## Pedido do Vitor (12/11): som mais baixo e suave no jogo todo, a explosão
+## principalmente.
+func _testar_sons_mais_baixos_e_suaves() -> void:
+	var trilha := AudioServer.get_bus_index("Efeitos")
+	_afirmar("som: a trilha de efeitos está mais baixa", AudioServer.get_bus_volume_db(trilha) <= -6.0)
+	_afirmar("som: a trilha de efeitos tem filtro que corta o agudo",
+		AudioServer.get_bus_effect_count(trilha) > 0 and AudioServer.get_bus_effect(trilha, 0) is AudioEffectLowPassFilter
+		and AudioServer.is_bus_effect_enabled(trilha, 0))
+	var mais_baixo := true
+	for nome in GerenciadorSom.VOLUME_DB:
+		if nome != "explosao" and GerenciadorSom.VOLUME_DB["explosao"] >= GerenciadorSom.VOLUME_DB[nome]:
+			mais_baixo = false
+	_afirmar("som: a explosão é o som com o maior desconto", mais_baixo)
+	GerenciadorSom._tocadores_ativos.clear()
+	var antes := get_children().filter(func(n): return n is AudioStreamPlayer3D).map(func(n): return n.get_instance_id())
+	GerenciadorSom.tocar_explosao(Vector3(900, 0, 0))
+	var novos := get_children().filter(func(n): return n is AudioStreamPlayer3D and not n.get_instance_id() in antes)
+	_afirmar("som: a explosão toca com o desconto dela", novos.size() == 1 and is_equal_approx(novos[0].volume_db, GerenciadorSom.VOLUME_DB["explosao"]))
+	await get_tree().process_frame
