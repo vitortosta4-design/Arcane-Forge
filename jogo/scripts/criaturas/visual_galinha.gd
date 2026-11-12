@@ -36,6 +36,18 @@ const COR_PENA_SOLTA_ZUMBI := Color(0.74, 0.8, 0.76)
 ## Congelada rápida ao levar o golpe, para o impacto ter peso.
 const PAUSA_IMPACTO_S := 0.05
 const PICO_DANO_S := 0.033
+## Clarão branco ao apanhar (ressalva do crítico, 12/11/2026: "falta um
+## piscar branco de 2 ou 3 quadros"). A galinha inteira vira silhueta branca
+## por este tempo. Troca o material das superfícies, não o `material_overlay`,
+## que é da camada de cor dos estados (ControladorEstados): os dois convivem.
+const CLARAO_S := 0.08
+## Aviso da bicada da zumbi (ressalva do crítico: ela anda rebolando, então o
+## aviso mexia menos que o andar). Só nela, durante o aviso, o corpo incha,
+## tomba para trás e treme; no bote volta ao normal de uma vez.
+const INCHACO_AVISO_ZUMBI := 0.25
+const TOMBO_AVISO_ZUMBI := 0.3
+const TREMOR_AVISO_ZUMBI := 0.16
+const TREMOR_AVISO_HZ := 10.0
 
 var zumbi := false
 
@@ -45,6 +57,12 @@ var _anim: AnimationPlayer
 var _acao := ""
 var _morta := false
 var _tempo := 0.0
+var _material_clarao: StandardMaterial3D
+## [malha, superfície, material que estava] de cada superfície durante o clarão.
+var _antes_do_clarao: Array = []
+var _fim_do_clarao: Tween
+## 0 a 1: quanto do aviso da zumbi está armado.
+var _aviso_zumbi := 0.0
 
 
 static func criar(e_zumbi: bool) -> VisualGalinha:
@@ -93,6 +111,7 @@ func levar_dano(interrompe_bicada := false) -> void:
 	if _morta:
 		return
 	_soltar_penas(9)
+	_piscar_branco()
 	# No meio da bicada o dano dela ainda vai sair: a Bicar continua na tela
 	# para o que se vê bater com a regra; só as penas e a pausa mostram o golpe.
 	if _acao != "Bicar" or interrompe_bicada:
@@ -127,10 +146,60 @@ func _process(delta: float) -> void:
 	_tempo += delta
 	if not zumbi or _morta:
 		return
+	# Aviso da bicada: arma em 60% do tempo do aviso e desarma rápido no bote.
+	var no_aviso := _anim != null and _acao == "Bicar" and _anim.current_animation == "Bicar" \
+		and _anim.current_animation_position < AVISO_BICADA_S
+	if no_aviso:
+		_aviso_zumbi = clampf(_anim.current_animation_position / (AVISO_BICADA_S * 0.6), 0.0, 1.0)
+	else:
+		_aviso_zumbi = move_toward(_aviso_zumbi, 0.0, delta * 12.0)
+	var armado := ease(_aviso_zumbi, 0.4)
+	_modelo.scale = Vector3.ONE * ESCALA_MODELO * (1.0 + INCHACO_AVISO_ZUMBI * armado)
+	# O modelo olha para +Z dele: X negativo joga o topo para trás.
+	_modelo.rotation.x = -TOMBO_AVISO_ZUMBI * armado
 	# Andar torto da zumbi: corpo caído para um lado, balançando fora do passo.
 	var andando := _anim != null and _anim.current_animation == "Andar"
 	var alvo := 0.2 + 0.1 * sin(_tempo * 3.1) if andando else 0.07
 	rotation.z = lerpf(rotation.z, alvo, minf(1.0, delta * 6.0))
+	if _aviso_zumbi > 0.0:
+		rotation.z = 0.07 + sin(_tempo * TAU * TREMOR_AVISO_HZ) * TREMOR_AVISO_ZUMBI * armado
+
+
+## Silhueta branca por CLARAO_S. Um golpe em cima do outro só renova o tempo.
+func _piscar_branco() -> void:
+	if _modelo == null:
+		return # normal: dano antes do _ready (o visual ainda não montou)
+	if _material_clarao == null:
+		_material_clarao = StandardMaterial3D.new()
+		_material_clarao.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_material_clarao.albedo_color = Color.WHITE
+		# Na nuvem (Compatibility) o branco sai 214 de 255 por causa do ajuste
+		# de tons da câmera, com ou sem luz própria. A luz própria fica para o
+		# Forward+ do PC do Vitor, onde o brilho (glow) pode pegar nela: conferir lá.
+		_material_clarao.emission_enabled = true
+		_material_clarao.emission = Color.WHITE
+		_material_clarao.emission_energy_multiplier = 1.0
+	if _antes_do_clarao.is_empty():
+		for no in _modelo.find_children("*", "MeshInstance3D", true, false):
+			var malha := no as MeshInstance3D
+			if malha.mesh == null:
+				push_warning("VisualGalinha: malha '%s' vazia no galinha.glb." % malha.name)
+				continue
+			for s in malha.mesh.get_surface_count():
+				_antes_do_clarao.append([malha, s, malha.get_surface_override_material(s)])
+				malha.set_surface_override_material(s, _material_clarao)
+	if _fim_do_clarao:
+		_fim_do_clarao.kill()
+	_fim_do_clarao = create_tween()
+	_fim_do_clarao.tween_interval(CLARAO_S)
+	_fim_do_clarao.tween_callback(_apagar_clarao)
+
+
+func _apagar_clarao() -> void:
+	for item in _antes_do_clarao:
+		if is_instance_valid(item[0]):
+			(item[0] as MeshInstance3D).set_surface_override_material(item[1], item[2])
+	_antes_do_clarao.clear()
 
 
 func _tocar_ciclo(nome: String, ritmo: float) -> void:

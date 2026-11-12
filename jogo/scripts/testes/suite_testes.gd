@@ -155,6 +155,8 @@ func _ready() -> void:
 	await _testar_galinha_aviso_abre_as_asas_e_mostra_a_cara()
 	await _testar_galinha_dano_congela_ja_recuada()
 	await _testar_arvore_gigante_anda_de_frente_e_segue_a_folha()
+	await _testar_galinha_pisca_branco_ao_apanhar()
+	await _testar_galinha_zumbi_incha_no_aviso()
 	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
@@ -2803,3 +2805,52 @@ func _testar_arvore_gigante_anda_de_frente_e_segue_a_folha() -> void:
 		var pe: AABB = caixas["PeBaseE"]
 		_afirmar("gigante: pé cheio de perfil (%.1f m de comprimento)" % pe.size.z, pe.size.z > 4.0)
 	arvore.queue_free()
+
+
+## Ressalvas do crítico na galinha (12/11): ao apanhar ela pisca branca por
+## 2 ou 3 quadros, sem mexer na camada de cor dos estados (material_overlay),
+## e depois volta a ter exatamente os materiais de antes (a zumbi, os dela).
+func _testar_galinha_pisca_branco_ao_apanhar() -> void:
+	for e_zumbi in [false, true]:
+		var nome := "zumbi" if e_zumbi else "invocada"
+		var g := VisualGalinha.criar(e_zumbi)
+		add_child(g)
+		await get_tree().process_frame
+		var malhas := g.find_children("*", "MeshInstance3D", true, false).filter(func(m): return m.mesh != null)
+		var antes := malhas.map(func(m): return m.get_surface_override_material(0))
+		var camadas := malhas.map(func(m): return m.material_overlay)
+		g.levar_dano()
+		var brancas := malhas.all(func(m):
+			var mat := m.get_surface_override_material(0) as StandardMaterial3D
+			return mat != null and mat.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED and mat.albedo_color == Color.WHITE)
+		_afirmar("galinha %s: apanhou, fica branca na hora (%d malhas)" % [nome, malhas.size()], malhas.size() > 0 and brancas)
+		_afirmar("galinha %s: o clarão não mexe na camada de cor dos estados" % nome, malhas.map(func(m): return m.material_overlay) == camadas)
+		# O crítico pediu prova de que não é um quadro só: a 0,05 s ainda está branca.
+		await get_tree().create_timer(0.05).timeout
+		_afirmar("galinha %s: a 0,05 s do golpe continua branca" % nome, malhas.all(func(m): return m.get_surface_override_material(0) == g._material_clarao))
+		g.levar_dano() # segundo golpe durante o clarão não pode guardar o branco como "antes"
+		await get_tree().create_timer(VisualGalinha.CLARAO_S + 0.06).timeout
+		_afirmar("galinha %s: depois do clarão voltam os materiais de antes" % nome, malhas.map(func(m): return m.get_surface_override_material(0)) == antes)
+		_afirmar("galinha: o clarão dura 2 ou 3 quadros a 30 por segundo", VisualGalinha.CLARAO_S >= 2.0 / 30.0 and VisualGalinha.CLARAO_S <= 3.0 / 30.0)
+		g.queue_free()
+
+
+## A zumbi anda rebolando, então o aviso da bicada dela precisa ser maior que
+## o da invocada: incha e tomba para trás durante o aviso e volta no bote.
+func _testar_galinha_zumbi_incha_no_aviso() -> void:
+	var zumbi := VisualGalinha.criar(true)
+	var invocada := VisualGalinha.criar(false)
+	add_child(zumbi)
+	add_child(invocada)
+	await get_tree().process_frame
+	zumbi.bicar()
+	invocada.bicar()
+	await get_tree().create_timer(0.3).timeout
+	var base := VisualGalinha.ESCALA_MODELO
+	_afirmar("galinha zumbi: incha no aviso da bicada (%.0f%%)" % ((zumbi._modelo.scale.y / base - 1.0) * 100.0), zumbi._modelo.scale.y > base * 1.18)
+	_afirmar("galinha zumbi: tomba para trás no aviso", zumbi._modelo.rotation.x < -0.2)
+	_afirmar("galinha invocada: aviso sem inchaço (só a zumbi)", is_equal_approx(invocada._modelo.scale.y, base))
+	await get_tree().create_timer(0.35).timeout
+	_afirmar("galinha zumbi: desincha no bote", zumbi._modelo.scale.y < base * 1.03 and zumbi._modelo.rotation.x > -0.05)
+	zumbi.queue_free()
+	invocada.queue_free()

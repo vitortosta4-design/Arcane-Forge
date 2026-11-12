@@ -2,22 +2,21 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 12/11/2026, noite (7ª rodada do gigante da árvore; o Vitor aceitou como está)
+Atualizado em: 12/11/2026, noite (gigante encerrado na 7ª rodada; ressalvas da galinha resolvidas)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035). O ciclo roda e tem teste de ponta a ponta; da fase só falta o que é do Vitor (jogar, achar divertido, medir FPS).
 - Tudo de 12/11 está no `main`.
 - **Gigante da árvore: encerrado na 7ª rodada por decisão do Vitor (12/11).** Crítico 7,5, reprovado por costas e perfil; o Vitor aceitou como está, por ser evento raro visto de longe. Não abrir 8ª rodada sem ele pedir. O que o crítico ainda apontou está em `evidencias/fase-2/critico_12-11-2026.md` (costas com pouco musgo, perfil sem rosto, aresta no pulso, musgo claro no jogo, pé curto de lado). 3.182 triângulos.
 - Auditoria de animação, feitos: mago lança com preparação de 0,1 s; impacto com peso; bigorna com martelo e som (aprovados pelo Vitor); galinha cancela a bicada se apanhar no aviso (**ADR-048, revogável**).
-- Galinha v4: crítico 7,5, aprovada com ressalvas; asas ficam bem abertas no aviso (decisão do Vitor).
+- **Galinha v4: crítico 8,0, aprovada.** Ao apanhar pisca branca por 0,08 s; a zumbi incha, tomba para trás e treme no aviso da bicada (aviso x andar foi de 0,98 para 1,47 em pixels mudados). Asas ficam bem abertas no aviso (decisão do Vitor).
 - HUD (crítico 8,0), mago com esqueleto (8,4) e runas v6 (6,5, esperando símbolos) seguem como estavam.
-- Testes: 390/390 (11 novos do gigante). Relatórios do crítico: `evidencias/fase-2/critico_12-11-2026.md`.
+- Testes: 404/404 (11 novos do gigante, 14 da galinha). Relatórios do crítico: `evidencias/fase-2/critico_12-11-2026.md`.
 
 ## Próximo passo
 1. Vitor e Matheus jogam o pacote (`build/ArcaneForge_teste_Matheus.zip`; a pasta `build/` não vai para o git, gerar com `ferramentas/gerar_pacote_teste.sh`) e respondem as 4 perguntas do LEIA-ME.
-2. Galinha, ressalvas do crítico: clarão branco no dano e aviso da zumbi maior que o andar dela.
-3. Auditoria de animação, o que sobrou: mago andando e parando seco, medalhão nascendo e voando até a barra (precisa da referência do medalhão).
-4. Runas: montar as 8 quando os símbolos chegarem.
+2. Auditoria de animação, o que sobrou: mago andando e parando seco, medalhão nascendo e voando até a barra (precisa da referência do medalhão).
+3. Runas: montar as 8 quando os símbolos chegarem.
 
 ## Problemas conhecidos
 - Teste instável "área continua machucando a cada segundo": nunca reproduzido na nuvem. Se falhar no PC do Vitor, anotar a distância que ele imprime.
@@ -27,7 +26,7 @@ Atualizado em: 12/11/2026, noite (7ª rodada do gigante da árvore; o Vitor acei
 - Sessão na nuvem nova precisa baixar de novo os modelos de exportação do Godot (1,2 GB, GitHub) para gerar o pacote.
 
 ## Pendente do Vitor
-- **Só dá para conferir no PC dele:** brilho dos olhos do gigante e se o rosto fica bom com a névoa de verdade; se o 0,1 s de preparação do mago parece atraso; se a tremida da explosão incomoda; a troca de cor do gigante a 52 m; FPS (`ferramentas\medir_fps.bat`).
+- **Só dá para conferir no PC dele:** se o clarão branco da galinha sai branco de verdade (na nuvem sai 214 de 255) e se o tremor do aviso da zumbi parece tremor ou falha; brilho dos olhos do gigante e se o rosto fica bom com a névoa de verdade; se o 0,1 s de preparação do mago parece atraso; se a tremida da explosão incomoda; a troca de cor do gigante a 52 m; FPS (`ferramentas\medir_fps.bat`).
 - ADR-048: confirmar ou revogar depois de jogar.
 - Runas: símbolos de gravitação, arremesso e quebrar; pedra acesa tingida ou cinza.
 - Referência do medalhão em close (ADR-033), que também destrava a animação do medalhão.

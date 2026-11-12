@@ -295,3 +295,11 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Limitações:** 3.182 triângulos (antes 2.412; a skill fala em até uns 3.000 para personagem principal). O teste de "musgo não espeta" compara com a caixa do corpo inteiro, é uma guarda frouxa. Brilho dos olhos e névoa só no PC do Vitor.
 - **Pacote:** modelos de exportação baixados de novo do GitHub; `build/ArcaneForge_teste_Matheus.zip` gerado (LEIA-ME sem mudança).
 - **Decisão do Vitor (12/11, noite):** aceitar o gigante como está (opção b: evento raro visto de longe). Sem 8ª rodada; as pendências do crítico ficam registradas, não agendadas.
+
+## 12/11/2026 (noite) · Galinha: as duas ressalvas do crítico (7,5 → 8,0, aprovada)
+
+- **Clarão branco ao apanhar** (`visual_galinha.gd`): a galinha inteira vira silhueta branca por 0,08 s. Troca o material das superfícies e devolve o que estava (a zumbi recebe de volta os materiais dela); não usa o `material_overlay`, que continua só da camada de cor dos estados. Era esse conflito que tinha deixado o clarão de fora antes.
+- **Aviso da zumbi maior que o andar:** só nela, durante o aviso da bicada, o modelo incha 25%, tomba para trás e treme a 10 Hz; desincha no bote. Pixels mudados aviso x andar: 0,98 → 1,47.
+- **Achado:** a vitrine da galinha fotografa um quadro depois do tempo pedido (`frame_post_draw`), então "0,034 s" é na verdade 0,1 s. Para pegar o clarão o print foi pedido com 0,01 s.
+- **Testes:** 14 novos (branca na hora, ainda branca a 0,05 s, camada dos estados intacta, materiais de volta, zumbi incha e tomba, invocada não, desincha no bote). 404/404.
+- **Limitações:** o branco sai 214 de 255 na nuvem (ajuste de tons); tremor e clarão em movimento só julgando no PC do Vitor.
