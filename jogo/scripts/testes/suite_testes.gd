@@ -2710,27 +2710,36 @@ func _testar_galinha_dano_congela_ja_recuada() -> void:
 ## ele anda com o rosto para o destino (andava de costas) e as proporções
 ## principais, medidas na malha: copa com perto de 0,47 da altura de largura,
 ## mãos terminando acima dos pés e bem longe do eixo.
+## 7ª rodada (12/11): o que o crítico reprovou vira teste. Mão em luva única
+## (nenhuma malha solta de dedo ou palma), ninho com borda trançada e pássaro
+## azul de bico laranja, musgo em placas deitadas (nenhuma espeta mais de
+## 0,9 m para fora da madeira em que está), olhos em meia-lua cheia com
+## brilho, e o rosto com mais luz própria que o corpo.
 func _testar_arvore_gigante_anda_de_frente_e_segue_a_folha() -> void:
 	var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
 	add_child(arvore)
 	arvore.iniciar(Vector3(1000, 0, 0), Vector3(1000, 0, -100))
 	await get_tree().process_frame
 	var caixas := {}
+	var malhas := {}
 	var tudo := AABB()
 	var primeiro := true
 	for m in arvore.find_child("VisualDetalhado", true, false).find_children("*", "MeshInstance3D", true, false):
 		var malha: MeshInstance3D = m
 		var caixa: AABB = malha.global_transform * malha.get_aabb()
 		caixas[String(malha.name)] = caixa
+		malhas[String(malha.name)] = malha
 		tudo = caixa if primeiro else tudo.merge(caixa)
 		primeiro = false
-	var olhos: Array = caixas.keys().filter(func(n): return n.begins_with("Olho"))
-	var copas: Array = caixas.keys().filter(func(n): return n.begins_with("Copa"))
-	var dedos: Array = caixas.keys().filter(func(n): return n.begins_with("Dedo"))
-	_afirmar("gigante: o modelo tem olhos, copa e dedos com nome", olhos.size() == 2 and copas.size() >= 8 and dedos.size() == 6)
-	if olhos.is_empty() or copas.is_empty() or dedos.is_empty():
+	var com := func(prefixo: String) -> Array: return caixas.keys().filter(func(n): return n.begins_with(prefixo))
+	var olhos: Array = com.call("Olho")
+	var copas: Array = com.call("Copa")
+	var luvas: Array = com.call("Luva")
+	_afirmar("gigante: o modelo tem 2 olhos, copa e 2 luvas com nome", olhos.size() == 2 and copas.size() >= 8 and luvas.size() == 2)
+	if olhos.size() != 2 or copas.is_empty() or luvas.size() != 2:
 		arvore.queue_free()
 		return
+	_afirmar("gigante: mão em luva única (sem dedo nem palma soltos)", com.call("Dedo").is_empty() and com.call("Palma").is_empty() and com.call("Polegar").is_empty())
 	_afirmar("gigante: o rosto fica virado para o destino (não anda de costas)", caixas[olhos[0]].get_center().z < -0.8)
 	var altura: float = tudo.size.y
 	var copa: AABB = caixas[copas[0]]
@@ -2739,9 +2748,58 @@ func _testar_arvore_gigante_anda_de_frente_e_segue_a_folha() -> void:
 	_afirmar("gigante: copa larga como na folha (%.2f da altura, folha 0,47)" % (copa.size.x / altura), absf(copa.size.x / altura - 0.47) < 0.06)
 	var mais_baixo := INF
 	var mais_longe := 0.0
-	for n in dedos:
+	for n in luvas:
 		mais_baixo = minf(mais_baixo, caixas[n].position.y)
 		mais_longe = maxf(mais_longe, absf(caixas[n].get_center().x - 1000.0))
 	_afirmar("gigante: a mão termina acima do pé (%.0f%% da altura, folha 9%%)" % (mais_baixo / altura * 100.0), mais_baixo / altura > 0.05 and mais_baixo / altura < 0.13)
 	_afirmar("gigante: mãos bem abertas para os lados (%.2f da altura do eixo)" % (mais_longe / altura), mais_longe / altura > 0.2)
+	# A luva continua o antebraço: começa dentro dele (sem vão nem degrau solto).
+	var luva_e: AABB = caixas["LuvaE"] if caixas.has("LuvaE") else AABB()
+	var braco_e: AABB = caixas["BracoE"] if caixas.has("BracoE") else AABB()
+	_afirmar("gigante: a luva começa dentro do antebraço (sem vão no pulso)", caixas.has("LuvaE") and caixas.has("BracoE") and luva_e.end.y > braco_e.position.y + 0.5)
+
+	# Olhos em meia-lua cheia (antes eram um risco: altura 0,3 da largura) e com brilho.
+	var olho: AABB = caixas[olhos[0]]
+	_afirmar("gigante: olho em meia-lua cheia (altura %.2f da largura)" % (olho.size.y / olho.size.x), olho.size.y / olho.size.x > 0.42)
+	_afirmar("gigante: cada olho tem seu ponto de brilho", com.call("Brilho").size() == 2)
+
+	# Ninho trançado e pássaro azul de bico laranja.
+	_afirmar("gigante: ninho com borda trançada (%d gravetos)" % com.call("NinhoTranca").size(), com.call("NinhoTranca").size() >= 12)
+	var cor_de := func(nome: String) -> Color:
+		if not malhas.has(nome):
+			push_warning("teste do gigante: malha '%s' não existe no modelo." % nome)
+			return Color.BLACK
+		var mat := (malhas[nome] as MeshInstance3D).get_active_material(0) as StandardMaterial3D
+		return mat.albedo_color if mat else Color.BLACK
+	var azul: Color = cor_de.call("PassaroCorpo")
+	var bico: Color = cor_de.call("PassaroBico")
+	_afirmar("gigante: pássaro de corpo azul claro", azul.b > azul.r + 0.1 and azul.b > 0.6)
+	_afirmar("gigante: pássaro de bico laranja", bico.r > 0.7 and bico.g > 0.25 and bico.g < 0.65 and bico.b < 0.3)
+
+	# Musgo deitado: cada placa fica colada na peça (não espeta para fora).
+	var musgos: Array = com.call("Musgo")
+	var madeira: Array = caixas.keys().filter(func(n): return n.begins_with("Braco") or n.begins_with("Perna") or n.begins_with("PeBase") or n.begins_with("Raiz") or n.begins_with("Luva") or n.begins_with("Ombro") or n in ["Tronco", "Peitoral"])
+	var corpo_madeira: AABB = caixas[madeira[0]] if not madeira.is_empty() else AABB()
+	for n in madeira:
+		corpo_madeira = corpo_madeira.merge(caixas[n])
+	var espetado := 0.0
+	for n in musgos:
+		var c: AABB = caixas[n]
+		espetado = maxf(espetado, maxf(maxf(corpo_madeira.position.x - c.position.x, c.end.x - corpo_madeira.end.x), maxf(corpo_madeira.position.z - c.position.z, c.end.z - corpo_madeira.end.z)))
+	_afirmar("gigante: %d placas de musgo deitadas (a que mais sai da madeira: %.2f m)" % [musgos.size(), espetado], musgos.size() >= 8 and espetado < 0.9)
+
+	# Rosto mais claro que o corpo na sombra da copa.
+	var luz_de := func(nome: String) -> float:
+		if not malhas.has(nome):
+			push_warning("teste do gigante: malha '%s' não existe no modelo." % nome)
+			return -1.0
+		var mat := (malhas[nome] as MeshInstance3D).get_active_material(0) as StandardMaterial3D
+		return mat.emission_energy_multiplier if mat and mat.emission_enabled else 0.0
+	_afirmar("gigante: rosto com mais luz própria que o corpo", luz_de.call("Cabeca") > luz_de.call("Tronco") + 0.2 and luz_de.call("Tronco") > 0.0)
+
+	# Perfil: peito para a frente do quadril e pé cheio de lado.
+	_afirmar("gigante: tem peitoral e base cheia nos dois pés", caixas.has("Peitoral") and caixas.has("PeBaseE") and caixas.has("PeBaseD"))
+	if caixas.has("Peitoral") and caixas.has("PeBaseE"):
+		var pe: AABB = caixas["PeBaseE"]
+		_afirmar("gigante: pé cheio de perfil (%.1f m de comprimento)" % pe.size.z, pe.size.z > 4.0)
 	arvore.queue_free()

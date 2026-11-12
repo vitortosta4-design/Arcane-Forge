@@ -170,6 +170,12 @@ func _montar_visual_detalhado() -> Node3D:
 ## brilham, não mudam. A silhueta distante (além de DISTANCIA_LOD_M) continua
 ## na névoa, e no fim da rota ele some encolhendo e afundando, como antes.
 const LUZ_PROPRIA := 0.4
+## 7ª rodada (12/11/2026): o rosto vive na sombra da copa e chegava no jogo
+## bem mais escuro que na folha (valor 0,31 contra 0,49, medido pelo crítico).
+## A madeira da cabeça tem material próprio no modelo ("TroncoRosto") e ganha
+## mais luz própria que o resto do corpo.
+const LUZ_PROPRIA_ROSTO := 0.62
+const MATERIAL_ROSTO := "TroncoRosto"
 
 
 func _aquecer_materiais(modelo: Node3D) -> void:
@@ -187,7 +193,7 @@ func _aquecer_materiais(modelo: Node3D) -> void:
 				var copia: StandardMaterial3D = mat.duplicate()
 				copia.emission_enabled = true
 				copia.emission = copia.albedo_color
-				copia.emission_energy_multiplier = LUZ_PROPRIA
+				copia.emission_energy_multiplier = LUZ_PROPRIA_ROSTO if mat.resource_name == MATERIAL_ROSTO else LUZ_PROPRIA
 				copia.disable_fog = true
 				copias[mat] = copia
 			malha.set_surface_override_material(i, copias[mat])

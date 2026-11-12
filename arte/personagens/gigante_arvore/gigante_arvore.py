@@ -4,8 +4,9 @@ olhos com brilho suave, bracos retos e curtos, ninho pequeno no topo da copa).
 
 Humanoide de casca e galhos: tronco e membros facetados, copa de blocos
 facetados (icosferas), musgo so nas manchas da folha (peito, coxas,
-antebracos), maos como aglomerados de dedos grossos (sem ossos por dedo:
-giram em bloco com a mao), pes meio-raiz. Rosto simples e tranquilo.
+antebracos, canelas), em placas deitadas que abracam o membro; maos em luva
+unica (palma e dedos fundidos numa malha so, sem ossos por dedo: giram em
+bloco com a mao), pes meio-raiz. Rosto simples e tranquilo.
 
 ~26 m de altura (ALTURA_TOTAL_M, igual ao jogo em arvore_gigante.gd).
 So anda: nao ataca nem reage a dano (ADR-047, "solida mas indiferente"),
@@ -61,12 +62,12 @@ PULSO_Z = 6.5
 
 def criar_materiais():
     global TRONCO, TRONCO_CLARO, TRONCO_ESCURO, MUSGO, MUSGO_CLARO, COPA, COPA_CLARA, COPA_ESCURA
-    global OLHO, BOCA, NINHO, PASSARO, PASSARO_BICO
+    global OLHO, OLHO_BRILHO, BOCA, NINHO, NINHO_CLARO, PASSARO, PASSARO_BARRIGA, PASSARO_BICO, PASSARO_OLHO, ROSTO
     TRONCO = base.material("Tronco", "#97633a", rugosidade=0.88)
     TRONCO_CLARO = base.material("TroncoClaro", "#b47a48", rugosidade=0.82)
     TRONCO_ESCURO = base.material("TroncoEscuro", "#724629", rugosidade=0.9)
-    MUSGO = base.material("Musgo", "#74ac34", rugosidade=0.85)
-    MUSGO_CLARO = base.material("MusgoClaro", "#8fc43f", rugosidade=0.8)
+    MUSGO = base.material("Musgo", "#5f922c", rugosidade=0.85)
+    MUSGO_CLARO = base.material("MusgoClaro", "#76a836", rugosidade=0.8)
     COPA = base.material("Copa", "#68a030", rugosidade=0.8)
     COPA_CLARA = base.material("CopaClara", "#86c13a", rugosidade=0.75)
     COPA_ESCURA = base.material("CopaEscura", "#4f8527", rugosidade=0.85)
@@ -74,9 +75,17 @@ def criar_materiais():
     # licao do mago: emissao alta + glow do jogo estourava a cor).
     OLHO = base.material("Olho", "#ffd23a", rugosidade=0.6, emissao="#ffc21a", forca=3.0)
     BOCA = base.material("Boca", "#2e1b0e", rugosidade=0.9)
-    NINHO = base.material("Ninho", "#8a5a2e", rugosidade=0.9)
-    PASSARO = base.material("Passaro", "#eaf6ff", rugosidade=0.6)
-    PASSARO_BICO = base.material("PassaroBico", "#e8a93c", rugosidade=0.5)
+    # 7a rodada: brilho no olho (ponto quase branco) e madeira do rosto mais
+    # clara, com material proprio: o jogo da mais luz propria a ele, porque o
+    # rosto vive na sombra da copa (arvore_gigante.gd, LUZ_PROPRIA_ROSTO).
+    OLHO_BRILHO = base.material("OlhoBrilho", "#fff6c4", rugosidade=0.5, emissao="#fff1a8", forca=4.0)
+    ROSTO = base.material("TroncoRosto", "#a56c3e", rugosidade=0.85)
+    NINHO = base.material("Ninho", "#7a4a24", rugosidade=0.9)
+    NINHO_CLARO = base.material("NinhoClaro", "#a8743c", rugosidade=0.9)
+    PASSARO = base.material("Passaro", "#8fc4ec", rugosidade=0.6)
+    PASSARO_BARRIGA = base.material("PassaroBarriga", "#eef7ff", rugosidade=0.6)
+    PASSARO_BICO = base.material("PassaroBico", "#f08a1e", rugosidade=0.5)
+    PASSARO_OLHO = base.material("PassaroOlho", "#1c1c22", rugosidade=0.4)
 
 
 # ---------------------------------------------------------------- utilitarios (padrao mago.py)
@@ -124,18 +133,21 @@ def icosfera(nome, centro, escala, mat, subdiv=0, rot=(0, 0, 0)):
     return fim(o, mat)
 
 
-def torno(nome, perfil, mat, lados=8, achatar=1.0, fechar=(True, True), centro=(0, 0, 0), ruido=0.0, semente=0):
-    """Gira um perfil (raio, z) em volta de Z. ruido mexe cada vertice (casca lapidada)."""
+def torno(nome, perfil, mat, lados=8, achatar=1.0, fechar=(True, True), centro=(0, 0, 0), ruido=0.0, semente=0, desvio=None):
+    """Gira um perfil (raio, z) em volta de Z. ruido mexe cada vertice (casca
+    lapidada). desvio: quanto cada anel anda em Y (perfil de lado com peito e
+    barriga, em vez de um poste reto)."""
     rnd = random.Random(semente)
     bm = bmesh.new()
     aneis = []
-    for r, z in perfil:
+    for k, (r, z) in enumerate(perfil):
+        dy = desvio[k] if desvio else 0.0
         anel = []
         for i in range(lados):
             a = 2 * math.pi * i / lados
             rr = r * (1 + rnd.uniform(-ruido, ruido))
             anel.append(bm.verts.new((centro[0] + rr * math.cos(a),
-                                      centro[1] + rr * math.sin(a) * achatar,
+                                      centro[1] + dy + rr * math.sin(a) * achatar,
                                       centro[2] + z + rnd.uniform(-ruido, ruido) * 0.2 * r)))
         aneis.append(anel)
     for k in range(len(aneis) - 1):
@@ -210,6 +222,98 @@ def mancha_musgo(nome, centro, normal, cima, largura, altura, mat, espessura=0.0
     return casco(nome, pts, mat)
 
 
+def arvores_bvh(objs):
+    from mathutils.bvhtree import BVHTree
+    arvs = []
+    for o in objs:
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        arvs.append(BVHTree.FromBMesh(bm))
+        bm.free()
+    return arvs
+
+
+def placa_musgo(nome, alvos, a, b, centro_dir, abertura, mat, contorno=(0.55, 1.0, 0.95, 0.6, 0.14),
+                esp=0.26, colunas=4, torcer=0.0, semente=0, alcance=7.0):
+    """Placa de musgo DEITADA na peca, abracando o membro (7a rodada: o
+    critico reprovou os blocos espetados, "cristal"). Monta uma grade em volta
+    do eixo a->b e projeta cada ponto na superficie dos alvos (raio na direcao
+    do eixo); o miolo sobe `esp` e a borda afunda na madeira, entao a placa
+    acompanha qualquer curva. abertura: quantos graus da volta ela cobre;
+    contorno: largura de cada fileira ao longo do eixo; torcer: graus que o
+    meio da placa gira ao longo do eixo (faixa em diagonal)."""
+    rnd = random.Random(semente)
+    arvs = arvores_bvh(alvos)
+    a, b = Vector(a), Vector(b)
+    t = (b - a).normalized()
+    u = Vector(centro_dir)
+    u = (u - t * u.dot(t)).normalized()
+    v = t.cross(u)
+    n = len(contorno)
+    passo = (b - a).length / (n - 1)
+    bm = bmesh.new()
+    grade = []
+    for i, larg in enumerate(contorno):
+        f = i / (n - 1)
+        linha = []
+        for j in range(colunas + 1):
+            c = -1 + 2 * j / colunas
+            borda = j in (0, colunas) or i in (0, n - 1)
+            lado = j in (0, colunas)
+            # borda em ziguezague (recorte de folha, nao regua)
+            zig = (0.86 if i % 2 else 1.1) if lado else 1.0
+            ang = math.radians(torcer) * f + math.radians(abertura) / 2 * larg * c * zig
+            radial = u * math.cos(ang) + v * math.sin(ang)
+            eixo = a.lerp(b, f) + t * (rnd.uniform(-0.22, 0.22) * passo if not lado or 0 < i < n - 1 else 0.0)
+            origem = eixo + radial * alcance
+            melhor = None
+            for arv in arvs:
+                loc, nor, _, dist = arv.ray_cast(origem, -radial, alcance)
+                if loc is not None and (melhor is None or dist < melhor[2]):
+                    melhor = (loc, nor, dist)
+            if melhor is None:
+                # normal: a placa passou da ponta da peca; cola no ponto mais proximo
+                for arv in arvs:
+                    loc, nor, _, dist = arv.find_nearest(eixo + radial * 1.0)
+                    if loc is not None and (melhor is None or dist < melhor[2]):
+                        melhor = (loc, nor, dist)
+            loc, nor = melhor[0], melhor[1]
+            if nor.dot(radial) < 0:
+                nor = -nor
+            alt = -0.12 if borda else esp * (1 + rnd.uniform(-0.3, 0.4))
+            linha.append(bm.verts.new(loc + (nor + radial).normalized() * alt))
+        grade.append(linha)
+    for i in range(n - 1):
+        for j in range(colunas):
+            bm.faces.new((grade[i][j], grade[i][j + 1], grade[i + 1][j + 1], grade[i + 1][j]))
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    me = bpy.data.meshes.new(nome)
+    bm.to_mesh(me)
+    bm.free()
+    o = bpy.data.objects.new(nome, me)
+    bpy.context.collection.objects.link(o)
+    return fim(o, mat)
+
+
+def fundir(objs, nome, mat, voxel=0.2, triangulos=300):
+    """Funde varias pecas numa malha so, sem emenda (a "luva unica" da mao):
+    refaz a superficie por fora (remesh por voxel) e reduz ate `triangulos`,
+    o que devolve as facetas grandes do estilo."""
+    o = base.juntar(objs, nome)
+    o.data.name = nome
+    bpy.context.view_layer.objects.active = o
+    m = o.modifiers.new("fundir", "REMESH")
+    m.mode = "VOXEL"
+    m.voxel_size = voxel
+    m.adaptivity = 0.0
+    bpy.ops.object.modifier_apply(modifier="fundir")
+    atuais = sum(len(p.vertices) - 2 for p in o.data.polygons)
+    d = o.modifiers.new("reduzir", "DECIMATE")
+    d.ratio = min(1.0, triangulos / max(1, atuais))
+    bpy.ops.object.modifier_apply(modifier="reduzir")
+    return fim(o, mat)
+
+
 def deformar(o, func):
     bm = bmesh.new()
     bm.from_mesh(o.data)
@@ -219,7 +323,7 @@ def deformar(o, func):
     bm.free()
 
 
-# ---------------------------------------------------------------- pecas (6a rodada)
+# ---------------------------------------------------------------- pecas (6a e 7a rodadas)
 def lapidar(o, amp, semente):
     """Mexe cada vertice um pouco (casca talhada a machado, nao tubo de PVC)."""
     rnd = random.Random(semente)
@@ -281,8 +385,19 @@ def perna(s):
     pts = [quadril + Vector((0, 0, 0.6)), quadril.lerp(joelho, 0.5), joelho, joelho.lerp(tornozelo, 0.55),
            tornozelo, Vector((s * PE_X, 0.0, 0.75))]
     p = [lapidar(tubo(f"Perna{nome}", pts, [1.0, 0.92, 0.85, 0.9, 1.3, 2.0], TRONCO, lados=7), 0.07, 11 + s)]
-    # raizes do pe: 3 na frente, 1 de cada lado e 1 atras, cada uma um tubo que afina
     centro = Vector((s * PE_X, 0.0, 0.0))
+    # 7a rodada: base cheia do pe (o tronco se abre em saia ate o chao, mais
+    # comprida para a frente), para o pe nao ser "palitos" visto de lado.
+    saia = []
+    for i in range(8):
+        a = 2 * math.pi * i / 8
+        d = Vector((math.cos(a), math.sin(a), 0))
+        alcance = 2.0 + (0.75 if d.y < -0.3 else 0.0) - (0.25 if d.y > 0.3 else 0.0)
+        saia.append(centro + d * 1.25 + Vector((0, 0, 2.7)))
+        saia.append(centro + d * alcance * 0.72 + Vector((0, 0, 1.0)))
+        saia.append(centro + d * alcance + Vector((0, 0, 0.04)))
+    p.append(lapidar(casco(f"PeBase{nome}", saia, TRONCO), 0.06, 15 + s))
+    # raizes do pe: 3 na frente, 1 de cada lado e 1 atras, cada uma um tubo que afina
     for i, (ang, comp) in enumerate(((-90, 3.6), (-90 + s * 48, 3.4), (-90 - s * 42, 3.1), (-90 + s * 100, 2.9), (-90 - s * 105, 2.3), (90, 2.2))):
         a = math.radians(ang)
         d = Vector((math.cos(a), math.sin(a), 0))
@@ -290,84 +405,121 @@ def perna(s):
         p.append(lapidar(tubo(f"Raiz{nome}{i}", [centro + d * 0.3 + Vector((0, 0, 1.25)), centro + d * comp * 0.5 + Vector((0, 0, 0.62)),
                                                   centro + d * comp + Vector((0, 0, 0.16))],
                               [1.2, 0.85, 0.32], mat, lados=5), 0.05, 20 + i + s))
-    # musgo da canela (folha: placa que sobe do pe pelo lado de fora e pela frente)
-    canela = joelho.lerp(tornozelo, 0.7)
-    p.append(tufo(f"MusgoCanela{nome}A", canela + Vector((s * 0.45, -0.4, 0.1)), (0.95, 0.9, 2.0), MUSGO, 100 + s))
-    p.append(tufo(f"MusgoCanela{nome}B", canela + Vector((s * 0.7, 0.1, -1.3)), (1.0, 1.05, 1.4), MUSGO_CLARO, 102 + s))
-    p.append(tufo(f"MusgoCanela{nome}C", canela + Vector((-s * 0.1, -0.6, -1.5)), (0.7, 0.6, 1.0), MUSGO, 104 + s))
+    # musgo da canela (folha): placa deitada que sobe do pe em ponta, abracando
+    # a canela por fora e pela frente
+    madeira = list(p)
+    if s < 0:
+        p.append(placa_musgo(f"MusgoCanela{nome}", madeira, joelho.lerp(tornozelo, 0.3), centro + Vector((s * 0.3, -0.2, 0.9)),
+                             (s * 0.8, -0.6, 0), 160, MUSGO, contorno=(0.1, 0.4, 0.7, 0.95, 1.0, 0.7), colunas=5, semente=100))
+    else:
+        p.append(placa_musgo(f"MusgoCanela{nome}", madeira, joelho.lerp(tornozelo, 0.45), centro + Vector((0.0, -0.3, 0.9)),
+                             (s * 0.25, -1, 0), 145, MUSGO_CLARO, contorno=(0.1, 0.45, 0.8, 1.0, 0.7), colunas=5, semente=101))
     return p
 
 
 def tronco_e_bracos():
     p = {"Tronco": [], "BracoE": [], "BracoD": [], "MaoE": [], "MaoD": []}
     # Tronco em V: cintura fina, peito largo (folha: ombros com 0,27 da altura).
-    perfil = [(1.45, QUADRIL_Z - 1.3), (1.8, QUADRIL_Z - 0.2), (1.5, CINTURA_Z - 0.6), (1.3, CINTURA_Z), (1.75, CINTURA_Z + 1.9),
+    # 7a rodada: de lado o peito vai para a frente e a barriga tem volume
+    # (desvio em Y por anel), em vez do perfil reto de tabua.
+    perfil = [(1.45, QUADRIL_Z - 1.3), (1.8, QUADRIL_Z - 0.2), (1.6, CINTURA_Z - 0.6), (1.3, CINTURA_Z + 0.2), (1.75, CINTURA_Z + 1.9),
               (2.55, PEITO_Z), (2.95, OMBRO_Z - 0.2), (2.5, OMBRO_Z + 0.5), (1.6, PESCOCO_Z)]
-    p["Tronco"].append(torno("Tronco", [(r, z) for r, z in perfil], TRONCO, lados=8, achatar=0.72, ruido=0.07, semente=3))
-    # veio claro no peito (o "V" talhado da folha) e sombra do umbigo
+    desvio = [0.0, -0.1, -0.4, -0.15, -0.3, -0.6, -0.4, -0.15, 0.0]
+    tronco = torno("Tronco", [(r, z) for r, z in perfil], TRONCO, lados=8, achatar=0.72, ruido=0.07, semente=3, desvio=desvio)
+    p["Tronco"].append(tronco)
+    # peitoral talhado (o "V" claro do peito da folha): escudo que salta para a frente
+    y_peito = -0.6 - 2.55 * 0.72
+    peitoral = lapidar(casco("Peitoral", [(-2.0, y_peito + 0.45, OMBRO_Z - 0.3), (2.0, y_peito + 0.45, OMBRO_Z - 0.3),
+                                          (-1.6, y_peito - 0.16, PEITO_Z - 0.2), (1.6, y_peito - 0.16, PEITO_Z - 0.2),
+                                          (0.0, y_peito - 0.24, PEITO_Z + 0.5), (0.0, y_peito - 0.1, PEITO_Z - 1.6),
+                                          (-0.9, y_peito + 0.35, CINTURA_Z + 1.5), (0.9, y_peito + 0.35, CINTURA_Z + 1.5),
+                                          (-1.6, y_peito + 1.3, PEITO_Z), (1.6, y_peito + 1.3, PEITO_Z)], TRONCO_CLARO), 0.05, 5)
+    p["Tronco"].append(peitoral)
+    ombros = {}
     bracos = {}
     for s, nome in ((-1, "E"), (1, "D")):
         ombro = Vector((s * OMBRO_X, 0.0, OMBRO_Z - 0.2))
         cotovelo = Vector((s * COTOVELO_X, -0.2, COTOVELO_Z))
         pulso = Vector((s * PULSO_X, -0.5, PULSO_Z))
         bracos[nome] = (ombro, pulso)
-        p[f"Braco{nome}"].append(lapidar(icosfera(f"Ombro{nome}", ombro, (1.05, 0.95, 0.95), TRONCO), 0.06, 30 + s))
+        ombros[s] = lapidar(icosfera(f"Ombro{nome}", ombro, (1.05, 0.95, 0.95), TRONCO), 0.06, 30 + s)
+        p[f"Braco{nome}"].append(ombros[s])
         # Braco fino no ombro que engrossa muito no antebraco (folha: de 0,05
-        # para 0,13 da altura de largura).
-        pts = [ombro, ombro.lerp(cotovelo, 0.5), cotovelo, cotovelo.lerp(pulso, 0.35), cotovelo.lerp(pulso, 0.72), pulso]
-        p[f"Braco{nome}"].append(lapidar(tubo(f"Braco{nome}", pts, [0.72, 0.82, 0.98, 1.28, 1.62, 1.5], TRONCO, lados=7), 0.08, 40 + s))
-        # musgo do antebraco: placas grossas do lado de fora
-        ante = cotovelo.lerp(pulso, 0.5)
-        p[f"Braco{nome}"].append(tufo(f"MusgoBraco{nome}A", ante + Vector((s * 1.05, -0.2, 0.9)), (0.75, 1.0, 2.0), MUSGO, 110 + s))
-        p[f"Braco{nome}"].append(tufo(f"MusgoBraco{nome}B", ante + Vector((s * 1.35, 0.3, -1.3)), (0.8, 1.15, 1.7), MUSGO_CLARO, 112 + s))
-        p[f"Braco{nome}"].append(tufo(f"MusgoBraco{nome}C", ante + Vector((s * 0.9, -0.9, -0.6)), (0.7, 0.6, 1.3), MUSGO, 114 + s))
+        # para 0,13 da altura de largura) e entra na luva sem degrau: o ultimo
+        # anel tem o tamanho do punho da luva.
+        # O ultimo anel passa do pulso e afina DENTRO da luva: a ponta do
+        # antebraco some na palma em vez de terminar em tampa (o degrau).
+        pts = [ombro, ombro.lerp(cotovelo, 0.5), cotovelo, cotovelo.lerp(pulso, 0.35), cotovelo.lerp(pulso, 0.72), pulso,
+               pulso + (pulso - cotovelo).normalized() * 0.9]
+        braco = lapidar(tubo(f"Braco{nome}", pts, [0.72, 0.82, 0.98, 1.3, 1.5, 1.46, 1.05], TRONCO, lados=8), 0.05, 40 + s)
+        p[f"Braco{nome}"].append(braco)
+        luva = mao(nome, pulso, cotovelo, s)
+        p[f"Mao{nome}"].append(luva)
+        # musgo do antebraco: placa comprida deitada por fora, abracando o braco
+        # (na folha, um braco tem a faixa inteira e o outro so perto da mao)
         if s < 0:
+            p[f"Braco{nome}"].append(placa_musgo(f"MusgoBraco{nome}", [braco, luva], cotovelo.lerp(ombro, 0.1), pulso + (pulso - cotovelo) * 0.12,
+                                                 (s, -0.45, 0), 205, MUSGO, contorno=(0.4, 0.8, 1.0, 1.0, 0.85, 0.35), colunas=5, semente=110))
             p[f"Braco{nome}"] += galhinho("GalhoBraco", cotovelo + Vector((s * 0.5, 0, -0.6)), (s * 0.8, -0.1, 0.7), 1.9, 0.2, semente=4)
-        p[f"Mao{nome}"] += mao(nome, pulso, s)
-    # ombreira de musgo: grande num ombro, descendo pelo peito; menor no outro
-    for s, tam in ((-1, 1.0), (1, 0.7)):
-        o = Vector((s * (OMBRO_X - 0.3), -0.2, OMBRO_Z + 0.35))
-        p["Tronco"].append(tufo(f"MusgoOmbro{s}A", o + Vector((s * 0.3, 0, 0.25)), (1.7 * tam, 1.25, 0.8), MUSGO, 120 + s))
-        p["Tronco"].append(tufo(f"MusgoOmbro{s}B", o + Vector((-s * 1.2 * tam, -0.75, -0.9 * tam)), (1.25 * tam, 0.7, 1.5 * tam), MUSGO_CLARO, 122 + s))
-        p["Tronco"].append(tufo(f"MusgoOmbro{s}C", o + Vector((s * 0.2, 0.9, -0.5)), (1.4 * tam, 0.7, 1.2 * tam), MUSGO, 124 + s))
-    # faixa diagonal de musgo no peito (folha): placas chapadas do ombro ao meio do peito
-    for i, (x, z, e) in enumerate(((-2.0, OMBRO_Z - 0.6, 1.25), (-1.25, OMBRO_Z - 1.7, 1.15), (-0.55, OMBRO_Z - 2.9, 0.95), (-0.1, OMBRO_Z - 3.9, 0.65))):
-        p["Tronco"].append(tufo(f"MusgoPeito{i}", (x, -1.45 - 0.08 * i, z), (e, 0.42, e * 1.05), MUSGO if i % 2 == 0 else MUSGO_CLARO, 130 + i))
+        else:
+            p[f"Braco{nome}"].append(placa_musgo(f"MusgoBraco{nome}", [braco, luva], cotovelo.lerp(pulso, 0.42), pulso + Vector((0, 0, -1.7)),
+                                                 (s, -0.3, 0), 175, MUSGO_CLARO, contorno=(0.3, 0.9, 1.0, 0.8, 0.3), colunas=5, semente=111))
+            p[f"Braco{nome}"].append(placa_musgo(f"MusgoBraco{nome}Tras", [braco], cotovelo.lerp(pulso, 0.02), cotovelo.lerp(pulso, 0.55),
+                                                 (s * 0.6, 1, 0), 120, MUSGO, contorno=(0.3, 1.0, 0.8, 0.25), colunas=3, semente=112))
+    madeira = [tronco, peitoral, ombros[-1], ombros[1]]
+    # manto de musgo deitado por cima do ombro (grande num, pequeno no outro)
+    x = -(OMBRO_X - 0.55)
+    p["Tronco"].append(placa_musgo("MusgoOmbroE", madeira, (x, -2.5, OMBRO_Z - 0.4), (x, 2.3, OMBRO_Z - 0.4), (-0.45, 0, 1), 215, MUSGO,
+                                   contorno=(0.45, 0.95, 1.0, 1.0, 0.55), colunas=5, esp=0.3, semente=120))
+    x = OMBRO_X - 0.45
+    p["Tronco"].append(placa_musgo("MusgoOmbroD", madeira, (x, -1.9, OMBRO_Z - 0.3), (x, 1.6, OMBRO_Z - 0.3), (0.6, 0, 1), 140, MUSGO_CLARO,
+                                   contorno=(0.4, 1.0, 0.9, 0.4), colunas=4, semente=121))
+    # manto da frente (folha): cobre a frente do ombro e desce em diagonal
+    # ate o meio do peito, em duas placas de tons diferentes
+    p["Tronco"].append(placa_musgo("MusgoPeito", madeira, (0, -0.3, OMBRO_Z + 0.9), (0, -0.3, PEITO_Z - 1.5), (-1, -0.8, 0), 122, MUSGO,
+                                   contorno=(0.75, 1.0, 0.9, 0.6, 0.16), colunas=5, torcer=-34, esp=0.3, semente=130))
+    p["Tronco"].append(placa_musgo("MusgoPeitoPonta", madeira, (0, -0.3, PEITO_Z + 0.4), (0, -0.3, CINTURA_Z + 1.9), (-0.45, -1, 0), 60, MUSGO_CLARO,
+                                   contorno=(0.5, 1.0, 0.7, 0.15), colunas=3, torcer=-22, esp=0.42, semente=132))
+    # e a ponta do manto caindo pelas costas
+    p["Tronco"].append(placa_musgo("MusgoCostas", madeira, (0, 0, OMBRO_Z + 0.2), (0, 0, PEITO_Z - 2.4), (-0.75, 1, 0), 85, MUSGO,
+                                   contorno=(1.0, 0.9, 0.6, 0.15), colunas=4, semente=131))
     p["Tronco"] += galhinho("GalhoOmbro", (OMBRO_X - 0.3, 0.2, OMBRO_Z + 0.4), (0.6, 0, 0.8), 1.7, 0.2, semente=7)
-    # saiote de musgo: tufos em ponta pendurados em volta do quadril
+    # saiote de musgo: cinta fechada em volta do quadril e folhas largas e
+    # gordas penduradas nela (a do meio da frente e a mais comprida, como na folha)
+    p["Tronco"].append(torno("SaioteCinta", [(1.45, QUADRIL_Z + 1.0), (2.0, QUADRIL_Z + 0.55), (2.12, QUADRIL_Z - 0.35), (1.6, QUADRIL_Z - 0.9)],
+                             MUSGO, lados=8, achatar=0.74, ruido=0.08, semente=140, desvio=[-0.25, -0.2, -0.1, -0.05]))
     for i in range(8):
-        a = 2 * math.pi * i / 8 + 0.2
-        d = Vector((math.cos(a), math.sin(a) * 0.62, 0))
-        topo = d * 1.75 + Vector((0, 0, QUADRIL_Z + 0.5))
-        ponta = d * 2.05 + Vector((0, 0, QUADRIL_Z - (2.7 if i % 2 == 0 else 2.0)))
-        p["Tronco"].append(folha(f"Saiote{i}", topo, ponta, 2.5, d, MUSGO if i % 2 == 0 else MUSGO_CLARO, espessura=0.55, barriga=0.3))
+        a = -math.pi / 2 + 2 * math.pi * i / 8
+        d = Vector((math.cos(a), math.sin(a) * 0.72, 0))
+        topo = d * 1.95 + Vector((0, -0.12, QUADRIL_Z + 0.45))
+        ponta = d * 2.1 + Vector((0, -0.1, QUADRIL_Z - (2.1 if i == 0 else 1.75 if i % 2 == 0 else 1.35)))
+        p["Tronco"].append(folha(f"Saiote{i}", topo, ponta, 2.3, d, MUSGO_CLARO if i % 2 == 0 else MUSGO, espessura=0.42, barriga=0.38))
     return p, bracos
 
 
-def mao(nome, pulso, s):
-    """Maozona: palma em bloco e 3 dedos grossos mais o polegar, meio fechados
-    (folha: a ponta dos dedos fica a uns 9% da altura, acima do pe)."""
-    p = []
-    palma = pulso + Vector((0, -0.1, -1.5))
-    # palma: comeca dentro do antebraco (sem vao no pulso) e alarga para baixo
-    pts = []
-    for dx in (-1.0, 1.0):
-        for dy in (-0.8, 0.8):
-            pts.append(palma + Vector((dx * 1.2, dy * 1.1, 2.1)))
-            pts.append(palma + Vector((dx * 1.6, dy * 1.15, 0.2)))
-            pts.append(palma + Vector((dx * 1.45, dy, -0.95)))
-    p.append(lapidar(casco(f"Palma{nome}", pts, TRONCO), 0.08, 50 + s))
-    # garra em C (folha): 3 dedos grossos em fila, que descem por fora e
-    # fecham para dentro, na direcao do corpo; polegar por dentro, oposto
-    for i, dy in enumerate((-0.82, 0.0, 0.82)):
-        b = palma + Vector((s * 0.75, dy, -0.7))
-        p.append(lapidar(tubo(f"Dedo{nome}{i}", [b, b + Vector((s * 0.4, dy * 0.1, -1.0)), b + Vector((s * 0.15, dy * 0.12, -2.0)),
-                                                 b + Vector((-s * 0.75, dy * 0.1, -2.55))],
-                              [0.66, 0.64, 0.54, 0.3], TRONCO_CLARO if i == 1 else TRONCO, lados=5), 0.04, 60 + i + s))
-    b = palma + Vector((-s * 1.2, -0.45, 0.2))
-    p.append(lapidar(tubo(f"Polegar{nome}", [b, b + Vector((-s * 0.5, -0.15, -0.9)), b + Vector((-s * 0.2, -0.1, -1.8)), b + Vector((s * 0.35, -0.05, -2.2))],
-                          [0.6, 0.56, 0.46, 0.26], TRONCO, lados=5), 0.04, 70 + s))
-    return p
+def mao(nome, pulso, cotovelo, s):
+    """Maozona em LUVA UNICA (7a rodada; o critico reprovou "pilha de caixotes
+    e toquinhos soltos"): punho que continua o antebraco sem degrau, palma que
+    alarga ate os nos dos dedos, 3 dedos grossos por fora que descem em curva
+    e fecham para dentro, e o polegar por dentro, oposto (garra em C da
+    folha). Tudo e fundido numa malha so. A ponta dos dedos fica a uns 9% da
+    altura, acima do pe."""
+    partes = []
+    sobe = (cotovelo - pulso).normalized()
+    # punho e palma: raio em Y; em X fica 1,22 vez mais largo (mao chata de
+    # frente). Afunila do punho para os nos dos dedos.
+    partes.append(tubo(f"LuvaPalma{nome}", [pulso + sobe * 1.2, pulso, pulso + Vector((s * 0.08, -0.05, -0.9)), pulso + Vector((s * 0.1, -0.1, -1.75))],
+                       [1.05, 1.38, 1.38, 1.16], TRONCO, lados=10, achatar=1.15))
+    for i, (dy, k) in enumerate(((-0.72, 0.93), (0.0, 1.0), (0.72, 0.9))):
+        b = pulso + Vector((s * 0.6, dy - 0.1, -1.45))
+        partes.append(tubo(f"LuvaDedo{nome}{i}", [b, b + Vector((s * 0.25, dy * 0.06, -0.85 * k)), b + Vector((s * 0.3, dy * 0.1, -1.6 * k)),
+                                                  b + Vector((s * 0.08, dy * 0.12, -2.15 * k)), b + Vector((-s * 0.42, dy * 0.12, -2.45 * k))],
+                           [0.72, 0.7, 0.63, 0.52, 0.34], TRONCO, lados=8))
+    b = pulso + Vector((-s * 0.95, -0.45, -0.85))
+    partes.append(tubo(f"LuvaPolegar{nome}", [b, b + Vector((-s * 0.35, -0.05, -0.8)), b + Vector((-s * 0.32, -0.1, -1.5)),
+                                              b + Vector((s * 0.12, -0.1, -1.95))],
+                       [0.7, 0.66, 0.56, 0.36], TRONCO, lados=8))
+    return fundir(partes, f"Luva{nome}", TRONCO, voxel=0.15, triangulos=340)
 
 
 def cabeca_e_rosto():
@@ -375,18 +527,29 @@ def cabeca_e_rosto():
     madeira, com olhos amarelos acesos e sorriso calmo."""
     p = []
     perfil = [(1.55, PESCOCO_Z - 0.5), (1.3, PESCOCO_Z + 0.5), (1.22, OLHOS_Z - 0.6), (1.28, OLHOS_Z + 0.5), (1.05, OLHOS_Z + 1.7), (0.7, TOPO_TRONCO_Z)]
-    p.append(torno("Cabeca", perfil, TRONCO, lados=8, achatar=0.9, ruido=0.05, semente=8))
+    p.append(torno("Cabeca", perfil, ROSTO, lados=8, achatar=0.9, ruido=0.05, semente=8))
     frente = -1.16
     # nariz curto em quilha (sem a quilha comprida, que junto das palpebras
     # dava cara de bravo)
     p.append(folha("Nariz", (0, frente - 0.02, OLHOS_Z + 0.25), (0, frente - 0.16, OLHOS_Z - 0.55), 0.38, (0, -1, 0), TRONCO_CLARO, espessura=0.14, barriga=0.7))
     for s in (-1, 1):
-        # olho sonolento e manso: meia-lua acesa, canto de fora um pouco caido
-        c = Vector((s * 0.56, frente + 0.02, OLHOS_Z))
-        p.append(casco(f"Olho{s}", [c + Vector((s * 0.4, 0.06, -0.07)), c + Vector((-s * 0.36, -0.02, 0.03)), c + Vector((0, -0.1, 0.1)),
-                                    c + Vector((0, -0.11, -0.13)), c + Vector((0, 0.1, 0))], OLHO))
-        # palpebra pesada e quase reta por cima (sono, nao raiva)
-        p.append(folha(f"Palpebra{s}", c + Vector((s * 0.5, -0.08, 0.1)), c + Vector((-s * 0.44, -0.12, 0.2)), 0.2, (0, -1, 0.5), TRONCO, espessura=0.08))
+        # 7a rodada: olho em MEIA-LUA CHEIA (reta em cima, barriga para baixo),
+        # com um ponto de brilho; antes era um risco fino que sumia na sombra
+        # da copa. O canto de fora cai um pouco (manso, sonolento).
+        c = Vector((s * 0.56, frente - 0.1, OLHOS_Z + 0.08))
+        pts = []
+        for ang in (0, 28, 58, 90, 122, 152, 180):
+            x = 0.41 * math.cos(math.radians(ang))
+            z = -0.36 * math.sin(math.radians(ang)) - 0.07 * s * x / 0.41
+            pts.append(c + Vector((x, 0.03 * abs(x), z)))
+            pts.append(c + Vector((x * 0.9, 0.42, z)))
+        pts.append(c + Vector((0, -0.05, -0.16)))
+        p.append(casco(f"Olho{s}", pts, OLHO))
+        b = c + Vector((-s * 0.13, -0.07, -0.1))
+        p.append(casco(f"Brilho{s}", [b + Vector((0.09, 0, 0)), b + Vector((-0.09, 0, 0)), b + Vector((0, 0, 0.07)),
+                                      b + Vector((0, 0, -0.07)), b + Vector((0, 0.1, 0))], OLHO_BRILHO))
+        # palpebra fina e reta por cima (sono, nao raiva)
+        p.append(folha(f"Palpebra{s}", c + Vector((s * 0.5, -0.02, 0.0)), c + Vector((-s * 0.46, -0.04, 0.09)), 0.16, (0, -1, 0.5), TRONCO, espessura=0.07))
     # sorriso largo e calmo: arco para cima nas pontas
     p.append(tubo("Sorriso", [(-0.6, frente + 0.05, OLHOS_Z - 0.75), (-0.32, frente - 0.05, OLHOS_Z - 0.98), (0.0, frente - 0.08, OLHOS_Z - 1.05),
                               (0.32, frente - 0.05, OLHOS_Z - 0.98), (0.6, frente + 0.05, OLHOS_Z - 0.75)], 0.065, BOCA, lados=4))
@@ -425,19 +588,37 @@ def copa():
 
 
 def ninho(centro_copa):
-    """Ninho com passarinho em cima da copa, do lado esquerdo da folha e bem
-    a vista (na folha ele tem uns 3 m de largura; antes era minusculo e
-    ficava escondido atras dos cachos)."""
+    """Ninho com passarinho em cima da copa, do lado esquerdo da folha.
+    7a rodada (critico: "tampa de panela com bolha cinza"): tigela com borda
+    TRANCADA (duas voltas de gravetos cruzados, claro e escuro), passaro de
+    corpo azul claro, peito branco e bico laranja."""
     p = []
-    k = 3.0
-    base_ninho = centro_copa + Vector((-2.3, -1.9, 3.3))
-    p.append(torno("Ninho", [(0.55 * k, 0.0), (0.66 * k, 0.12 * k), (0.52 * k, 0.26 * k)], NINHO, lados=8, fechar=(True, False),
-                   ruido=0.12, semente=99, centro=tuple(base_ninho)))
-    corpo_passaro = base_ninho + Vector((0.0, 0.0, 0.34 * k))
-    p.append(esfera("PassaroCorpo", corpo_passaro, (0.22 * k, 0.26 * k, 0.2 * k), PASSARO, seg=6, aneis=5))
-    p.append(esfera("PassaroCabeca", corpo_passaro + Vector((0, -0.22, 0.12)) * k, (0.13 * k,) * 3, PASSARO, seg=6, aneis=5))
-    p.append(casco("PassaroBico", [corpo_passaro + Vector((0, -0.36, 0.1)) * k, corpo_passaro + Vector((0.04, -0.3, 0.08)) * k,
-                                   corpo_passaro + Vector((-0.04, -0.3, 0.08)) * k, corpo_passaro + Vector((0, -0.3, 0.14)) * k], PASSARO_BICO))
+    k = 1.4
+    base_ninho = centro_copa + Vector((-2.5, -2.2, 3.15))
+    p.append(torno("Ninho", [(0.5 * k, 0.0), (0.92 * k, 0.2 * k), (1.0 * k, 0.46 * k), (0.72 * k, 0.4 * k)], NINHO, lados=8,
+                   ruido=0.08, semente=99, centro=tuple(base_ninho)))
+    n = 8
+    for volta, (sobe, mat) in enumerate(((1, NINHO_CLARO), (-1, NINHO))):
+        for i in range(n):
+            a0 = 2 * math.pi * (i + 0.5 * volta) / n
+            pts = []
+            for f in (-0.55, 0.0, 0.55):
+                a = a0 + f * 2 * math.pi / n * 1.25
+                r = (1.0 + (0.1 if f == 0 else 0.0)) * k
+                pts.append(base_ninho + Vector((math.cos(a) * r, math.sin(a) * r, (0.45 + sobe * f * 0.32) * k)))
+            p.append(tubo(f"NinhoTranca{volta}_{i}", pts, [0.1 * k, 0.14 * k, 0.1 * k], mat, lados=3))
+    corpo = base_ninho + Vector((0.05, 0.0, 0.4 * k + 0.5))
+    p.append(esfera("PassaroCorpo", corpo, (0.56, 0.68, 0.54), PASSARO, seg=6, aneis=4))
+    p.append(esfera("PassaroPeito", corpo + Vector((0, -0.26, -0.08)), (0.44, 0.48, 0.44), PASSARO_BARRIGA, seg=6, aneis=4))
+    cabeca = corpo + Vector((0, -0.4, 0.6))
+    p.append(esfera("PassaroCabeca", cabeca, (0.37, 0.37, 0.35), PASSARO, seg=6, aneis=4))
+    p.append(casco("PassaroBico", [cabeca + Vector((0, -0.72, -0.02)), cabeca + Vector((0.13, -0.3, -0.08)),
+                                   cabeca + Vector((-0.13, -0.3, -0.08)), cabeca + Vector((0, -0.3, 0.1))], PASSARO_BICO))
+    for s in (-1, 1):
+        o = cabeca + Vector((s * 0.3, -0.2, 0.08))
+        p.append(casco(f"PassaroOlho{s}", [o + Vector((s * 0.06, 0, 0)), o + Vector((0, -0.05, 0.05)), o + Vector((0, 0.05, 0.03)),
+                                           o + Vector((0, 0, -0.06))], PASSARO_OLHO))
+    p.append(folha("PassaroRabo", corpo + Vector((0, 0.35, 0.05)), corpo + Vector((0, 0.95, 0.4)), 0.34, (0, 0, 1), PASSARO, espessura=0.06))
     return p
 
 

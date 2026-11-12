@@ -279,3 +279,18 @@ Vitor autorizou a ordem de trabalho e delegou as decisões de detalhe. Sessão n
 - **Testes:** 379/379. Relatórios do crítico em `evidencias/fase-2/critico_12-11-2026.md`.
 - **Limitações:** o gigante de perto fica fora da névoa e a silhueta distante (além de 52 m) continua nela: pode dar um salto de cor na troca, conferir no PC do Vitor. GIF do gigante andando tem um pinheiro na frente da cabeça.
 - **Decisões do Vitor (12/11, noite):** juntar tudo no `main`; asas da galinha ficam bem abertas no aviso; som aprovado; não quer versão on-line no navegador (continua o pacote .zip).
+
+## 12/11/2026 (noite) · Gigante da árvore, 7ª rodada (autorizada pelo Vitor): 6,5 → 7,5, ainda reprovado
+
+Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_testes.gd`. Blender por `pip install bpy` (5.3.0). Ossos e animações não mudaram.
+- **Mão em luva única:** punho, palma, 3 dedos curvos e polegar são montados em peças e fundidos numa malha só (`fundir`: remesh por voxel e redução para 340 triângulos por mão). O antebraço agora passa do pulso e afina dentro da luva. Os nomes `Dedo*`, `Palma*` e `Polegar*` deixaram de existir; a malha é `LuvaE`/`LuvaD`.
+- **Ninho e pássaro:** tigela com duas voltas de gravetos cruzados (16, claro e escuro), pássaro azul claro com peito branco, bico laranja, olhos e rabo.
+- **Musgo deitado:** função nova `placa_musgo`: monta uma grade em volta de um eixo e projeta cada ponto na madeira (raio contra a malha), miolo levantado e borda afundada. Trocou todos os blocos espetados (icosferas) por 10 placas; saiote ganhou cinta fechada e folhas largas. Verde sobre o corpo de frente: 22,0% → 25,3% no Blender e 25,7% no jogo (folha 24,1% pelo mesmo script; o crítico tinha medido 26% e 18% com o dele).
+- **Rosto:** madeira da cabeça com material próprio (`TroncoRosto`) que no jogo recebe mais luz própria (`LUZ_PROPRIA_ROSTO = 0,62`; com 0,85 passou do ponto, 0,60 contra 0,47 da folha). Valor do rosto no jogo 0,31 → 0,48. Olhos em meia-lua cheia (altura 0,55 da largura, antes risco fino) com ponto de brilho.
+- **Perfil:** `torno` ganhou desvio em Y por anel (peito e barriga para a frente), peitoral talhado, base cheia do pé (`PeBase`).
+- **Achado de método:** a vista do Blender em perspectiva distorce as frações de altura (as raízes da frente descem na imagem); para medir contra a folha usei renders ortográficos fora do repositório. No jogo, a silhueta foi recortada pela diferença entre o print com e sem o gigante, descontando a sombra no chão.
+- **Evidência:** prints no jogo de frente, lado, costas e perto, GIF e folha de quadros andando (câmera de frente em 0,10,36, sem nada na frente dele), folha x modelo e closes de mão, ninho e rosto em `evidencias/fase-2/eventos-ambientais/`.
+- **Testes:** 11 novos (luva única, luva começando dentro do antebraço, meia-lua, brilho, ninho trançado, cores do pássaro, placas de musgo, luz do rosto, peitoral e pé). 390/390.
+- **Crítico, uma rodada com medição: 7,5, reprovado.** A frente ele aprovaria. Reprovou por costas com pouco musgo (13,8% contra 20,4%, piorou), perfil sem rosto (a copa cobre a cabeça de lado), aresta ainda visível no pulso, placa do antebraço lisa como prancha, musgo claro demais no jogo, pé curto de lado (0,15 contra 0,23), galhos lendo como sobrancelha brava, ninho pousado como chapéu. Nada corrigido depois, como combinado.
+- **Limitações:** 3.182 triângulos (antes 2.412; a skill fala em até uns 3.000 para personagem principal). O teste de "musgo não espeta" compara com a caixa do corpo inteiro, é uma guarda frouxa. Brilho dos olhos e névoa só no PC do Vitor.
+- **Pacote:** modelos de exportação baixados de novo do GitHub; `build/ArcaneForge_teste_Matheus.zip` gerado (LEIA-ME sem mudança).
