@@ -144,6 +144,7 @@ func _montar_visual_detalhado() -> Node3D:
 	# rosto virado para onde veio (achado em 12/11/2026).
 	modelo.rotation.y = PI
 	raiz.add_child(modelo)
+	_aquecer_materiais(modelo)
 	_anim = modelo.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim == null or not _anim.has_animation("Andar"):
 		push_warning("ArvoreGigante: gigante_arvore.glb sem animação 'Andar'; fica parada em pose.")
@@ -161,6 +162,37 @@ func _montar_visual_detalhado() -> Node3D:
 ## Silhueta barata para quando ela está longe: só 4 formas, mas já lendo
 ## como figura humanoide (pernas separadas + torso + copa), não um palito
 ## genérico (GTX 1050, pedido do Vitor).
+## O gigante é sempre visto de longe e contra o céu: a luz ambiente azulada e
+## a névoa lavavam o marrom da folha para cinza-azulado (medido pelo crítico,
+## 12/11/2026). Cada material ganha um pouco de luz própria da própria cor
+## (não é brilho: é só não deixar a sombra virar azul) e fica fora da névoa de
+## distância, senão a 40 m ele já chega rosa-acinzentado. Os olhos, que já
+## brilham, não mudam. A silhueta distante (além de DISTANCIA_LOD_M) continua
+## na névoa, e no fim da rota ele some encolhendo e afundando, como antes.
+const LUZ_PROPRIA := 0.4
+
+
+func _aquecer_materiais(modelo: Node3D) -> void:
+	var copias := {}
+	for m in modelo.find_children("*", "MeshInstance3D", true, false):
+		var malha: MeshInstance3D = m
+		if malha.mesh == null:
+			push_warning("ArvoreGigante: malha '%s' vazia no gigante_arvore.glb." % malha.name)
+			continue
+		for i in malha.mesh.get_surface_count():
+			var mat := malha.get_active_material(i) as StandardMaterial3D
+			if mat == null or mat.emission_enabled:
+				continue # normal: material já emissivo (olhos) fica como veio
+			if not copias.has(mat):
+				var copia: StandardMaterial3D = mat.duplicate()
+				copia.emission_enabled = true
+				copia.emission = copia.albedo_color
+				copia.emission_energy_multiplier = LUZ_PROPRIA
+				copia.disable_fog = true
+				copias[mat] = copia
+			malha.set_surface_override_material(i, copias[mat])
+
+
 func _montar_visual_distante() -> Node3D:
 	var raiz := Node3D.new()
 	raiz.name = "VisualDistante"
