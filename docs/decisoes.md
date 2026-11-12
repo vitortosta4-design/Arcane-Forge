@@ -3,7 +3,7 @@
 Cada decisão tem: problema, alternativas, escolha, motivo, consequências e se é fácil de mudar.
 Status possíveis: **Aprovada**, **Proposta** (aguardando o Vitor), **Adiada**.
 
-Última atualização: 28/10/2026 (ADR-047 adicionada: sistema de eventos ambientais raros, árvore gigante)
+Última atualização: 12/11/2026 (ADR-048 adicionada: apanhar no aviso cancela a bicada da galinha, revogável)
 
 Este arquivo guarda só decisões. O histórico do que foi implementado está em `docs/contexto/diario.md`, e o ponto onde o trabalho parou está em `docs/contexto/estado-atual.md`.
 
@@ -503,6 +503,19 @@ Arte conceitual gerada por IA a pedido do Vitor.
 - **Modelo provisório, sem folha aprovada:** a skill `personagem-low-poly` exige uma folha de referência do Vitor antes de modelar qualquer personagem ou criatura pelo Blender. Como ainda não existe essa folha para a árvore, o modelo desta entrega é feito só por geometria em código (como as árvores e pedras da própria `Clareira`), não pelo pipeline do Blender — compatível com a regra da skill (nenhum modelo Blender foi feito sem folha) e com a prioridade 2 do CLAUDE.md (ciclo jogável com visual provisório primeiro, acabamento depois). Se o Vitor aprovar o resultado, o próximo passo é gerar essa folha e refazer a árvore pela skill, com esqueleto de verdade.
 - **Arquitetura:** segue a regra de ouro (proposta técnica, seção 2) — quem decide (sorteio, rota, instante) é sempre o host; jogando sozinho isso é a mesma máquina que mostra, mas a decisão já está isolada numa classe própria (`GerenciadorEventosAmbientais`) para a Fase 3 só precisar replicar o resultado, não reescrever a lógica.
 - **Fácil de mudar?** Sim: a lista de eventos é a única coisa que cresce; cada evento novo é uma cena própria.
+
+## ADR-048 · Apanhar durante o aviso cancela a bicada da galinha zumbi
+**Status:** Aprovada como decisão **revogável** (12/11/2026). O Vitor delegou as decisões de detalhe da ordem de trabalho da auditoria de animação; esta era uma pendência dele e segue a recomendação do animador. Vale até o Vitor ou o teste do Matheus dizerem o contrário.
+
+- **Problema:** a bicada tem aviso de 0,4 s (cabeça para trás) e o dano sai aos 0,47 s. Faltava decidir se acertar a galinha nesse aviso cancela o ataque. É regra de combate.
+- **Alternativas:** (a) cancela; (b) não cancela (como estava).
+- **Escolha:** (a). Qualquer dano maior que zero recebido durante o aviso cancela a bicada: o dano dela não sai e a galinha troca a animação de bicar pela de dano. Depois que o bote começa (os últimos 0,07 s), apanhar não cancela mais.
+- **Motivo:** premia quem reage ao aviso em vez de só fugir, dá utilidade ao aviso e deixa a luta mais legível (recomendação do animador, ADR-042).
+- **Consequências conhecidas:**
+  - O intervalo de 1 s entre ataques conta do começo do aviso, então interromper rende mais ou menos 1 s de respiro.
+  - Dano contínuo (queimando, área) também cancela quando o tique cai dentro do aviso. Fogo fica mais forte contra a galinha. Se ficar forte demais no teste, a saída é só golpe direto cancelar.
+  - Vale só para a galinha zumbi. Outros inimigos decidem a própria regra quando existirem.
+- **Fácil de mudar?** Sim, em uma linha: `APANHAR_NO_AVISO_CANCELA` em `jogo/scripts/inimigos/galinha_zumbi.gd` (trocar para `false` volta ao comportamento antigo; os dois testes da regra precisam sair junto).
 
 ## Status da descoberta
 Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026.

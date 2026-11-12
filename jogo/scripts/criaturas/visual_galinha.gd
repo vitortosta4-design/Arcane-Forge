@@ -85,13 +85,15 @@ func bicar() -> void:
 	_tocar_acao("Bicar")
 
 
-func levar_dano() -> void:
+## interrompe_bicada: a regra cancelou a bicada (ADR-048), então a animação
+## Bicar é trocada pela Dano; senão o que se vê não bateria com a regra.
+func levar_dano(interrompe_bicada := false) -> void:
 	if _morta:
 		return
 	_soltar_penas(9)
 	# No meio da bicada o dano dela ainda vai sair: a Bicar continua na tela
 	# para o que se vê bater com a regra; só as penas e a pausa mostram o golpe.
-	if _acao != "Bicar":
+	if _acao != "Bicar" or interrompe_bicada:
 		_tocar_acao("Dano")
 	_anim.speed_scale = 0.0
 	var pausa := create_tween()

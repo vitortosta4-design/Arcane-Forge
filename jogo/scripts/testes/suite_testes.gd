@@ -150,6 +150,8 @@ func _ready() -> void:
 	await _testar_bigorna_acusa_o_golpe_mesmo_sem_trocar_de_rosto()
 	await _testar_forja_martelar_dispara_o_martelo_e_o_som()
 	_testar_som_do_martelo_e_curto_e_mono()
+	await _testar_apanhar_no_aviso_cancela_a_bicada()
+	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
 	print("")
 	if _falhas == 0:
@@ -2582,3 +2584,40 @@ func _testar_forja_martelar_dispara_o_martelo_e_o_som() -> void:
 func _testar_som_do_martelo_e_curto_e_mono() -> void:
 	var som: AudioStreamWAV = GerenciadorSom.SomMartelo
 	_afirmar("som do martelo: existe, é mono e dura menos de 1 s", som != null and not som.stereo and som.get_length() > 0.2 and som.get_length() < 1.0)
+
+
+## ADR-048 (revogável): acertar a galinha enquanto ela prepara a bicada
+## cancela a bicada; ela mostra o dano e só ataca de novo depois do intervalo.
+func _testar_apanhar_no_aviso_cancela_a_bicada() -> void:
+	var chao := _chao_em(Vector3(800, 0, 0))
+	var mago := _mago_em(Vector3(800, 0, 0))
+	var galinha := _galinha_em(Vector3(800.8, 0, 0))
+	await get_tree().create_timer(0.15).timeout
+	_afirmar("cancelar bicada: aos 0,15 s ela está no aviso", galinha.esta_no_aviso_da_bicada())
+	Host.aplicar_dano(galinha, 1.0, mago.global_position, 0.0)
+	_afirmar("cancelar bicada: o golpe no aviso cancela na hora e a galinha mostra o dano",
+		galinha._bicada_restante_s < 0.0 and galinha._visual._acao == "Dano")
+	await get_tree().create_timer(0.55).timeout
+	_afirmar("cancelar bicada: o bico não chega (mago sem dano aos 0,7 s)", mago.vida_atual == mago.vida_maxima)
+	await get_tree().create_timer(1.0).timeout
+	_afirmar("cancelar bicada: depois do intervalo ela ataca de novo e acerta", mago.vida_atual < mago.vida_maxima)
+	for n in [mago, galinha, chao]:
+		n.queue_free()
+
+
+func _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada() -> void:
+	var chao := _chao_em(Vector3(820, 0, 0))
+	var mago := _mago_em(Vector3(820, 0, 0))
+	var galinha := _galinha_em(Vector3(820.8, 0, 0))
+	# Espera o aviso acabar (o bote dura só 0,07 s, então confere pelo estado).
+	var quadros := 0
+	while (galinha._bicada_restante_s < 0.0 or galinha.esta_no_aviso_da_bicada()) and quadros < 120:
+		await get_tree().physics_frame
+		quadros += 1
+	_afirmar("bote: a galinha chegou ao bote sem acertar ainda", galinha._bicada_restante_s > 0.0 and mago.vida_atual == mago.vida_maxima)
+	Host.aplicar_dano(galinha, 1.0, mago.global_position, 0.0)
+	_afirmar("bote: apanhar depois do aviso não cancela", galinha._bicada_restante_s > 0.0 and galinha._visual._acao == "Bicar")
+	await get_tree().create_timer(0.2).timeout
+	_afirmar("bote: a bicada acerta mesmo assim", mago.vida_atual < mago.vida_maxima)
+	for n in [mago, galinha, chao]:
+		n.queue_free()

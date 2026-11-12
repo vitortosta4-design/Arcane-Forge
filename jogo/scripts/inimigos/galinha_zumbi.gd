@@ -8,6 +8,9 @@ const DANO_BICADA := 5.0
 const INTERVALO_ATAQUE_S := 1.0
 ## Tamanho da zumbi em relação ao modelo da galinha (VisualGalinha): ~0,9 m.
 const ESCALA_VISUAL := 0.62
+## ADR-048 (revogável): apanhar durante o aviso da bicada cancela a bicada.
+## Para desligar a regra, basta trocar para false.
+const APANHAR_NO_AVISO_CANCELA := true
 
 @export var vida := 30.0
 
@@ -128,8 +131,19 @@ func receber_dano(dano: float, origem_dano: Vector3, empurrao: float) -> void:
 		velocity += direcao * empurrao
 	if _vida_atual <= 0.0:
 		_morrer()
-	else:
-		_visual.levar_dano()
+		return
+	var cancelou := APANHAR_NO_AVISO_CANCELA and dano > 0.0 and esta_no_aviso_da_bicada()
+	if cancelou:
+		# A bicada não sai mais. O intervalo entre ataques já começou a contar
+		# no início do aviso, então quem interrompe ganha um respiro.
+		_bicada_restante_s = -1.0
+	_visual.levar_dano(cancelou)
+
+
+## Verdadeiro enquanto a galinha ainda está se preparando (cabeça para trás),
+## antes do bote. Depois que o bote começa, apanhar não cancela mais.
+func esta_no_aviso_da_bicada() -> bool:
+	return _bicada_restante_s > VisualGalinha.TEMPO_ACERTO_BICADA_S - VisualGalinha.AVISO_BICADA_S
 
 
 ## Fração da vida que sobra (0 a 1), só para leitura do HUD.
