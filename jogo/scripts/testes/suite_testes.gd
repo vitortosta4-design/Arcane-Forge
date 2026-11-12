@@ -143,6 +143,9 @@ func _ready() -> void:
 	_testar_rota_do_evento_passa_perto_de_um_ponto_conhecido()
 	# Auditoria de animação (ordem de trabalho autorizada em 12/11/2026)
 	await _testar_mago_prepara_antes_de_lancar()
+	await _testar_explosao_treme_a_camera_de_quem_esta_perto()
+	await _testar_explosao_tem_clarao_estouro_anel_e_lascas()
+	await _testar_projetil_nasce_pequeno_e_cresce()
 
 	print("")
 	if _falhas == 0:
@@ -2456,3 +2459,58 @@ func _testar_mago_prepara_antes_de_lancar() -> void:
 			n.queue_free()
 	mago.queue_free()
 	await get_tree().process_frame
+
+
+## Auditoria de animação, item 4: a explosão balança a câmera de quem está
+## perto, mais forte quanto mais perto, e não a de quem está longe.
+func _testar_explosao_treme_a_camera_de_quem_esta_perto() -> void:
+	var perto := _mago_em(Vector3(700, 0, 0))
+	var medio := _mago_em(Vector3(704, 0, 0))
+	var longe := _mago_em(Vector3(730, 0, 0))
+	await get_tree().process_frame
+	Host.criar_explosao(Vector3(700, 0, 1), 2.0, 0.0, 0.0, [])
+	_afirmar("tremida: quem está perto da explosão sente", perto._tremor_camera > 0.2)
+	_afirmar("tremida: mais longe, mais fraca", medio._tremor_camera > 0.0 and medio._tremor_camera < perto._tremor_camera)
+	_afirmar("tremida: fora do alcance (3 raios) não sente", longe._tremor_camera == 0.0)
+	_afirmar("tremida: nunca passa do teto", perto._tremor_camera <= Host.TREMOR_EXPLOSAO_MAX)
+	for i in 60:
+		await get_tree().physics_frame
+	_afirmar("tremida: passa sozinha em menos de 1 s e a cabeça volta reta",
+		perto._tremor_camera < 0.01 and perto.get_node("PivotCabeca").rotation.z == 0.0)
+	for n in [perto, medio, longe]:
+		n.queue_free()
+	await get_tree().process_frame
+
+
+## O efeito começa como um miolo pequeno (clarão), cresce freando até o raio
+## e some sozinho; tem anel de choque e lascas.
+func _testar_explosao_tem_clarao_estouro_anel_e_lascas() -> void:
+	var efeito: Node3D = load("res://cenas/efeitos/explosao_visual.tscn").instantiate()
+	add_child(efeito)
+	efeito.iniciar(2.0, "fogo")
+	var malha: MeshInstance3D = efeito.get_node("MeshInstance3D")
+	_afirmar("explosão: começa como um miolo pequeno", malha.scale.x < 0.7)
+	_afirmar("explosão: tem anel de choque e lascas", efeito.get_node_or_null("Anel") != null and efeito.get_child_count() >= 2 + efeito.LASCAS)
+	await get_tree().process_frame
+	_afirmar("explosão: o miolo fica parado durante o clarão", is_equal_approx(malha.scale.x, 2.0 * 0.28))
+	# Um terço do estouro: crescimento que freia já passou de 70% do raio
+	# (em velocidade constante estaria em uns 45%).
+	await get_tree().create_timer(efeito.PAUSA_CLARAO_S + (efeito.duracao_s - efeito.PAUSA_CLARAO_S) * 0.55 * 0.34).timeout
+	_afirmar("explosão: cresce rápido no começo (%.2f de 2,0 m)" % malha.scale.x, malha.scale.x > 1.4)
+	await get_tree().create_timer(efeito.duracao_s).timeout
+	_afirmar("explosão: o efeito some sozinho", not is_instance_valid(efeito))
+
+
+## A bola nascia grande e cobria a mão em primeira pessoa: agora nasce com
+## 30% do tamanho e chega ao tamanho cheio em 0,12 s.
+func _testar_projetil_nasce_pequeno_e_cresce() -> void:
+	var projetil: Node3D = load("res://cenas/magias/projetil.tscn").instantiate()
+	add_child(projetil)
+	projetil.global_position = Vector3(760, 5, 0)
+	projetil.definir_forma("ovo")
+	var malha: MeshInstance3D = projetil.get_node("MeshInstance3D")
+	_afirmar("projétil: nasce pequeno", is_equal_approx(malha.scale.x, 0.8 * projetil.ESCALA_AO_NASCER))
+	for i in 20:
+		await get_tree().physics_frame
+	_afirmar("projétil: em 0,12 s chega ao tamanho da forma", malha.scale.is_equal_approx(Vector3(0.8, 0.8, 1.5)))
+	projetil.queue_free()

@@ -12,7 +12,14 @@ var aliados: Array = []
 var tempo_de_vida_s := 5.0
 var material := "fogo"
 
+## O projétil nasce pequeno e cresce em 0,12 s (auditoria de animação: a
+## bola de fogo nascia grande e cobria a mão em primeira pessoa). Só a malha
+## cresce; a colisão é a mesma desde o começo.
+const CRESCER_S := 0.12
+const ESCALA_AO_NASCER := 0.3
+
 var _tempo_vivo := 0.0
+var _escala_forma := Vector3.ONE
 
 @onready var _mesh: MeshInstance3D = $MeshInstance3D
 
@@ -32,7 +39,7 @@ func definir_material(nome: String) -> void:
 ## (esfera, ovo ou cubo, ver Validador.FORMAS_VALIDAS), em vez de ser
 ## sempre uma bolinha não importa o que o jogador pediu.
 func definir_forma(nome: String) -> void:
-	_mesh.scale = Vector3.ONE
+	_escala_forma = Vector3.ONE
 	match nome:
 		"cubo":
 			var malha := BoxMesh.new()
@@ -41,14 +48,27 @@ func definir_forma(nome: String) -> void:
 		"ovo":
 			# Sem malha de ovo pronta no Godot: alonga a esfera na direção
 			# do voo, que já dá a silhueta de ovo (ADR-007, formas simples).
-			_mesh.scale = Vector3(0.8, 0.8, 1.5)
+			_escala_forma = Vector3(0.8, 0.8, 1.5)
 		_:
 			pass # esfera é a malha padrão da cena, nada a fazer
+	_mesh.scale = _escala_forma * fator_crescimento()
+
+
+func _ready() -> void:
+	_mesh.scale = _escala_forma * fator_crescimento()
+
+
+## De ESCALA_AO_NASCER a 1, freando no fim.
+func fator_crescimento() -> float:
+	var t := clampf(_tempo_vivo / CRESCER_S, 0.0, 1.0)
+	return lerpf(ESCALA_AO_NASCER, 1.0, 1.0 - (1.0 - t) * (1.0 - t))
 
 
 func _physics_process(delta: float) -> void:
 	global_position += -global_transform.basis.z * velocidade * delta
 	_tempo_vivo += delta
+	if _tempo_vivo <= CRESCER_S + delta:
+		_mesh.scale = _escala_forma * fator_crescimento()
 	if _tempo_vivo >= tempo_de_vida_s:
 		queue_free()
 

@@ -96,6 +96,10 @@ func _process(delta: float) -> bool:
 				print("MARTELOU: ", saida.get("mensagem", "?"))
 			else:
 				push_warning("tirar_print: --martelar pedido, mas a cena não tem Caverna com forja.")
+		if _args.has("explosao"):
+			# Explosão de fogo de 2,5 m no ponto dado (com dano de bola de fogo),
+			# para gravar o impacto sem depender de acertar o tiro.
+			current_scene.get_node("/root/Host").criar_explosao(_vetor(_args["explosao"]), 2.5, 10.0, 4.0, ["fogo"], [], "fogo")
 		# Depois de martelar, para dar para usar o medalhão recém-forjado.
 		if _mago and _args.has("usar"):
 			_mago.usar_medalhao(int(_args["usar"]) - 1)

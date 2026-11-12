@@ -9,7 +9,7 @@
 # Uso:
 #   ferramentas/gravar_quadros.sh PASTA [--fps 30] [--colunas 6] [--de N] [--ate N] [--passo N] [opções do tirar_print]
 # Opções do tirar_print: --posicao, --olhar, --terceira, --camera, --alvo-camera,
-#   --runas, --barra-cheia, --usar n, --interagir, --andar s, --galinha x,y,z, --espera s
+#   --runas, --barra-cheia, --usar n, --interagir, --andar s, --galinha x,y,z, --explosao x,y,z, --espera s
 #   (a gravação dura até --espera; padrão 2.5 s)
 # Saída em PASTA: quadros/ (PNG), folha.png, movimento.gif, som.txt
 #

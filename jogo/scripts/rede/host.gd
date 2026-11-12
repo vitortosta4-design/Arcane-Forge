@@ -6,6 +6,11 @@ extends Node
 const LIMITE_PROJETEIS_ATIVOS := 40
 const LIMITE_CRIATURAS_INVOCADAS := 6
 const LIMITE_MAGIAS_ATIVAS_POR_DONO := 3
+## Tremida de câmera da explosão (auditoria de animação, item 4): quem está
+## até 3 raios de distância sente, mais forte quanto mais perto. O teto é
+## baixo de propósito (o passo do gigante da árvore usa 0,35).
+const TREMOR_EXPLOSAO_MAX := 0.45
+const TREMOR_EXPLOSAO_RAIOS := 3.0
 const CenaEfeitoExplosao := preload("res://cenas/efeitos/explosao_visual.tscn")
 
 var projeteis_ativos: Array[Node] = []
@@ -30,6 +35,7 @@ func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, e
 	efeito.global_position = pos
 	efeito.iniciar(raio_m, material)
 	GerenciadorSom.tocar_explosao(pos)
+	_tremer_cameras(pos, raio_m)
 
 	var alvos := get_tree().get_nodes_in_group("recebe_dano")
 	for alvo in alvos:
@@ -49,6 +55,17 @@ func criar_explosao(pos: Vector3, raio_m: float, dano: float, empurrao: float, e
 			var obj3d := obj as Node3D
 			if obj3d.global_position.distance_to(pos) <= raio_m and obj3d.has_method("pegar_fogo"):
 				obj3d.pegar_fogo()
+
+
+## Só sensação (não é regra de combate): balança a câmera de cada mago perto.
+func _tremer_cameras(pos: Vector3, raio_m: float) -> void:
+	var alcance := raio_m * TREMOR_EXPLOSAO_RAIOS
+	for mago in get_tree().get_nodes_in_group("mago"):
+		if not is_instance_valid(mago) or not (mago is Node3D) or not mago.has_method("tremor_camera"):
+			continue
+		var distancia: float = (mago as Node3D).global_position.distance_to(pos)
+		if distancia < alcance:
+			mago.tremor_camera((1.0 - distancia / alcance) * TREMOR_EXPLOSAO_MAX)
 
 
 ## Eletricidade em algo molhado se espalha num raio (proposta técnica,
