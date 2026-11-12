@@ -58,8 +58,8 @@ func martelar(mago: Node, selecao: Array) -> Dictionary:
 
 func _reagir(resultado: Dictionary, expressao: String) -> Dictionary:
 	if bigorna:
-		bigorna._tremor = 0.12 if expressao == "raiva" else 0.05
-		bigorna.mudar_expressao(expressao)
+		# O martelo desce e, na batida, a bigorna treme e troca de rosto.
+		bigorna.martelar(expressao, 0.12 if expressao == "raiva" else 0.05)
 	_volta_neutro_s = VOLTA_AO_NEUTRO_S
 	forjou.emit(resultado)
 	return resultado

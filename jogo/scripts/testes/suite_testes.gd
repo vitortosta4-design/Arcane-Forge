@@ -146,6 +146,10 @@ func _ready() -> void:
 	await _testar_explosao_treme_a_camera_de_quem_esta_perto()
 	await _testar_explosao_tem_clarao_estouro_anel_e_lascas()
 	await _testar_projetil_nasce_pequeno_e_cresce()
+	await _testar_bigorna_martelo_desce_bate_e_some()
+	await _testar_bigorna_acusa_o_golpe_mesmo_sem_trocar_de_rosto()
+	await _testar_forja_martelar_dispara_o_martelo_e_o_som()
+	_testar_som_do_martelo_e_curto_e_mono()
 
 	print("")
 	if _falhas == 0:
@@ -2514,3 +2518,67 @@ func _testar_projetil_nasce_pequeno_e_cresce() -> void:
 		await get_tree().physics_frame
 	_afirmar("projétil: em 0,12 s chega ao tamanho da forma", malha.scale.is_equal_approx(Vector3(0.8, 0.8, 1.5)))
 	projetil.queue_free()
+
+
+## Auditoria de animação, item 5: o martelo aparece erguido, recua, desce e
+## bate; na batida saem som, faíscas e a troca de rosto; depois ele some.
+func _testar_bigorna_martelo_desce_bate_e_some() -> void:
+	var b := await _criar_bigorna()
+	var martelo: Node3D = b.get_node("Martelo")
+	_afirmar("martelo: guardado (invisível) antes de martelar", not martelo.visible)
+	var bateu := [false]
+	b.martelou.connect(func(): bateu[0] = true)
+	b.martelar("rindo", 0.05)
+	_afirmar("martelo: aparece no mesmo instante, erguido", martelo.visible and martelo.rotation.z < -0.8)
+	await get_tree().create_timer(BigornaViva.TEMPO_ATE_BATER_S * 0.6).timeout
+	_afirmar("martelo: antes da batida nada reagiu (há antecipação)", not bateu[0] and b.expressao == "neutro" and not b.trocando)
+	await get_tree().create_timer(BigornaViva.TEMPO_ATE_BATER_S * 0.4 + 0.08).timeout
+	_afirmar("martelo: bate em %.2f s" % BigornaViva.TEMPO_ATE_BATER_S, bateu[0])
+	_afirmar("martelo: a batida solta faíscas", b.get_node_or_null("Faisca0") != null)
+	_afirmar("martelo: a troca de rosto começa na batida", b.trocando or b.expressao == "rindo")
+	await get_tree().create_timer(BigornaViva.DURACAO_TROCA + 0.5).timeout
+	_afirmar("martelo: depois do golpe a bigorna está rindo", b.expressao == "rindo")
+	_afirmar("martelo: some e as faíscas se apagam", not martelo.visible and b.get_node_or_null("Faisca0") == null)
+	b.queue_free()
+
+
+func _testar_bigorna_acusa_o_golpe_mesmo_sem_trocar_de_rosto() -> void:
+	var b := await _criar_bigorna()
+	var corpo: Node3D = b.find_child("Corpo", true, false)
+	b.martelar("neutro", 0.05)
+	await b.martelou
+	_afirmar("golpe sem troca: bate, o corpo afunda e dá clarão",
+		b.expressao == "neutro" and not b.trocando and corpo.scale.y < 1.0 and b.brilho_agora() > b.brilho_alvo() * 1.2)
+	await get_tree().create_timer(0.6).timeout
+	_afirmar("golpe sem troca: o corpo volta ao tamanho e o clarão apaga", corpo.scale.is_equal_approx(Vector3.ONE) and b._flare == 0.0)
+	b.queue_free()
+
+
+func _testar_forja_martelar_dispara_o_martelo_e_o_som() -> void:
+	var r := await _mago_e_forja_de_teste()
+	var mago: Node = r[0]
+	var forja: Forja = r[1]
+	mago.coletar_runa("agua")
+	# Tocadores do som do martelo (pelo id, porque os de testes anteriores
+	# ainda podem estar acabando de tocar).
+	var tocando := func() -> Array:
+		return get_children().filter(func(n): return n is AudioStreamPlayer3D and n.stream == GerenciadorSom.SomMartelo).map(func(n): return n.get_instance_id())
+	# Os testes anteriores podem ter enchido o limite de sons simultâneos.
+	GerenciadorSom._tocadores_ativos.clear()
+	var antes: Array = tocando.call()
+	var saida := forja.martelar(mago, ["agua"])
+	_afirmar("forja: o resultado sai na hora (a regra não espera a animação)", saida["ok"] and mago.barra.medalhoes[2] != null)
+	_afirmar("forja: o martelo sobe e o som ainda não tocou", forja.bigorna.get_node("Martelo").visible and tocando.call() == antes)
+	# Conta no instante da batida (sem placa de som, o tocador some logo).
+	await forja.bigorna.martelou
+	var novos: Array = tocando.call().filter(func(id): return not id in antes)
+	_afirmar("forja: o som do martelo toca na batida", novos.size() == 1)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(r[2]))
+	mago.queue_free()
+	forja.queue_free()
+	await get_tree().process_frame
+
+
+func _testar_som_do_martelo_e_curto_e_mono() -> void:
+	var som: AudioStreamWAV = GerenciadorSom.SomMartelo
+	_afirmar("som do martelo: existe, é mono e dura menos de 1 s", som != null and not som.stereo and som.get_length() > 0.2 and som.get_length() < 1.0)

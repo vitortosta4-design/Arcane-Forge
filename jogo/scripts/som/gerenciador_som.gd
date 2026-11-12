@@ -2,7 +2,7 @@ extends Node
 ## Sistema de som por camadas (ADR-026): efeitos tocam em 3D, com pequena
 ## variação de tom a cada execução e um limite de sons simultâneos (o valor
 ## abaixo é provisório, ainda falta medir desempenho e clareza de verdade).
-## Hoje só tiro, explosão e galinha zumbi, gerados por script (sem nenhum
+## Hoje só tiro, explosão, galinha zumbi, árvore e martelo, gerados por script (sem nenhum
 ## arquivo de terceiro envolvido, ver docs/creditos-audio.md). Quando o
 ## Vitor mandar gravações de verdade (ADR-028), é só trocar os streams
 ## abaixo.
@@ -13,6 +13,9 @@ const SomTiro := preload("res://assets/som/tiro.wav")
 const SomExplosao := preload("res://assets/som/explosao.wav")
 const SomGalinha := preload("res://assets/som/galinha_zumbi.wav")
 const SomArvore := preload("res://assets/som/arvore_rangendo.wav")
+## Provisório, gerado por ferramentas/gerar_som_martelo.py. Para trocar pela
+## gravação do Vitor: salvar o arquivo novo por cima deste, com o mesmo nome.
+const SomMartelo := preload("res://assets/som/martelo_bigorna.wav")
 
 var _tocadores_ativos: Array[AudioStreamPlayer3D] = []
 
@@ -55,3 +58,7 @@ func tocar_galinha(posicao: Vector3) -> void:
 
 func tocar_arvore(posicao: Vector3) -> void:
 	tocar(SomArvore, posicao, "Efeitos", 0.05)
+
+
+func tocar_martelo(posicao: Vector3) -> void:
+	tocar(SomMartelo, posicao, "Efeitos", 0.06)

@@ -12,6 +12,8 @@ extends Node3D
 ## pulsa mais, raiva fica vermelha, forte, tremida, e o anel de pedras acelera.
 
 signal expressao_mudou(nova: String)
+## O martelo acabou de bater (o som, o clarão e as faíscas saem neste instante).
+signal martelou
 
 const EXPRESSOES := ["neutro", "rindo", "raiva"]
 const T_ANTECIPA := 0.12
@@ -34,6 +36,23 @@ const LUZ := {
 	"rindo": {"brilho": 1.25, "cor": Color("ffa232"), "pulso_hz": 0.9, "pulso": 0.12, "tremido": 0.0, "anel": 1.6},
 	"raiva": {"brilho": 1.7, "cor": Color("ff4414"), "pulso_hz": 2.2, "pulso": 0.12, "tremido": 0.1, "anel": 2.6},
 }
+
+## Martelo fantasma (auditoria de animação, item 5). Visual PROVISÓRIO feito
+## em código (cabeça de pedra com faixa de lava e cabo); a regra de forjar não
+## depende dele. Tempos do golpe: aparece erguido, recua mais um pouco
+## (antecipação), desce acelerando, quica e some.
+const MARTELO_SURGE_S := 0.1
+const MARTELO_RECUA_S := 0.12
+const MARTELO_DESCE_S := 0.07
+const TEMPO_ATE_BATER_S := MARTELO_SURGE_S + MARTELO_RECUA_S + MARTELO_DESCE_S
+const MARTELO_ERGUIDO_GRAUS := 62.0
+const MARTELO_RECUADO_GRAUS := 84.0
+const MARTELO_QUIQUE_GRAUS := 14.0
+## Onde a cabeça do martelo bate: na mesa da bigorna, ao lado da coluna
+## (por dentro do anel de pedras, para não atravessar as pedras girando).
+const PONTO_BATIDA := Vector3(1.1, 2.9, 0.2)
+const CABO_M := 1.3
+const FAISCAS := 8
 
 @export var expressao_inicial := "neutro"
 
@@ -58,6 +77,8 @@ var _vel_anel := 1.0
 var _tremor := 0.0
 var _t := 0.0
 var _sorte := RandomNumberGenerator.new()
+var _martelo: Node3D
+var _golpe: Tween
 
 
 func _ready() -> void:
@@ -86,6 +107,7 @@ func _ready() -> void:
 			if filho.name.begins_with("Estilhaco_") or filho.name.begins_with("Fagulha_"):
 				_estilhacos.append(filho)
 				_pos_estilhaco[filho] = filho.position
+	_criar_martelo()
 	var inicial := expressao_inicial if expressao_inicial in EXPRESSOES else "neutro"
 	for nome in EXPRESSOES:
 		if _rostos[nome]:
@@ -161,6 +183,117 @@ func mudar_expressao(nova: String) -> bool:
 		expressao_mudou.emit(nova)
 	)
 	return true
+
+
+## O eixo do martelo fica fora da bigorna, à direita; o cabo aponta para ela
+## e a cabeça fica na ponta. Girar o eixo é o que ergue e desce o martelo.
+func _criar_martelo() -> void:
+	_martelo = Node3D.new()
+	_martelo.name = "Martelo"
+	_martelo.position = PONTO_BATIDA + Vector3(CABO_M, 0.25, 0.0)
+	_martelo.scale = Vector3.ZERO
+	_martelo.visible = false
+	add_child(_martelo)
+	var madeira := StandardMaterial3D.new()
+	madeira.albedo_color = Color("6b4a2e")
+	var pedra := StandardMaterial3D.new()
+	pedra.albedo_color = Color("3d3852")
+	var lava := StandardMaterial3D.new()
+	lava.albedo_color = Color("ff7a1a")
+	lava.emission_enabled = true
+	lava.emission = Color("ff7a1a")
+	lava.emission_energy_multiplier = 2.0
+	var cabo := CylinderMesh.new()
+	cabo.top_radius = 0.07
+	cabo.bottom_radius = 0.09
+	cabo.height = CABO_M
+	cabo.radial_segments = 6
+	cabo.rings = 0
+	_peca_martelo("Cabo", cabo, madeira, Vector3(-CABO_M * 0.5, 0, 0), Vector3(0, 0, PI * 0.5))
+	var cabeca := BoxMesh.new()
+	cabeca.size = Vector3(0.5, 0.5, 0.82)
+	_peca_martelo("Cabeca", cabeca, pedra, Vector3(-CABO_M, 0, 0), Vector3.ZERO)
+	var faixa := BoxMesh.new()
+	faixa.size = Vector3(0.56, 0.56, 0.14)
+	_peca_martelo("FaixaA", faixa, lava, Vector3(-CABO_M, 0, 0.22), Vector3.ZERO)
+	_peca_martelo("FaixaB", faixa, lava, Vector3(-CABO_M, 0, -0.22), Vector3.ZERO)
+	var pomo := BoxMesh.new()
+	pomo.size = Vector3.ONE * 0.22
+	_peca_martelo("Pomo", pomo, pedra, Vector3(0.05, 0, 0), Vector3(PI * 0.25, 0, PI * 0.25))
+
+
+func _peca_martelo(nome: String, malha: Mesh, mat: Material, pos: Vector3, giro: Vector3) -> void:
+	var peca := MeshInstance3D.new()
+	peca.name = nome
+	peca.mesh = malha
+	peca.material_override = mat
+	peca.position = pos
+	peca.rotation = giro
+	_martelo.add_child(peca)
+
+
+## Golpe de martelo e, na batida, a reação da bigorna (expressão e tremor).
+## Só visual e som: quem decide o que foi forjado é a Forja, antes disto.
+## Chamado de novo no meio de um golpe, recomeça (vale o pedido mais novo).
+func martelar(expressao_depois: String, tremor: float) -> void:
+	if _golpe and _golpe.is_valid():
+		_golpe.kill()
+	_martelo.visible = true
+	_martelo.scale = Vector3.ZERO
+	_martelo.rotation.z = -deg_to_rad(MARTELO_ERGUIDO_GRAUS)
+	_golpe = create_tween()
+	_golpe.tween_property(_martelo, "scale", Vector3.ONE, MARTELO_SURGE_S).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_golpe.tween_property(_martelo, "rotation:z", -deg_to_rad(MARTELO_RECUADO_GRAUS), MARTELO_RECUA_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_golpe.tween_property(_martelo, "rotation:z", 0.0, MARTELO_DESCE_S).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_golpe.tween_callback(_bater.bind(expressao_depois, tremor))
+	_golpe.tween_property(_martelo, "rotation:z", -deg_to_rad(MARTELO_QUIQUE_GRAUS), 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_golpe.tween_property(_martelo, "rotation:z", -deg_to_rad(4.0), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_golpe.tween_interval(0.2)
+	_golpe.tween_property(_martelo, "scale", Vector3.ZERO, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	_golpe.tween_callback(func() -> void: _martelo.visible = false)
+
+
+func _bater(expressao_depois: String, tremor: float) -> void:
+	GerenciadorSom.tocar_martelo(to_global(PONTO_BATIDA))
+	_tremor = tremor
+	_flare = 1.0
+	_soltar_faiscas()
+	# Se a expressão não muda (ou outra troca está no meio), a bigorna ainda
+	# acusa o golpe: afunda e volta, e o clarão apaga sozinho.
+	if not mudar_expressao(expressao_depois) and not trocando:
+		var tw := create_tween()
+		_corpo.scale = Vector3(1.05, 0.93, 1.05)
+		tw.tween_property(_corpo, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(self, "_flare", 0.0, 0.3)
+	martelou.emit()
+
+
+## Faíscas da batida: cubinhos acesos em leque para cima, caindo em arco.
+func _soltar_faiscas() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color("ffd070")
+	var malha := BoxMesh.new()
+	malha.size = Vector3.ONE * 0.11
+	for i in FAISCAS:
+		var f := MeshInstance3D.new()
+		f.name = "Faisca%d" % i
+		f.mesh = malha
+		f.material_override = mat
+		f.position = PONTO_BATIDA
+		f.rotation = Vector3(_sorte.randf(), _sorte.randf(), _sorte.randf()) * TAU
+		add_child(f)
+		var angulo := TAU * (float(i) + _sorte.randf() * 0.5) / FAISCAS
+		var lado := Vector3(cos(angulo), 0.0, sin(angulo)) * _sorte.randf_range(0.7, 1.5)
+		var sobe := _sorte.randf_range(0.6, 1.3)
+		var dur := _sorte.randf_range(0.35, 0.5)
+		var tw := f.create_tween().set_parallel(true)
+		tw.tween_property(f, "position:x", PONTO_BATIDA.x + lado.x, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(f, "position:z", PONTO_BATIDA.z + lado.z, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(f, "position:y", PONTO_BATIDA.y + sobe, dur * 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(f, "position:y", PONTO_BATIDA.y - 0.6, dur * 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN).set_delay(dur * 0.4)
+		tw.tween_property(f, "scale", Vector3.ONE * 0.1, dur).set_ease(Tween.EASE_IN)
+		tw.chain().tween_callback(f.queue_free)
 
 
 ## Na raiva, as lascas e faíscas saem do meio do rosto voando até o lugar delas.
