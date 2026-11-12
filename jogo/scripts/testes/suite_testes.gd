@@ -154,6 +154,7 @@ func _ready() -> void:
 	_testar_martelo_bate_com_a_face()
 	await _testar_galinha_aviso_abre_as_asas_e_mostra_a_cara()
 	await _testar_galinha_dano_congela_ja_recuada()
+	await _testar_arvore_gigante_anda_de_frente_e_segue_a_folha()
 	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
@@ -2703,3 +2704,44 @@ func _testar_galinha_dano_congela_ja_recuada() -> void:
 	var recuo: float = esq.get_bone_global_pose(corpo).origin.distance_to(antes)
 	_afirmar("galinha: a pausa do golpe pega o corpo já recuado (%.1f cm)" % (recuo * 100.0), is_zero_approx(g._anim.speed_scale) and recuo > 0.07)
 	g.queue_free()
+
+
+## 6ª rodada do gigante (12/11): refeito pelas medidas da folha. Confere que
+## ele anda com o rosto para o destino (andava de costas) e as proporções
+## principais, medidas na malha: copa com perto de 0,47 da altura de largura,
+## mãos terminando acima dos pés e bem longe do eixo.
+func _testar_arvore_gigante_anda_de_frente_e_segue_a_folha() -> void:
+	var arvore: Node3D = load("res://cenas/eventos/arvore_gigante.tscn").instantiate()
+	add_child(arvore)
+	arvore.iniciar(Vector3(1000, 0, 0), Vector3(1000, 0, -100))
+	await get_tree().process_frame
+	var caixas := {}
+	var tudo := AABB()
+	var primeiro := true
+	for m in arvore.find_child("VisualDetalhado", true, false).find_children("*", "MeshInstance3D", true, false):
+		var malha: MeshInstance3D = m
+		var caixa: AABB = malha.global_transform * malha.get_aabb()
+		caixas[String(malha.name)] = caixa
+		tudo = caixa if primeiro else tudo.merge(caixa)
+		primeiro = false
+	var olhos: Array = caixas.keys().filter(func(n): return n.begins_with("Olho"))
+	var copas: Array = caixas.keys().filter(func(n): return n.begins_with("Copa"))
+	var dedos: Array = caixas.keys().filter(func(n): return n.begins_with("Dedo"))
+	_afirmar("gigante: o modelo tem olhos, copa e dedos com nome", olhos.size() == 2 and copas.size() >= 8 and dedos.size() == 6)
+	if olhos.is_empty() or copas.is_empty() or dedos.is_empty():
+		arvore.queue_free()
+		return
+	_afirmar("gigante: o rosto fica virado para o destino (não anda de costas)", caixas[olhos[0]].get_center().z < -0.8)
+	var altura: float = tudo.size.y
+	var copa: AABB = caixas[copas[0]]
+	for n in copas:
+		copa = copa.merge(caixas[n])
+	_afirmar("gigante: copa larga como na folha (%.2f da altura, folha 0,47)" % (copa.size.x / altura), absf(copa.size.x / altura - 0.47) < 0.06)
+	var mais_baixo := INF
+	var mais_longe := 0.0
+	for n in dedos:
+		mais_baixo = minf(mais_baixo, caixas[n].position.y)
+		mais_longe = maxf(mais_longe, absf(caixas[n].get_center().x - 1000.0))
+	_afirmar("gigante: a mão termina acima do pé (%.0f%% da altura, folha 9%%)" % (mais_baixo / altura * 100.0), mais_baixo / altura > 0.05 and mais_baixo / altura < 0.13)
+	_afirmar("gigante: mãos bem abertas para os lados (%.2f da altura do eixo)" % (mais_longe / altura), mais_longe / altura > 0.2)
+	arvore.queue_free()

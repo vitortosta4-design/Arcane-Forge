@@ -20,7 +20,7 @@ extends Node3D
 const ALTURA_TOTAL_M := 26.0
 const VELOCIDADE_MS := 1.1
 ## Pé/raiz: largo e baixo, para subir. Perna: estreita e vertical, acima.
-const RAIO_PE_M := 2.5
+const RAIO_PE_M := 3.2
 const ALTURA_PE_M := 1.7
 const RAIO_PERNA_M := 1.25
 const ALTURA_PERNA_M := 8.5
@@ -29,7 +29,7 @@ const RAIO_TORSO_BASE_M := 2.0
 const RAIO_TORSO_TOPO_M := 2.7
 const ALTURA_CABECA_M := 2.2
 ## Metade da distância entre os dois pés/pernas (postura humanoide).
-const AFASTAMENTO_PERNAS_M := 1.9
+const AFASTAMENTO_PERNAS_M := 3.0
 ## Últimos metros da rota em que ela desaparece, encolhendo e afundando,
 ## dentro da neblina (ADR-031, distância de névoa da arena).
 const DISTANCIA_DESAPARECER_M := 14.0
@@ -45,11 +45,14 @@ const DISTANCIA_LOD_M := 52.0
 ## exatamente isso que o crítico reprovou na 1ª versão ("corte de cor que
 ## parece bug de UV").
 ## Usadas só pela silhueta distante (abaixo); o visual de perto vem do .glb.
-const COR_CASCA := Color(0.34, 0.21, 0.13)
+const COR_CASCA := Color(0.59, 0.39, 0.23)
 ## Verde musgoso e envelhecido, de propósito diferente do verde-pinheiro
 ## comum da Clareira (pedido do crítico: "não pode ler como pinheiro
 ## ampliado").
-const COR_COPA := Color(0.24, 0.34, 0.16)
+## 6ª rodada (12/11/2026): as cores da silhueta distante acompanham as da
+## folha do Vitor (tronco marrom-alaranjado, copa verde-limão), que é quem
+## manda; o verde-limão continua diferente do pinheiro da Clareira.
+const COR_COPA := Color(0.41, 0.63, 0.19)
 
 ## Modelo de verdade pela folha do Vitor (docs/referencias/gigante_arvore.png,
 ## sorriso calmo e olhos suaves na 2ª versão), feito pela skill
@@ -136,6 +139,10 @@ func _montar_visual_detalhado() -> Node3D:
 	var raiz := Node3D.new()
 	raiz.name = "VisualDetalhado"
 	var modelo := MODELO_DETALHADO.instantiate() as Node3D
+	# O Blender desenhou o gigante olhando para -Y, que no Godot vira +Z; o
+	# nó anda para -Z (look_at). Sem este giro ele andava de costas, com o
+	# rosto virado para onde veio (achado em 12/11/2026).
+	modelo.rotation.y = PI
 	raiz.add_child(modelo)
 	_anim = modelo.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim == null or not _anim.has_animation("Andar"):
