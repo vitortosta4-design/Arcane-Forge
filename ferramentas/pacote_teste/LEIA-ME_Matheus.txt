@@ -1,4 +1,4 @@
-ARCANE FORGE · VERSÃO DE TESTE (23/10/2026)
+ARCANE FORGE · VERSÃO DE TESTE (12/11/2026)
 ============================================
 
 Fala, Matheus! Este é o jogo que o Vitor está fazendo. Ainda é uma versão de
@@ -76,7 +76,16 @@ O desafio:
      está recarregando)?
   5. Algo travou, atravessou parede, sumiu ou ficou estranho? Se sim, print.
   6. O jogo ficou liso ou engasgando? (F3 mostra o FPS na tela.)
-  7. Uma nota de 0 a 10 e uma frase, do jeito que você escreveria uma
+  7. Novidades desta versão, diga o que sentiu de cada uma:
+     a) O mago agora recolhe a mão antes de soltar a magia (um instante
+        só). Pareceu atraso ou ficou gostoso?
+     b) A explosão ganhou clarão, anel e tremida de câmera. Tem peso? A
+        tremida incomoda?
+     c) Na bigorna desce um martelo com som (os dois são provisórios).
+        Deu vontade de martelar de novo?
+     d) Se você acerta a galinha enquanto ela arma a bicada (cabeça para
+        trás), a bicada é cancelada. Você percebeu? Ficou fácil demais?
+  8. Uma nota de 0 a 10 e uma frase, do jeito que você escreveria uma
      avaliação na Steam.
 
 
