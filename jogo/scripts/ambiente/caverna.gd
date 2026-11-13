@@ -31,7 +31,7 @@ const COR_LAVA := Color(1.0, 0.5, 0.12)
 ## troca para um ar próprio: escuro, roxo, com névoa fraca e arroxeada.
 const ALTURA_DO_AR_DA_CAVERNA := -40.0
 const COR_AR := Color(0.05, 0.04, 0.14)
-const COR_AMBIENTE_CAVERNA := Color(0.42, 0.3, 0.7)
+const COR_AMBIENTE_CAVERNA := Color(0.4, 0.32, 0.72)
 const COR_NEVOA_CAVERNA := Color(0.2, 0.1, 0.36)
 const COR_PEDRA := Color(0.36, 0.33, 0.4)
 const COR_CHAO := Color(0.42, 0.34, 0.37)
@@ -111,7 +111,7 @@ func _criar_ar_da_caverna() -> Environment:
 	ar.background_color = COR_AR
 	ar.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	ar.ambient_light_color = COR_AMBIENTE_CAVERNA
-	ar.ambient_light_energy = 0.3
+	ar.ambient_light_energy = 0.38
 	ar.fog_enabled = true
 	ar.fog_light_color = COR_NEVOA_CAVERNA
 	ar.fog_density = 0.004
@@ -119,6 +119,16 @@ func _criar_ar_da_caverna() -> Environment:
 	ar.fog_aerial_perspective = 0.0
 	ar.fog_sky_affect = 0.0
 	ar.volumetric_fog_enabled = false
+	# No Forward+ (o renderizador de verdade) todas as luzes somam e o brilho
+	# (glow) espalha qualquer coisa clara: com os números calibrados no
+	# renderizador da nuvem a caverna estourava em branco (print do Vitor,
+	# 13/11/2026). Aqui dentro o brilho é mais contido e só pega o que é
+	# aceso de verdade, e a exposição é um pouco menor.
+	ar.glow_intensity = 0.8
+	ar.glow_strength = 1.0
+	ar.glow_hdr_threshold = 1.1
+	ar.tonemap_exposure = 0.85
+	ar.sdfgi_enabled = false
 	return ar
 
 
@@ -265,7 +275,7 @@ func _criar_camara() -> void:
 	var brasa := OmniLight3D.new()
 	brasa.name = "LuzQuenteDaForja"
 	brasa.light_color = Color(1.0, 0.46, 0.12)
-	brasa.light_energy = 9.0
+	brasa.light_energy = 3.4
 	brasa.omni_range = 44.0
 	brasa.omni_attenuation = 1.3
 	brasa.position = c + Vector3.UP * 6.0
@@ -275,7 +285,7 @@ func _criar_camara() -> void:
 	var roxo := OmniLight3D.new()
 	roxo.name = "LuzRoxaDoTeto"
 	roxo.light_color = Color(0.72, 0.42, 1.0)
-	roxo.light_energy = 0.3
+	roxo.light_energy = 0.45
 	roxo.omni_range = 52.0
 	roxo.omni_attenuation = 0.6
 	roxo.position = c + Vector3.UP * 15.0
@@ -341,7 +351,7 @@ func _cristais(base: Vector3, cor: Color, tamanho := 1.0, com_luz := true) -> vo
 	mat.vertex_color_use_as_albedo = true
 	mat.emission_enabled = true
 	mat.emission = cor
-	mat.emission_energy_multiplier = 2.0
+	mat.emission_energy_multiplier = 0.35
 	cristal.material_override = mat
 	cristal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(cristal, true)
@@ -349,7 +359,7 @@ func _cristais(base: Vector3, cor: Color, tamanho := 1.0, com_luz := true) -> vo
 		return # normal: grupo pequeno de parede, só enfeite (menos luzes = mais FPS)
 	var luz := OmniLight3D.new()
 	luz.light_color = cor
-	luz.light_energy = 2.0
+	luz.light_energy = 1.1
 	luz.omni_range = 9.0 * tamanho
 	luz.position = base + Vector3.UP * 1.8 * tamanho
 	add_child(luz)
@@ -514,7 +524,7 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 		var luz_lava := OmniLight3D.new()
 		luz_lava.name = "LuzDaLavaDaParede%d" % (0 if lado < 0.0 else 1)
 		luz_lava.light_color = COR_LAVA
-		luz_lava.light_energy = 4.0
+		luz_lava.light_energy = 1.5
 		luz_lava.omni_range = 13.0
 		luz_lava.position = poca + Vector3.UP * 2.2 - d * 1.0
 		add_child(luz_lava)
@@ -764,8 +774,8 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 		var luz := OmniLight3D.new()
 		luz.name = "LuzDaLanterna%d" % k
 		luz.light_color = Color(1.0, 0.58, 0.2)
-		luz.light_energy = 4.6
-		luz.omni_range = 14.0
+		luz.light_energy = 2.0
+		luz.omni_range = 12.0
 		luz.position = p + Vector3.UP * 1.5
 		add_child(luz)
 	# cerca de postes com lanterna e corrente
@@ -808,7 +818,7 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 	var aceso := MeshInstance3D.new()
 	aceso.name = "LanternasAcesas"
 	aceso.mesh = G.finalizar(st_aceso)
-	aceso.material_override = _material_aceso(COR_LANTERNA, 1.4)
+	aceso.material_override = _material_aceso(COR_LANTERNA, 0.35)
 	aceso.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(aceso)
 

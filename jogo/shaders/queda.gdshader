@@ -16,6 +16,6 @@ void vertex() {
 void fragment() {
 	// A faixa desce com o tempo; o seno quebra a linha reta de lado a lado.
 	float faixa = fract(mundo.y * faixas_por_metro + TIME * velocidade + sin(mundo.x * 0.9 + mundo.z * 0.7) * 0.35);
-	float brilho = 0.7 + 0.55 * smoothstep(0.0, 0.25, faixa) * (1.0 - smoothstep(0.5, 1.0, faixa));
+	float brilho = 0.55 + 0.5 * smoothstep(0.0, 0.25, faixa) * (1.0 - smoothstep(0.5, 1.0, faixa));
 	ALBEDO = COLOR.rgb * brilho;
 }

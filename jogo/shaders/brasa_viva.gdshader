@@ -17,6 +17,6 @@ void vertex() {
 void fragment() {
 	float longe = distance(mundo.xz, centro.xz);
 	float onda = 0.5 + 0.5 * sin(longe * 6.2832 / comprimento_da_onda - TIME * velocidade);
-	ALBEDO = COLOR.rgb * (0.78 + 0.5 * onda * onda);
-	EMISSION = COLOR.rgb * 0.5 * onda;
+	ALBEDO = COLOR.rgb * (0.7 + 0.35 * onda * onda);
+	EMISSION = COLOR.rgb * 0.18 * onda;
 }

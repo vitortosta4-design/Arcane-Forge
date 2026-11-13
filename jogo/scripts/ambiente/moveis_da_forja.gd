@@ -120,7 +120,7 @@ static func montar(dono: Node3D, centro: Vector3, raio_camara: float, altura_do_
 		var luz := OmniLight3D.new()
 		luz.name = "LuzDosMoveis%d" % k
 		luz.light_color = Color(1.0, 0.6, 0.24)
-		luz.light_energy = 5.0
+		luz.light_energy = 2.2
 		luz.omni_range = 14.0
 		luz.omni_attenuation = 0.8
 		luz.position = centro + Vector3(cos(a), 0, sin(a)) * (r - 2.6) + Vector3.UP * 3.0
