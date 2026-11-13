@@ -2991,7 +2991,14 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 	var cristais := caverna.get_children().filter(func(n): return String(n.name).begins_with("Cristais"))
 	_afirmar("caverna: cristais espalhados (%d grupos)" % cristais.size(), cristais.size() >= 12)
 	var luzes := caverna.find_children("*", "Light3D", true, false).filter(func(l): return l.global_position.y < -40.0 and not caverna.forja.is_ancestor_of(l))
-	_afirmar("caverna: luzes da câmara dentro do teto, pelo FPS (%d, teto 14)" % luzes.size(), luzes.size() <= 14)
+	_afirmar("caverna: luzes da câmara dentro do teto, pelo FPS (%d, teto 16)" % luzes.size(), luzes.size() <= 16)
+	# Etapa 5: lava e água correndo (malha animada), lava descendo pela parede de dentro, sulcos que pulsam.
+	var quedas := caverna.get_node_or_null("QuedasDoFundo") as MeshInstance3D
+	_afirmar("caverna: quedas de lava e água numa malha animada", quedas != null and quedas.material_override is ShaderMaterial and quedas.mesh.get_faces().size() / 3 > 60)
+	_afirmar("caverna: lava descendo pela parede dos dois lados, cada uma com luz", caverna.get_node_or_null("LuzDaLavaDaParede0") != null and caverna.get_node_or_null("LuzDaLavaDaParede1") != null)
+	for nome in ["VeiosDeBrasa", "LinhasDeRuna"]:
+		var malha_acesa := caverna.get_node_or_null(nome) as MeshInstance3D
+		_afirmar("caverna: %s pulsa a partir da bigorna" % nome, malha_acesa != null and malha_acesa.material_override is ShaderMaterial)
 	# Etapa 3: móveis do posto, cheios de detalhe (pedido do Vitor), em só duas malhas.
 	for nome in ["MoveisDaForja", "MoveisAcesos"]:
 		_afirmar("caverna: tem %s" % nome, caverna.get_node_or_null(nome) != null)

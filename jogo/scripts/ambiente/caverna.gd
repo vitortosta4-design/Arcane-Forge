@@ -64,6 +64,7 @@ const QUANTAS_RAIZES_METALICAS := 6
 const PEDESTAL := [[8.0, 0.0], [7.46, 0.45], [6.5, 0.45], [5.96, 0.9], [0.0, 0.9]]
 const ALTURA_PEDESTAL := 0.9
 const RAIO_ANEL_DE_RUNAS := 11.4
+const RACHADURAS_DO_PEDESTAL := 9
 const COR_PEDESTAL := Color(0.62, 0.48, 0.36)
 const RAIO_CERCA := 19.5
 const COR_MADEIRA := Color(0.5, 0.3, 0.18)
@@ -200,10 +201,10 @@ func _criar_camara() -> void:
 	# Estalactites no teto e estalagmites no pé da parede.
 	for i in 44:
 		var a := _rng.randf_range(0.0, TAU)
-		var r := _rng.randf_range(6.0, RAIO_CAMARA - 3.0)
-		var comprimento := _rng.randf_range(1.5, 6.0)
+		var r := _rng.randf_range(11.0, RAIO_CAMARA - 3.0)
+		var comprimento := _rng.randf_range(1.5, 4.5)
 		var topo := c + Vector3(cos(a) * r, _altura_do_teto(r) - 0.2, sin(a) * r)
-		G.anexar(st, G.cilindro(0.0, _rng.randf_range(0.5, 1.3), comprimento, 5),
+		G.anexar(st, G.cilindro(0.0, _rng.randf_range(0.4, 0.9), comprimento, 5),
 			Transform3D(Basis(), topo + Vector3.DOWN * comprimento / 2.0), _cor_pedra(0.7))
 	for i in 16:
 		var a := _rng.randf_range(0.4, TAU - 0.4)
@@ -376,7 +377,8 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 	add_child(ceu)
 
 	var st := G.nova()        # pedra (ilhas, colunas, beirada)
-	var st_brilho := G.nova() # água, lava e cristais acesos
+	var st_brilho := G.nova() # cristais acesos das ilhas
+	var st_queda := G.nova()  # água e lava que correm (malha animada)
 	var fita_em_pe := func(topo: Vector3, altura: float, largura: float, cor: Color) -> void:
 		# duas fitas cruzadas, para ler de qualquer lado
 		for giro in [0.0, PI / 2.0]:
@@ -384,10 +386,10 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 			var base := topo + Vector3.DOWN * altura
 			var claro := cor.lerp(Color.WHITE, 0.25)
 			var olho := topo + Vector3(sin(giro), 0, -cos(giro)) * 9.0 + Vector3.DOWN * altura / 2.0
-			_face(st_brilho, topo + lado, topo - lado, base - lado * 1.3, claro, olho)
-			_face(st_brilho, topo + lado, base - lado * 1.3, base + lado * 1.3, cor, olho)
-			_face(st_brilho, topo + lado, base - lado * 1.3, topo - lado, claro, topo + (topo - olho))
-			_face(st_brilho, topo + lado, base + lado * 1.3, base - lado * 1.3, cor, topo + (topo - olho))
+			_face(st_queda, topo + lado, topo - lado, base - lado * 1.3, claro, olho)
+			_face(st_queda, topo + lado, base - lado * 1.3, base + lado * 1.3, cor, olho)
+			_face(st_queda, topo + lado, base - lado * 1.3, topo - lado, claro, topo + (topo - olho))
+			_face(st_queda, topo + lado, base + lado * 1.3, base - lado * 1.3, cor, topo + (topo - olho))
 	# Colunas distantes (do teto ao fundo), para dar profundidade.
 	for k in 7:
 		var x := rng.randf_range(-95.0, -55.0)
@@ -417,12 +419,6 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 		var a := PI + lerpf(-FUNDO_MEIA_ABERTURA, FUNDO_MEIA_ABERTURA, k / 8.0)
 		var p := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 0.6)
 		_pedregulho(st, colisores, p + Vector3.UP * 0.5, Vector3(rng.randf_range(2.6, 4.2), rng.randf_range(1.2, 2.2), rng.randf_range(2.2, 3.4)), _cor_pedra(0.1))
-	var pedras := MeshInstance3D.new()
-	pedras.name = "IlhasFlutuantes"
-	pedras.mesh = G.finalizar(st)
-	pedras.material_override = _material
-	pedras.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(pedras)
 	var brilhos := MeshInstance3D.new()
 	brilhos.name = "BrilhosDoFundo"
 	brilhos.mesh = G.finalizar(st_brilho)
@@ -433,6 +429,49 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 	brilhos.material_override = mat
 	brilhos.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(brilhos)
+	# Lava descendo pela parede de dentro, dos dois lados do fundo aberto
+	# (folha), caindo numa poça cercada de pedra; cada uma com a sua luz.
+	for lado: float in [-1.0, 1.0]:
+		var a := lado * deg_to_rad(128.0)
+		var d := Vector3(cos(a), 0, sin(a))
+		var de_lado := Vector3(-sin(a), 0, cos(a))
+		var pontos: Array[Vector3] = []
+		for y: float in [13.0, 9.0, 5.0, 2.0, 0.05]:
+			pontos.append(c + d * (sqrt(maxf(0.0, 1.0 - pow(y / (RAIO_CAMARA * ACHATAMENTO), 2))) * RAIO_CAMARA - 0.75) + Vector3.UP * y)
+		for k in pontos.size() - 1:
+			var larg0 := lerpf(1.3, 2.2, float(k) / (pontos.size() - 1))
+			var larg1 := lerpf(1.3, 2.2, float(k + 1) / (pontos.size() - 1))
+			_face(st_queda, pontos[k] + de_lado * larg0 / 2.0, pontos[k] - de_lado * larg0 / 2.0, pontos[k + 1] - de_lado * larg1 / 2.0, COR_LAVA.lerp(Color.WHITE, 0.2), c)
+			_face(st_queda, pontos[k] + de_lado * larg0 / 2.0, pontos[k + 1] - de_lado * larg1 / 2.0, pontos[k + 1] + de_lado * larg1 / 2.0, COR_LAVA, c)
+		var poca := pontos[-1] - d * 1.4
+		for q in 8:
+			var a0 := TAU * q / 8.0
+			var a1 := TAU * (q + 1) / 8.0
+			_face(st_queda, poca, poca + Vector3(cos(a0), 0, sin(a0)) * 2.3, poca + Vector3(cos(a1), 0, sin(a1)) * 2.3, COR_LAVA.lerp(Color(1.0, 0.85, 0.4), 0.35 if q % 2 else 0.0), poca + Vector3.UP * 4.0)
+			var pedra := poca + Vector3(cos(a0 + 0.3), 0, sin(a0 + 0.3)) * 2.7
+			if (pedra - c).length() < RAIO_CAMARA - 1.2 and q != 6:
+				_pedregulho(st, colisores, pedra + Vector3.UP * 0.35, Vector3(rng.randf_range(1.2, 1.9), rng.randf_range(0.8, 1.3), rng.randf_range(1.2, 1.8)), _cor_pedra(0.05))
+		var luz_lava := OmniLight3D.new()
+		luz_lava.name = "LuzDaLavaDaParede%d" % (0 if lado < 0.0 else 1)
+		luz_lava.light_color = COR_LAVA
+		luz_lava.light_energy = 4.0
+		luz_lava.omni_range = 13.0
+		luz_lava.position = poca + Vector3.UP * 2.2 - d * 1.0
+		add_child(luz_lava)
+	var pedras := MeshInstance3D.new()
+	pedras.name = "IlhasFlutuantes"
+	pedras.mesh = G.finalizar(st)
+	pedras.material_override = _material
+	pedras.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pedras)
+	var quedas := MeshInstance3D.new()
+	quedas.name = "QuedasDoFundo"
+	quedas.mesh = G.finalizar(st_queda)
+	var mat_queda := ShaderMaterial.new()
+	mat_queda.shader = preload("res://shaders/queda.gdshader")
+	quedas.material_override = mat_queda
+	quedas.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(quedas)
 
 
 ## Pedra da caverna: arroxeada e fria; `altura` 0 = pé da parede (um pouco
@@ -496,6 +535,14 @@ func _casca(st: SurfaceTool, c: Vector3, enfeitada := true) -> void:
 func _chao(st: SurfaceTool, c: Vector3) -> void:
 	var raios := [0.0, 8.0, 10.6, 13.4, 16.4, 19.6, 23.0, RAIO_CAMARA + 1.0]
 	var olho := c + Vector3.UP * 5.0
+	# Fundo escuro logo abaixo das lajotas: os anéis têm números diferentes de
+	# lajotas e deixam frestas entre si; com o fundo, a fresta vira rejunte
+	# (antes aparecia o azul do abismo, com cara de buraco).
+	for j in 24:
+		var b0 := TAU * j / 24.0
+		var b1 := TAU * (j + 1) / 24.0
+		_face(st, c + Vector3.DOWN * 0.05, c + Vector3(cos(b0), 0, sin(b0)) * (RAIO_CAMARA + 1.0) + Vector3.DOWN * 0.05,
+			c + Vector3(cos(b1), 0, sin(b1)) * (RAIO_CAMARA + 1.0) + Vector3.DOWN * 0.05, COR_CHAO * 0.4, olho)
 	for i in raios.size() - 1:
 		var dentro: float = raios[i]
 		var fora: float = raios[i + 1]
@@ -523,7 +570,7 @@ func _pedestal(st: SurfaceTool, c: Vector3) -> void:
 		var r1: float = PEDESTAL[n + 1][0]
 		var y1: float = PEDESTAL[n + 1][1]
 		for j in lados:
-			var a0 := TAU * (j + n * 0.5) / lados
+			var a0 := TAU * j / lados
 			var a1 := a0 + TAU / lados
 			var subida := not is_equal_approx(y0, y1)
 			var cor := GeometriaLowPoly.variar(COR_PEDESTAL * (0.78 if subida else 1.0), _rng, 0.12)
@@ -550,7 +597,7 @@ func _fita(st: SurfaceTool, a: Vector3, b: Vector3, largura: float, cor: Color) 
 func _linhas_de_runa(c: Vector3) -> void:
 	var st := GeometriaLowPoly.nova()
 	var y := Vector3.UP * 0.03
-	for anel in [[8.25, 0.26, 36, 1.0], [RAIO_ANEL_DE_RUNAS, 0.16, 48, 0.8], [17.6, 0.12, 60, 0.45]]:
+	for anel in [[8.2, 0.13, 36, 1.0], [RAIO_ANEL_DE_RUNAS, 0.1, 48, 0.85], [17.6, 0.07, 60, 0.5]]:
 		var raio: float = anel[0]
 		var partes: int = anel[2]
 		for j in partes:
@@ -568,22 +615,51 @@ func _linhas_de_runa(c: Vector3) -> void:
 		var pontas := [m + para_fora, m + de_lado, m - para_fora, m - de_lado]
 		for q in 4:
 			_fita(st, pontas[q], pontas[(q + 1) % 4], 0.14, COR_VEIO)
-	# lava nas subidas do pedestal
-	for k in 16:
-		var a := TAU * (k + 0.3) / 16.0
-		var d := Vector3(cos(a), 0, sin(a))
-		for n in [0, 2]:
-			var baixo: Array = PEDESTAL[n]
-			var alto: Array = PEDESTAL[n + 1]
-			var p0: Vector3 = c + d * (float(baixo[0]) + 0.02) + Vector3.UP * (float(baixo[1]) + 0.03)
-			var p1: Vector3 = c + d * (float(alto[0]) + 0.02) + Vector3.UP * (float(alto[1]) + 0.03)
-			_fita(st, p0, p1, 0.3 if (k + n) % 3 else 0.7, COR_VEIO * 1.0)
+	# rachaduras de lava no pedestal (folha): linhas quebradas que descem do pé
+	# da bigorna pelos dois degraus até o chão, cada uma com um galho
+	for k in RACHADURAS_DO_PEDESTAL:
+		var a := TAU * (k + 0.35) / RACHADURAS_DO_PEDESTAL
+		var anterior := Vector3.ZERO
+		var tem_anterior := false
+		for passo in [[3.4, 0.9], [5.9, 0.9], [6.0, 0.88], [6.46, 0.47], [7.4, 0.47], [7.5, 0.43], [7.98, 0.03], [8.15, 0.03]]:
+			var giro := a + (_rng.randf_range(-0.07, 0.07) if tem_anterior else 0.0)
+			var raio_p: float = passo[0]
+			var y_p: float = passo[1]
+			var ponto := c + Vector3(cos(giro) * raio_p, y_p + 0.035, sin(giro) * raio_p)
+			if tem_anterior:
+				_fita_solta(st, anterior, ponto, 0.16 if raio_p < 6.5 else 0.12, COR_VEIO)
+			anterior = ponto
+			tem_anterior = true
+		var meio := c + Vector3(cos(a) * 4.6, 0.935, sin(a) * 4.6)
+		_fita_solta(st, meio, c + Vector3(cos(a + 0.22) * 5.6, 0.935, sin(a + 0.22) * 5.6), 0.08, COR_VEIO * 0.85)
 	var linhas := MeshInstance3D.new()
 	linhas.name = "LinhasDeRuna"
 	linhas.mesh = GeometriaLowPoly.finalizar(st)
-	linhas.material_override = _material_aceso(COR_VEIO, 0.8)
+	linhas.material_override = _material_brasa(c)
 	linhas.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(linhas)
+
+
+## Fita acesa entre dois pontos quaisquer (sobe degrau, desce rampa): a
+## largura é medida de lado, no plano do chão.
+func _fita_solta(st: SurfaceTool, a: Vector3, b: Vector3, largura: float, cor: Color) -> void:
+	var ao_longo := b - a
+	var lado := Vector3(ao_longo.x, 0, ao_longo.z).cross(Vector3.UP)
+	if lado.length() < 0.001:
+		lado = Vector3.RIGHT
+	lado = lado.normalized() * largura / 2.0
+	var olho := (a + b) / 2.0 + Vector3.UP * 5.0 + Vector3(ao_longo.x, 0, ao_longo.z).normalized() * 3.0
+	_face(st, a + lado, a - lado, b - lado, cor, olho)
+	_face(st, a + lado, b - lado, b + lado, cor, olho)
+
+
+## Material dos sulcos de lava e das linhas de runa: brilho que pulsa do pé
+## da bigorna para as paredes.
+func _material_brasa(c: Vector3) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = preload("res://shaders/brasa_viva.gdshader")
+	mat.set_shader_parameter("centro", global_position + c)
+	return mat
 
 
 func _material_aceso(cor: Color, energia: float) -> StandardMaterial3D:
@@ -837,10 +913,10 @@ func _raizes_metalicas(c: Vector3) -> void:
 			var olho := (p0 + p1) / 2.0 + cima * 3.0
 			# barra de metal: topo e duas abas inclinadas
 			var cor := G.variar(COR_METAL, _rng, 0.12)
-			var t0a := p0 + lado * l0 * 0.55 + cima * 0.12
-			var t0b := p0 - lado * l0 * 0.55 + cima * 0.12
-			var t1a := p1 + lado * l1 * 0.55 + cima * 0.12
-			var t1b := p1 - lado * l1 * 0.55 + cima * 0.12
+			var t0a := p0 + lado * l0 * 0.55 + cima * 0.035
+			var t0b := p0 - lado * l0 * 0.55 + cima * 0.035
+			var t1a := p1 + lado * l1 * 0.55 + cima * 0.035
+			var t1b := p1 - lado * l1 * 0.55 + cima * 0.035
 			_face(st_metal, t0a, t0b, t1b, cor, olho)
 			_face(st_metal, t0a, t1b, t1a, cor, olho)
 			_face(st_metal, t0a, t1a, p1 + lado * l1 - cima * 0.03, cor * 0.8, olho + lado * 4.0)
@@ -850,8 +926,15 @@ func _raizes_metalicas(c: Vector3) -> void:
 			# veio de brasa: fita fina no meio do topo, que vai apagando longe da bigorna
 			var brilho0 := COR_VEIO * lerpf(1.0, 0.25, f0)
 			var v := 0.42
-			_face(st_veio, p0 + lado * l0 * v + cima * 0.135, p0 - lado * l0 * v + cima * 0.135, p1 - lado * l1 * v + cima * 0.135, brilho0, olho)
-			_face(st_veio, p0 + lado * l0 * v + cima * 0.135, p1 - lado * l1 * v + cima * 0.135, p1 + lado * l1 * v + cima * 0.135, brilho0, olho)
+			_face(st_veio, p0 + lado * l0 * v + cima * 0.05, p0 - lado * l0 * v + cima * 0.05, p1 - lado * l1 * v + cima * 0.05, brilho0, olho)
+			_face(st_veio, p0 + lado * l0 * v + cima * 0.05, p1 - lado * l1 * v + cima * 0.05, p1 + lado * l1 * v + cima * 0.05, brilho0, olho)
+			# rachadura lateral: um galho fino de lava saindo do sulco, no chão
+			if k < 7 and (k + i) % 2 == 0:
+				var sentido := 1.0 if (k + i) % 4 == 0 else -1.0
+				var ponta := p0 + (lado * sentido * _rng.randf_range(1.2, 2.4) + frente * _rng.randf_range(0.6, 1.4))
+				var cotovelo := p0.lerp(ponta, 0.55) + frente * 0.35
+				_fita(st_veio, p0 + Vector3.UP * 0.045, cotovelo + Vector3.UP * 0.045, 0.1, brilho0 * 0.9)
+				_fita(st_veio, cotovelo + Vector3.UP * 0.045, ponta + Vector3.UP * 0.045, 0.06, brilho0 * 0.75)
 	var metal := MeshInstance3D.new()
 	metal.name = "RaizesMetalicas"
 	metal.mesh = G.finalizar(st_metal)
@@ -861,7 +944,7 @@ func _raizes_metalicas(c: Vector3) -> void:
 	var veio := MeshInstance3D.new()
 	veio.name = "VeiosDeBrasa"
 	veio.mesh = G.finalizar(st_veio)
-	veio.material_override = _material_aceso(COR_VEIO, 0.6)
+	veio.material_override = _material_brasa(c)
 	veio.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(veio)
 
