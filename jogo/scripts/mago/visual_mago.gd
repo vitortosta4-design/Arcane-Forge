@@ -24,7 +24,29 @@ const MISTURA_S := 0.15
 ## magia sai. Depois volta ao ritmo normal para segurar a pose e assentar.
 const RITMO_PREPARO := 2.0
 const COR_CRISTAL := Color(0.3, 0.62, 1.0)
+## Peso no andar (auditoria de animação, item 6: "para de uma vez, sem
+## assentar"). O corpo inclina para onde anda e, quando arranca ou para,
+## balança numa mola até assentar; na parada ainda dá uma agachadinha.
+## É só visual: a velocidade do mago continua respondendo na hora.
+const INCLINACAO_ANDAR := 0.12   # radianos a VELOCIDADE_REFERENCIA (uns 7 graus)
+const VELOCIDADE_REFERENCIA := 4.5
+const MOLA_HZ := 2.6             # quantas balançadas por segundo
+const MOLA_AMORTECIMENTO := 0.35 # 1 = para sem balançar; 0,35 = passa do ponto uma vez e assenta
+const AGACHAR_NA_PARADA := 0.36  # empurrão na mola de achatar, por m/s perdido
+const AGACHAR_NO_ARRANQUE := 0.12
+## Teleporte (print, renascer) não pode virar um tranco: acima disso é ignorado.
+const VELOCIDADE_MAXIMA_LIDA := 8.0
 
+var _modelo: Node3D
+## Inclinação atual: x = para a frente, y = para o lado direito (radianos).
+var _inclinacao := Vector2.ZERO
+var _vel_inclinacao := Vector2.ZERO
+## Achatar: negativo = mais baixo e mais largo.
+var _achatar := 0.0
+var _vel_achatar := 0.0
+var _posicao_anterior := Vector3.ZERO
+var _tem_posicao_anterior := false
+var _velocidade_anterior := 0.0
 var _anim: AnimationPlayer
 var _cristal: Node3D
 var _acao := ""
@@ -38,6 +60,7 @@ func _ready() -> void:
 	modelo.rotation.y = PI
 	modelo.scale = Vector3.ONE * ESCALA
 	add_child(modelo)
+	_modelo = modelo
 	_anim = modelo.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim == null:
 		push_warning("VisualMago: mago.glb sem AnimationPlayer; o mago fica parado em pose.")
@@ -55,7 +78,8 @@ func _ready() -> void:
 
 
 ## Chamado pelo mago a cada quadro de física.
-func animar(_delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
+func animar(delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
+	_assentar(delta, velocidade_horizontal, no_chao)
 	if _anim == null or _acao != "":
 		return
 	if no_chao and velocidade_horizontal > 0.3:
@@ -66,6 +90,46 @@ func animar(_delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
 		if _anim.current_animation != "Parado":
 			_anim.play("Parado", MISTURA_S)
 		_anim.speed_scale = 1.0
+
+
+## Uma mola amortecida: devolve Vector2(posição nova, velocidade nova).
+## Analogia: a cabeça de um boneco de mola do painel do carro, que segue o
+## carro e balança um pouco antes de parar.
+static func mola(posicao: float, velocidade: float, alvo: float, delta: float) -> Vector2:
+	var w := TAU * MOLA_HZ
+	velocidade += (w * w * (alvo - posicao) - 2.0 * MOLA_AMORTECIMENTO * w * velocidade) * delta
+	return Vector2(posicao + velocidade * delta, velocidade)
+
+
+func _assentar(delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
+	if _modelo == null or delta <= 0.0:
+		return # normal: chamado antes do _ready ou com o jogo pausado
+	# Para onde o corpo está indo, medido pelo próprio deslocamento (vale para
+	# andar de lado e de costas, e para o mago do parceiro no cooperativo).
+	var local := Vector3.ZERO
+	if _tem_posicao_anterior:
+		var v := (global_position - _posicao_anterior) / delta
+		if v.length() < VELOCIDADE_MAXIMA_LIDA:
+			local = global_transform.basis.orthonormalized().inverse() * v
+	_posicao_anterior = global_position
+	_tem_posicao_anterior = true
+	var alvo := Vector2(-local.z, local.x) / VELOCIDADE_REFERENCIA * INCLINACAO_ANDAR if no_chao else Vector2.ZERO
+	var frente := mola(_inclinacao.x, _vel_inclinacao.x, alvo.x, delta)
+	var lado := mola(_inclinacao.y, _vel_inclinacao.y, alvo.y, delta)
+	_inclinacao = Vector2(frente.x, lado.x)
+	_vel_inclinacao = Vector2(frente.y, lado.y)
+	# Parou ou arrancou de uma vez: empurrão para baixo na mola de achatar.
+	var mudanca := velocidade_horizontal - _velocidade_anterior
+	_velocidade_anterior = velocidade_horizontal
+	if no_chao and absf(mudanca) > 1.0:
+		_vel_achatar -= absf(mudanca) * (AGACHAR_NA_PARADA if mudanca < 0.0 else AGACHAR_NO_ARRANQUE)
+	var achatar := mola(_achatar, _vel_achatar, 0.0, delta)
+	_achatar = clampf(achatar.x, -0.12, 0.08)
+	_vel_achatar = achatar.y
+	# O modelo olha para +Z dele (girado em PI): X positivo joga o topo para a
+	# frente do mago; Z positivo joga o topo para a direita do mago.
+	_modelo.rotation = Vector3(_inclinacao.x, PI, _inclinacao.y)
+	_modelo.scale = Vector3(1.0 - _achatar * 0.5, 1.0 + _achatar, 1.0 - _achatar * 0.5) * ESCALA
 
 
 ## Clique: começa já a recolher o braço (antecipação), em ritmo dobrado.

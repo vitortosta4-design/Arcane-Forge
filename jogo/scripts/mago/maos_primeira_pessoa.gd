@@ -17,6 +17,13 @@ var _palma: MeshInstance3D
 var _brilho: MeshInstance3D
 var _fase_passo := 0.0
 var _brilho_restante := 0.0
+## Assentar das mãos quando o mago para ou arranca (mesma mola do corpo em
+## terceira pessoa): descem um pouco e voltam passando do ponto uma vez.
+const BAIXAR_NA_PARADA := 0.12   # empurrão por m/s perdido
+const BAIXAR_NO_ARRANQUE := 0.06
+var _assento := 0.0
+var _vel_assento := 0.0
+var _velocidade_anterior := 0.0
 
 
 func _ready() -> void:
@@ -54,6 +61,14 @@ func animar(delta: float, velocidade_horizontal: float, no_chao: bool) -> void:
 	_fase_passo += delta * 9.0 * andando
 	# Balanço do passo: as mãos sobem e descem de leve.
 	_modelo.position = Vector3(sin(_fase_passo * 0.5) * 0.012, absf(sin(_fase_passo * 0.5)) * -0.018, 0.0) * andando
+	var mudanca := velocidade_horizontal - _velocidade_anterior
+	_velocidade_anterior = velocidade_horizontal
+	if no_chao and absf(mudanca) > 1.0:
+		_vel_assento -= absf(mudanca) * (BAIXAR_NA_PARADA if mudanca < 0.0 else BAIXAR_NO_ARRANQUE)
+	var assento := VisualMago.mola(_assento, _vel_assento, 0.0, delta)
+	_assento = clampf(assento.x, -0.04, 0.02)
+	_vel_assento = assento.y
+	_modelo.position.y += _assento
 	if _brilho_restante > 0.0:
 		_brilho_restante = maxf(0.0, _brilho_restante - delta)
 		var t := sin(_brilho_restante / DURACAO_BRILHO_S * PI)

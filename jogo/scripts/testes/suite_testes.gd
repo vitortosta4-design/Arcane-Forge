@@ -157,6 +157,9 @@ func _ready() -> void:
 	await _testar_arvore_gigante_anda_de_frente_e_segue_a_folha()
 	await _testar_galinha_pisca_branco_ao_apanhar()
 	await _testar_galinha_zumbi_incha_no_aviso()
+	await _testar_mago_inclina_ao_andar_e_assenta_ao_parar()
+	await _testar_maos_do_mago_assentam_ao_parar()
+	await _testar_mago_no_jogo_anda_na_hora_e_assenta_so_no_visual()
 	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
@@ -2854,3 +2857,97 @@ func _testar_galinha_zumbi_incha_no_aviso() -> void:
 	_afirmar("galinha zumbi: desincha no bote", zumbi._modelo.scale.y < base * 1.03 and zumbi._modelo.rotation.x > -0.05)
 	zumbi.queue_free()
 	invocada.queue_free()
+
+
+
+## Auditoria de animação, item 6: o mago parava seco. Agora o corpo inclina
+## para onde anda e, ao parar, passa do ponto uma vez, agacha e assenta.
+## Simulado em passos de 1/60 s, sem depender do relógio da máquina.
+func _testar_mago_inclina_ao_andar_e_assenta_ao_parar() -> void:
+	var v := VisualMago.new()
+	add_child(v)
+	v.global_position = Vector3(500, 0, 0)
+	await get_tree().process_frame
+	var dt := 1.0 / 60.0
+	var topo := func() -> Vector3: return v._modelo.global_transform.basis.y.normalized()
+	v.animar(dt, 0.0, true)
+	for i in 40:
+		v.global_position.z -= 4.5 * dt # anda para a frente (-Z)
+		v.animar(dt, 4.5, true)
+	_afirmar("mago: andando para a frente o corpo inclina para a frente (%.1f graus)" % rad_to_deg(v._inclinacao.x), topo.call().z < -0.05 and absf(topo.call().x) < 0.02)
+	var menor_inclinacao := INF
+	var menor_altura := INF
+	for i in 70:
+		v.animar(dt, 0.0, true)
+		menor_inclinacao = minf(menor_inclinacao, v._inclinacao.x)
+		menor_altura = minf(menor_altura, v._modelo.scale.y / VisualMago.ESCALA)
+	_afirmar("mago: ao parar o corpo passa do ponto e volta (%.1f graus para trás)" % rad_to_deg(-menor_inclinacao), menor_inclinacao < -0.008)
+	_afirmar("mago: ao parar dá uma agachadinha (%.1f%% mais baixo)" % ((1.0 - menor_altura) * 100.0), menor_altura < 0.975 and menor_altura > 0.88)
+	_afirmar("mago: 1,2 s depois de parar está assentado e reto", absf(v._inclinacao.x) < 0.004 and absf(v._modelo.scale.y / VisualMago.ESCALA - 1.0) < 0.004)
+	for i in 40:
+		v.global_position.x += 4.5 * dt # anda de lado, para a direita (+X)
+		v.animar(dt, 4.5, true)
+	_afirmar("mago: andando de lado o corpo inclina para o lado em que anda", topo.call().x > 0.05)
+	v.global_position += Vector3(300, 0, 300) # teleporte (renascer, print)
+	v.animar(dt, 4.5, true)
+	_afirmar("mago: teleporte não vira tranco no corpo", absf(v._vel_inclinacao.x) < 2.0 and absf(v._vel_inclinacao.y) < 2.0)
+	v.queue_free()
+
+
+func _testar_maos_do_mago_assentam_ao_parar() -> void:
+	var m := MaosPrimeiraPessoa.new()
+	add_child(m)
+	await get_tree().process_frame
+	var dt := 1.0 / 60.0
+	for i in 40:
+		m.animar(dt, 4.5, true)
+	var mais_baixo := INF
+	for i in 80:
+		m.animar(dt, 0.0, true)
+		mais_baixo = minf(mais_baixo, m._modelo.position.y)
+	_afirmar("mago 1ª pessoa: ao parar as mãos descem um pouco (%.1f cm)" % (-mais_baixo * 100.0), mais_baixo < -0.008 and mais_baixo > -0.045)
+	_afirmar("mago 1ª pessoa: e voltam ao lugar", absf(m._modelo.position.y) < 0.002)
+	m.queue_free()
+
+
+
+## O mesmo, no mago de verdade com chão e tecla: o comando continua seco
+## (velocidade cheia no primeiro quadro e zero ao soltar; a regra não mudou),
+## e só o corpo visível inclina e assenta.
+func _testar_mago_no_jogo_anda_na_hora_e_assenta_so_no_visual() -> void:
+	var chao := StaticBody3D.new()
+	var forma := CollisionShape3D.new()
+	var caixa := BoxShape3D.new()
+	caixa.size = Vector3(40, 1, 40)
+	forma.shape = caixa
+	chao.add_child(forma)
+	add_child(chao)
+	chao.global_position = Vector3(700, -0.5, 0)
+	var mago: CharacterBody3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	mago.global_position = Vector3(700, 0.05, 0)
+	for i in 30:
+		await get_tree().physics_frame
+	var visual: VisualMago = mago.get_node("CorpoVisivel")
+	_afirmar("mago no jogo: parado no chão, corpo reto", mago.is_on_floor() and absf(visual._inclinacao.x) < 0.01)
+	Input.action_press("mover_frente")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var arranque := Vector2(mago.velocity.x, mago.velocity.z).length()
+	_afirmar("mago no jogo: anda na velocidade cheia já no primeiro quadro (%.1f m/s)" % arranque, arranque > mago.VELOCIDADE_ANDAR * 0.95)
+	for i in 30:
+		await get_tree().physics_frame
+	_afirmar("mago no jogo: andando, o corpo inclina para a frente (%.1f graus)" % rad_to_deg(visual._inclinacao.x), visual._inclinacao.x > 0.05)
+	Input.action_release("mover_frente")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_afirmar("mago no jogo: ao soltar a tecla a velocidade zera na hora (regra igual)", Vector2(mago.velocity.x, mago.velocity.z).length() < 0.01)
+	var para_tras := INF
+	var mais_baixo := INF
+	for i in 40:
+		await get_tree().physics_frame
+		para_tras = minf(para_tras, visual._inclinacao.x)
+		mais_baixo = minf(mais_baixo, visual._modelo.scale.y / VisualMago.ESCALA)
+	_afirmar("mago no jogo: ao parar o corpo balança para trás e agacha (%.1f graus, %.1f%%)" % [rad_to_deg(-para_tras), (1.0 - mais_baixo) * 100.0], para_tras < -0.008 and mais_baixo < 0.975)
+	mago.queue_free()
+	chao.queue_free()

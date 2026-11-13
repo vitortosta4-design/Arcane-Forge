@@ -303,3 +303,12 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Achado:** a vitrine da galinha fotografa um quadro depois do tempo pedido (`frame_post_draw`), então "0,034 s" é na verdade 0,1 s. Para pegar o clarão o print foi pedido com 0,01 s.
 - **Testes:** 14 novos (branca na hora, ainda branca a 0,05 s, camada dos estados intacta, materiais de volta, zumbi incha e tomba, invocada não, desincha no bote). 404/404.
 - **Limitações:** o branco sai 214 de 255 na nuvem (ajuste de tons); tremor e clarão em movimento só julgando no PC do Vitor.
+
+## 12/11/2026 (noite) · Mago assenta ao parar (auditoria de animação, item 6)
+
+- **Decisão técnica:** peso só no visual. A velocidade do mago continua seca (cheia no primeiro quadro, zero ao soltar a tecla), porque a auditoria elogiou a resposta do comando e mexer nela muda a sensação de controle. Quem ganha peso é o corpo.
+- **3ª pessoa (`visual_mago.gd`):** o modelo inclina para onde anda (7 graus na velocidade cheia, vale para frente, lado e costas, medido pelo próprio deslocamento) seguindo uma mola amortecida (2,6 Hz, amortecimento 0,35); ao parar passa 2 graus do ponto e volta, e agacha 5,3% (achata e alarga) antes de assentar. Arranque agacha um terço disso. Teleporte acima de 8 m/s é ignorado para não virar tranco.
+- **1ª pessoa (`maos_primeira_pessoa.gd`):** as mãos descem 1,7 cm ao parar e voltam com a mesma mola.
+- **Testes:** 13 novos, inclusive um no mago de verdade com chão e tecla (velocidade cheia no primeiro quadro, zero ao soltar, corpo inclina, balança e agacha). 417/417.
+- **Evidência:** `evidencias/fase-2/animacao/mago_andar_v2.gif` e `_folha.png`. **Limitação honesta:** de costas e em quadro pequeno o efeito quase não se vê; uma tentativa de gravar de lado ficou com o mago longe e atrás de uma pedra e foi descartada. Por isso não rodei o crítico nesta entrega (ele só enxerga quadros parados e gastaria cota sem poder julgar); fica para o Vitor ver em movimento.
+- **Ficou de fora:** cadência do passo (a auditoria é anterior ao mago com esqueleto, que já tem `Andar` casado com a velocidade) e som de passo (fase de áudio).
