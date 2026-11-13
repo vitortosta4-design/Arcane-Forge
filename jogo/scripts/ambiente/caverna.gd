@@ -36,6 +36,14 @@ const COR_NEVOA_CAVERNA := Color(0.2, 0.1, 0.36)
 const COR_PEDRA := Color(0.36, 0.33, 0.4)
 const COR_CHAO := Color(0.42, 0.34, 0.37)
 const COR_BURACO := Color(0.03, 0.02, 0.05)
+## Entrada (referência do Vitor de 13/11/2026): pedra clara e quente ao sol,
+## arroxeada na sombra; grama viva; runa e cristais roxos acesos.
+const COR_ROCHA_BOCA := Color(0.6, 0.57, 0.56)
+const COR_ROCHA_BOCA_SOMBRA := Color(0.4, 0.36, 0.46)
+const COR_GRAMA_BOCA := Color(0.42, 0.68, 0.2)
+const COR_RUNA_BOCA := Color(0.78, 0.36, 1.0)
+const COR_TUNEL_BOCA := Color(0.2, 0.1, 0.32)
+const COR_PANO_BOCA := Color(0.45, 0.2, 0.52)
 const CORES_CRISTAL := [Color(0.62, 0.28, 1.0), Color(0.3, 0.75, 1.0)]
 ## Câmara (1ª passada da caverna definitiva, pedido do Vitor em 12/11/2026).
 ## Quem manda é a folha `docs/referencias/lote02/lote02_09_caverna_forja.png`:
@@ -145,39 +153,188 @@ func saida_clareira() -> Vector3:
 # --- Boca na clareira -----------------------------------------------------
 
 func _criar_boca() -> void:
+	# Entrada refeita pela referência do Vitor de 13/11/2026
+	# (docs/referencias/caverna_entrada_referencia.png): arco de pedregulhos
+	# com runa roxa na pedra do topo, dois pilares com runa, cipós, dois
+	# estandartes, dois braseiros acesos, cristais na boca, túnel roxo para
+	# dentro, caminho de lajes, pedras, cogumelos e flores.
+	# Eixos: +X entra no morro, -X sai para a clareira, Z é a largura.
 	var G := GeometriaLowPoly
-	var st := G.nova()
+	var st := G.nova()          # pedra, madeira, pano, plantas (material toon)
+	var st_aceso := G.nova()    # runas, fogo, miolo das lanternas (cor acesa)
+	var st_tunel := G.nova()    # paredes de dentro, pintadas (sem luz)
 	var colisores := StaticBody3D.new()
+	colisores.name = "PedrasDaBoca"
 	colisores.collision_layer = 1
 	colisores.collision_mask = 0
 	var b := _boca_chao
-	# Morro de pedra atrás da boca e dois pilares tortos com uma laje em cima.
-	_pedregulho(st, colisores, b + Vector3(3.5, 1.5, 0), Vector3(4.5, 4.5, 6.5))
-	_pedregulho(st, colisores, b + Vector3(0.2, 1.4, -2.6), Vector3(1.6, 3.0, 1.6))
-	_pedregulho(st, colisores, b + Vector3(0.2, 1.4, 2.6), Vector3(1.6, 3.2, 1.6))
-	_pedregulho(st, colisores, b + Vector3(0.4, 4.2, 0.0), Vector3(2.2, 1.2, 4.2))
+	var clareira := get_parent().get_node_or_null("Clareira") as Clareira if get_parent() else null
+	var chao := func(x: float, z: float) -> Vector3:
+		# normal: sem Clareira (testes), o chão é a altura da boca
+		return Vector3(x, clareira.altura_em(x, z) if clareira else b.y, z)
+	var cor_rocha := func(sombra: float) -> Color:
+		return G.variar(COR_ROCHA_BOCA.lerp(COR_ROCHA_BOCA_SOMBRA, sombra), _rng, 0.08)
+
+	# Paredão de pedra atrás e dos lados (a boca fica encaixada num barranco).
+	for k in 9:
+		var dz: float = [-8.6, -6.4, -4.3, 4.3, 6.4, 8.6, -2.6, 2.6, 0.0][k]
+		var alto: float = [3.4, 4.6, 5.6, 5.6, 4.8, 3.2, 6.6, 6.6, 7.4][k]
+		var fundo := 2.6 if absf(dz) > 3.0 else 4.4
+		_pedregulho(st, colisores, b + Vector3(fundo, alto * 0.42, dz), Vector3(5.0, alto, 3.4 + _rng.randf_range(0.0, 0.8)), cor_rocha.call(0.35 + _rng.randf_range(0.0, 0.25)))
+		# tampa de grama em cima de cada pedra do paredão
+		G.anexar(st, G.esfera(0.5, 6, 3), Transform3D(Basis().scaled(Vector3(4.4, 0.9, 3.6)), b + Vector3(fundo + 0.2, alto * 0.9, dz)), G.variar(COR_GRAMA_BOCA, _rng, 0.1))
+	# Pilares: bloco de baixo, bloco de cima mais largo.
+	for lado: float in [-1.0, 1.0]:
+		_pedregulho(st, colisores, b + Vector3(0.4, 1.5, lado * 2.75), Vector3(2.0, 3.4, 1.9), cor_rocha.call(0.1))
+		_pedregulho(st, colisores, b + Vector3(0.3, 3.5, lado * 2.6), Vector3(2.5, 1.5, 2.5), cor_rocha.call(0.0))
+		# runa do pilar: haste com losango, acesa
+		var frente := b + Vector3(-0.72, 1.7, lado * 2.75)
+		G.anexar(st_aceso, G.cubo(Vector3(0.05, 1.3, 0.14)), Transform3D(Basis(), frente), COR_RUNA_BOCA)
+		G.anexar(st_aceso, G.cubo(Vector3(0.05, 0.5, 0.5)), Transform3D(Basis(Vector3.RIGHT, PI / 4.0), frente + Vector3.UP * 0.45), COR_RUNA_BOCA)
+		G.anexar(st_aceso, G.cubo(Vector3(0.06, 0.24, 0.24)), Transform3D(Basis(Vector3.RIGHT, PI / 4.0), frente + Vector3(-0.01, 0.45, 0)), COR_RUNA_BOCA.lerp(Color.WHITE, 0.6))
+		G.anexar(st_aceso, G.cubo(Vector3(0.05, 0.14, 0.5)), Transform3D(Basis(), frente + Vector3.DOWN * 0.3), COR_RUNA_BOCA)
+	# Arco: pedregulhos em meia-lua por cima da abertura.
+	for k in 7:
+		var a := deg_to_rad(18.0 + k * 24.0)
+		var centro := b + Vector3(0.2, 3.3 + sin(a) * 2.5, cos(a) * 3.4)
+		var tam := 2.5 if k != 3 else 3.3
+		_pedregulho(st, colisores, centro, Vector3(tam, tam * 0.82, tam), cor_rocha.call(0.05 + 0.15 * absf(cos(a))))
+	# Pedra do topo com a runa grande (espiral quadrada da referência).
+	var runa := b + Vector3(-1.62, 5.35, 0.0)
+	for anel in [[1.5, 0.2, 0.0], [0.95, 0.17, 0.0], [0.42, 0.42, 0.5]]:
+		var lado_r: float = anel[0]
+		var esp: float = anel[1]
+		var cor_r := COR_RUNA_BOCA.lerp(Color.WHITE, anel[2])
+		for q in 4:
+			var giro := Basis(Vector3.RIGHT, q * PI / 2.0 + PI / 4.0)
+			G.anexar(st_aceso, G.cubo(Vector3(0.06, esp, lado_r if lado_r > esp else esp)), Transform3D(giro, runa + giro * Vector3(0, lado_r / 2.0 - esp / 2.0, 0)), cor_r)
+	# Cipós pendurados do arco e do paredão.
+	for k in 9:
+		var dz: float = [-2.3, -1.6, -0.9, 1.0, 1.7, 2.4, -5.0, 5.2, 6.6][k]
+		var topo := b + Vector3(-1.05 if absf(dz) < 3.0 else 0.2, (5.4 - absf(dz) * 0.45) if absf(dz) < 3.0 else 4.4, dz)
+		var comprimento := _rng.randf_range(0.9, 2.2)
+		for q in int(comprimento / 0.32):
+			G.anexar(st, G.cubo(Vector3(0.1, 0.34, _rng.randf_range(0.28, 0.5))), Transform3D(Basis(Vector3.UP, _rng.randf_range(-0.5, 0.5)), topo + Vector3(_rng.randf_range(-0.06, 0.06), -q * 0.3, _rng.randf_range(-0.08, 0.08))),
+				G.variar(COR_GRAMA_BOCA.lerp(Color(0.75, 0.85, 0.25), 0.35 if q % 2 else 0.0), _rng, 0.1))
 	var malha := MeshInstance3D.new()
 	malha.name = "BocaCaverna"
+
+	# Túnel para dentro: paredes pintadas de roxo, mais escuras no fundo, e cristais.
+	var olho_tunel := b + Vector3(1.0, 1.8, 0.0)
+	var aneis: Array = []
+	for n in 5:
+		var f := n / 4.0
+		var anel: Array[Vector3] = []
+		for q in 9:
+			var a := PI * q / 8.0
+			var raio := lerpf(2.25, 1.3, f)
+			anel.append(b + Vector3(-0.4 + f * 7.5, maxf(0.0, sin(a) * raio * 1.55) + 0.02, cos(a) * raio))
+		aneis.append(anel)
+	for n in 4:
+		var cor_t := COR_TUNEL_BOCA.lerp(COR_BURACO, (n + 0.5) / 4.0)
+		for q in 8:
+			_face(st_tunel, aneis[n][q], aneis[n][q + 1], aneis[n + 1][q + 1], G.variar(cor_t, _rng, 0.12), olho_tunel + Vector3(n * 1.8, 0, 0))
+			_face(st_tunel, aneis[n][q], aneis[n + 1][q + 1], aneis[n + 1][q], G.variar(cor_t, _rng, 0.12), olho_tunel + Vector3(n * 1.8, 0, 0))
+		# chão do túnel
+		_face(st_tunel, aneis[n][0], aneis[n][8], aneis[n + 1][8], cor_t * 0.8, olho_tunel + Vector3(n * 1.8, 2, 0))
+		_face(st_tunel, aneis[n][0], aneis[n + 1][8], aneis[n + 1][0], cor_t * 0.8, olho_tunel + Vector3(n * 1.8, 2, 0))
+	for q in 7:
+		_face(st_tunel, aneis[4][0], aneis[4][q + 1], aneis[4][q + 2] if q < 7 else aneis[4][8], COR_BURACO, olho_tunel)
+	for k in 8:
+		var dentro := _rng.randf_range(0.6, 5.5)
+		var raio_ali := lerpf(2.1, 1.4, dentro / 7.5)
+		var lado_c := -1.0 if k % 2 else 1.0
+		var no_teto := k % 4 == 3
+		var pe := b + Vector3(dentro, 2.9 * (1.0 - dentro / 14.0) if no_teto else 0.0, lado_c * raio_ali * (0.45 if no_teto else 0.82))
+		var altura_c := _rng.randf_range(0.5, 1.2)
+		var em_pe := Basis(Vector3.RIGHT, PI if no_teto else lado_c * -0.25)
+		G.anexar(st_aceso, G.cilindro(altura_c * 0.24, altura_c * 0.2, altura_c * 0.6, 5), Transform3D(em_pe, pe + em_pe * Vector3(0, altura_c * 0.3, 0)), CORES_CRISTAL[0] * _rng.randf_range(0.75, 0.95))
+		G.anexar(st_aceso, G.cilindro(altura_c * 0.2, 0.0, altura_c * 0.4, 5), Transform3D(em_pe, pe + em_pe * Vector3(0, altura_c * 0.8, 0)), CORES_CRISTAL[0].lerp(Color.WHITE, 0.45))
+
+	# Estandartes em mastro de madeira e braseiros de pedra, um par de cada lado.
+	for lado: float in [-1.0, 1.0]:
+		var pe_m: Vector3 = chao.call(b.x - 2.4, b.z + lado * 5.6)
+		G.anexar(st, G.cubo(Vector3(0.22, 5.0, 0.22)), Transform3D(Basis(), pe_m + Vector3.UP * 2.5), G.variar(COR_MADEIRA, _rng, 0.1))
+		G.anexar(st, G.cubo(Vector3(0.18, 0.18, 1.9)), Transform3D(Basis(), pe_m + Vector3.UP * 4.5), G.variar(COR_MADEIRA, _rng, 0.1))
+		G.anexar(st, G.cubo(Vector3(0.06, 2.2, 1.3)), Transform3D(Basis(), pe_m + Vector3(-0.15, 3.3, 0)), COR_PANO_BOCA)
+		G.anexar(st, G.cilindro(0.0, 0.66, 0.7, 3), Transform3D(Basis(Vector3.RIGHT, PI) * Basis(Vector3.UP, PI / 2.0) * Basis().scaled(Vector3(1, 1, 0.1)), pe_m + Vector3(-0.15, 1.86, 0)), COR_PANO_BOCA * 0.9)
+		G.anexar(st, G.cubo(Vector3(0.07, 0.62, 0.62)), Transform3D(Basis(Vector3.RIGHT, PI / 4.0), pe_m + Vector3(-0.19, 3.4, 0)), Color(0.93, 0.86, 0.9))
+		G.anexar(st, G.cubo(Vector3(0.08, 0.34, 0.34)), Transform3D(Basis(Vector3.RIGHT, PI / 4.0), pe_m + Vector3(-0.2, 3.4, 0)), COR_PANO_BOCA)
+		G.anexar(st, G.cubo(Vector3(0.09, 0.13, 0.13)), Transform3D(Basis(Vector3.RIGHT, PI / 4.0), pe_m + Vector3(-0.21, 3.4, 0)), Color(0.93, 0.86, 0.9))
+		var pe_b: Vector3 = chao.call(b.x - 1.9, b.z + lado * 4.0)
+		_pedregulho(st, colisores, pe_b + Vector3.UP * 0.45, Vector3(1.3, 1.1, 1.3), cor_rocha.call(0.2))
+		G.anexar(st, G.cilindro(0.35, 0.75, 0.45, 7), Transform3D(Basis(), pe_b + Vector3.UP * 1.15), cor_rocha.call(0.5))
+		for q in 4:
+			var alt_f := [1.0, 0.7, 0.6, 0.45][q] as float
+			var desloca := Vector3([0.0, 0.2, -0.18, 0.05][q], 1.3 + alt_f / 2.0, [0.0, 0.15, 0.1, -0.22][q])
+			G.anexar(st_aceso, G.cilindro(alt_f * 0.3, 0.0, alt_f, 5), Transform3D(Basis(), pe_b + desloca), [COR_LAVA, Color(1.0, 0.75, 0.25), COR_LAVA, Color(1.0, 0.9, 0.5)][q])
+		var fogo := OmniLight3D.new()
+		fogo.name = "LuzDoBraseiro%d" % (0 if lado < 0.0 else 1)
+		fogo.light_color = Color(1.0, 0.62, 0.25)
+		fogo.light_energy = 1.2
+		fogo.omni_range = 6.0
+		# Sem espalhar na névoa volumétrica: ao ar livre a luz virava uma bola branca de neblina.
+		fogo.light_volumetric_fog_energy = 0.0
+		fogo.position = pe_b + Vector3(-0.4, 2.0, 0)
+		add_child(fogo)
+	# Caminho de lajes saindo da boca para a clareira, pedras, cogumelos e flores.
+	for k in 9:
+		var x := b.x - 2.6 - k * 1.55
+		var p: Vector3 = chao.call(x, b.z + sin(k * 0.9) * 0.9)
+		G.anexar(st, G.cilindro(_rng.randf_range(0.75, 1.1), _rng.randf_range(0.6, 0.9), 0.16, 6), Transform3D(Basis(Vector3.UP, _rng.randf_range(0.0, TAU)).scaled(Vector3(1.25, 1, 0.85)), p + Vector3.UP * 0.06), cor_rocha.call(0.3))
+	for k in 7:
+		var p: Vector3 = chao.call(b.x - _rng.randf_range(3.0, 9.0), b.z + (-1.0 if k % 2 else 1.0) * _rng.randf_range(3.0, 7.5))
+		var tam := _rng.randf_range(0.9, 2.2)
+		_pedregulho(st, colisores, p + Vector3.UP * tam * 0.3, Vector3(tam * 1.3, tam * 0.8, tam), cor_rocha.call(0.25))
+	for k in 5:
+		var p: Vector3 = chao.call(b.x - _rng.randf_range(3.5, 8.0), b.z + (1.0 if k % 2 else -1.0) * _rng.randf_range(2.2, 6.0))
+		var tam := _rng.randf_range(0.35, 0.8)
+		G.anexar(st, G.cilindro(tam * 0.22, tam * 0.16, tam, 6), Transform3D(Basis(), p + Vector3.UP * tam / 2.0), Color(0.95, 0.9, 0.82))
+		G.anexar(st, G.cilindro(tam * 0.75, tam * 0.12, tam * 0.45, 7), Transform3D(Basis(), p + Vector3.UP * (tam + tam * 0.18)), Color(0.86, 0.2, 0.16))
+		for q in 4:
+			var a := TAU * q / 4.0 + 0.4
+			G.anexar(st, G.cubo(Vector3.ONE * tam * 0.14), Transform3D(Basis(), p + Vector3(cos(a) * tam * 0.4, tam * 1.22, sin(a) * tam * 0.4)), Color(0.98, 0.96, 0.92))
+	for k in 12:
+		var p: Vector3 = chao.call(b.x - _rng.randf_range(2.5, 9.5), b.z + (1.0 if k % 2 else -1.0) * _rng.randf_range(1.8, 7.0))
+		var alt_fl := _rng.randf_range(0.5, 0.95)
+		G.anexar(st, G.cubo(Vector3(0.05, alt_fl, 0.05)), Transform3D(Basis(), p + Vector3.UP * alt_fl / 2.0), COR_GRAMA_BOCA * 0.8)
+		for q in 4:
+			G.anexar(st, G.cubo(Vector3.ONE * (0.17 - q * 0.025)), Transform3D(Basis(Vector3(1, 1, 0).normalized(), 0.8 + q), p + Vector3.UP * (alt_fl * 0.6 + q * 0.12)), Color(0.55, 0.36, 0.9).lerp(Color.WHITE, q * 0.06))
+	# Cristais grandes dos dois lados da boca (o da direita com luz).
+	_cristais(b + Vector3(-1.2, 0.0, -1.55), CORES_CRISTAL[0], 1.25, false)
+	_cristais(b + Vector3(-1.0, 0.0, 1.6), CORES_CRISTAL[0], 0.95, false)
+	_cristais(chao.call(b.x - 2.2, b.z + 6.9), CORES_CRISTAL[0], 0.8, false)
+
 	malha.mesh = G.finalizar(st)
 	malha.material_override = _material
 	add_child(malha)
 	add_child(colisores)
-
-	# O "buraco": uma placa escura com uma luz roxa fraca de dentro, que
-	# chama o jogador ("tem algo ali").
-	var buraco := MeshInstance3D.new()
-	buraco.name = "Buraco"
-	buraco.mesh = G.cubo(Vector3(0.2, 3.4, 3.2))
-	buraco.position = b + Vector3(0.9, 1.7, 0.0)
-	buraco.material_override = _material_escuro()
-	add_child(buraco)
+	var aceso := MeshInstance3D.new()
+	aceso.name = "BocaAcesa"
+	aceso.mesh = G.finalizar(st_aceso)
+	aceso.material_override = _material_aceso(COR_RUNA_BOCA, 0.25)
+	aceso.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(aceso)
+	var tunel := MeshInstance3D.new()
+	tunel.name = "TunelDaBoca"
+	tunel.mesh = G.finalizar(st_tunel)
+	var mat_tunel := StandardMaterial3D.new()
+	mat_tunel.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat_tunel.vertex_color_use_as_albedo = true
+	mat_tunel.disable_fog = true
+	tunel.material_override = mat_tunel
+	tunel.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(tunel)
+	# Luz roxa que vaza de dentro e chama o jogador ("tem algo ali").
 	var luz := OmniLight3D.new()
+	luz.name = "LuzRoxaDaBoca"
 	luz.light_color = CORES_CRISTAL[0]
-	luz.light_energy = 1.5
-	luz.omni_range = 5.0
-	luz.position = b + Vector3(-0.3, 1.8, 0.0)
+	luz.light_energy = 1.0
+	luz.omni_range = 6.0
+	luz.light_volumetric_fog_energy = 0.0
+	luz.position = b + Vector3(-0.6, 1.8, 0.0)
 	add_child(luz)
-	_gatilho(b + Vector3(0.3, 1.5, 0.0), Vector3(1.2, 3.0, 3.0), true)
+	_gatilho(b + Vector3(0.9, 1.5, 0.0), Vector3(1.2, 3.0, 3.0), true)
 
 
 # --- Câmara ---------------------------------------------------------------

@@ -25,6 +25,15 @@ fi
 
 ln -sf "$BINARIO" /usr/local/bin/godot
 
+# Vulkan por software (Mesa lavapipe, licença MIT, aprovado pelo Vitor em
+# 13/11/2026): deixa tirar prints no renderizador de verdade (Forward+) com
+# ferramentas/tirar_print_forward.sh. Sem ele, luz e cor só aparecem em
+# Compatibility, que engana (a caverna da forja estourou em branco por isso).
+if [ ! -f /usr/share/vulkan/icd.d/lvp_icd.json ]; then
+  (apt-get update -qq && apt-get install -y -qq mesa-vulkan-drivers) > /dev/null 2>&1 \
+    || echo "Aviso: não consegui instalar mesa-vulkan-drivers; tirar_print_forward.sh não vai funcionar."
+fi
+
 # Reimporta o projeto (sem tela). Sem isso, a primeira execução falha com
 # "Identifier not declared" para Validador, Executor etc.
 cd "$CLAUDE_PROJECT_DIR/jogo"
