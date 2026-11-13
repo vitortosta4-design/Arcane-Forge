@@ -388,3 +388,7 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Achados:** (1) luz ao ar livre com névoa volumétrica vira uma bola branca de neblina em volta da lâmpada; as luzes da entrada ficaram com `light_volumetric_fog_energy = 0`. (2) O print Forward+ da nuvem ao ar livre sai todo enevoado e não bate com o print do PC do Vitor; dentro da caverna (sem volumétrica nem SDFGI) ele bate. Regra ajustada no estado atual.
 - **Honesto:** a entrada tem as peças da referência, mas não a qualidade: pedras em bola facetada, cor chapada, luz dura do toon. Não rodei o crítico (a distância para a referência é evidente e a pergunta do Vitor é justamente sobre como fechar essa distância).
 - **Testes:** 461/461. **Evidência:** `evidencias/fase-2/caverna/entrada_referencia_x_jogo.png`, `entrada_nova_perto.png`, `entrada_nova_longe.png` (Compatibility).
+
+## 13/11/2026 (10h) · Pausa na modelagem
+
+- Vitor, com print da entrada nova no PC dele: a modelagem por código não está funcionando; um pilar de ~30 faces da referência fica bom e o nosso, com as mesmas ~30 faces, fica pior, e isso se repete no jogo todo. Projeto pausado até achar um jeito de modelar de verdade (sem Tripo nem Meshy). Pesquisa vai para outro chat.

@@ -1,5 +1,7 @@
 # Estado atual (passagem de turno)
 
+> **PROJETO PAUSADO (13/11/2026, pedido do Vitor):** a modelagem por código (SurfaceTool e bpy às cegas) não chega na qualidade das referências e gera tentativa e erro sem fim. O Vitor está pesquisando em outro chat uma forma de modelar de verdade (Blender com retorno visual, IA local, kit modular etc.). Não retomar modelagem nem a entrada da caverna até sair essa decisão.
+
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
 Atualizado em: 13/11/2026, manhã (luz da caverna aprovada; entrada refeita, 1ª passada)
