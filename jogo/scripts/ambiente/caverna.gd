@@ -31,10 +31,10 @@ const COR_LAVA := Color(1.0, 0.5, 0.12)
 ## troca para um ar próprio: escuro, roxo, com névoa fraca e arroxeada.
 const ALTURA_DO_AR_DA_CAVERNA := -40.0
 const COR_AR := Color(0.05, 0.04, 0.14)
-const COR_AMBIENTE_CAVERNA := Color(0.5, 0.33, 0.8)
+const COR_AMBIENTE_CAVERNA := Color(0.42, 0.3, 0.7)
 const COR_NEVOA_CAVERNA := Color(0.2, 0.1, 0.36)
 const COR_PEDRA := Color(0.36, 0.33, 0.4)
-const COR_CHAO := Color(0.4, 0.32, 0.47)
+const COR_CHAO := Color(0.42, 0.34, 0.37)
 const COR_BURACO := Color(0.03, 0.02, 0.05)
 const CORES_CRISTAL := [Color(0.6, 0.35, 1.0), Color(0.3, 0.75, 1.0)]
 ## Câmara (1ª passada da caverna definitiva, pedido do Vitor em 12/11/2026).
@@ -50,9 +50,9 @@ const ANEIS_CASCA := 7
 const LADOS_CASCA := 20
 const POLAR_ABERTURA := 0.25     # ângulo do buraco no topo (raio de uns 3,7 m)
 const ALTURA_CHAMINE := 7.0
-const COR_PEDRA_BAIXA := Color(0.44, 0.3, 0.43)
+const COR_PEDRA_BAIXA := Color(0.48, 0.31, 0.32)
 const COR_PEDRA_ALTA := Color(0.24, 0.19, 0.44)
-const COR_CHAO_QUENTE := Color(0.64, 0.52, 0.4)
+const COR_CHAO_QUENTE := Color(0.7, 0.5, 0.33)
 const COR_CEU_ABERTURA := Color(0.78, 0.9, 1.0)
 const COR_RAIZ := Color(0.4, 0.46, 0.22)   # cipó (na folha pendem cipós e correntes do teto)
 const COR_METAL := Color(0.2, 0.2, 0.27)
@@ -64,7 +64,7 @@ const QUANTAS_RAIZES_METALICAS := 6
 const PEDESTAL := [[8.0, 0.0], [7.46, 0.45], [6.5, 0.45], [5.96, 0.9], [0.0, 0.9]]
 const ALTURA_PEDESTAL := 0.9
 const RAIO_ANEL_DE_RUNAS := 11.4
-const COR_PEDESTAL := Color(0.6, 0.52, 0.44)
+const COR_PEDESTAL := Color(0.62, 0.48, 0.36)
 const RAIO_CERCA := 19.5
 const COR_MADEIRA := Color(0.5, 0.3, 0.18)
 const COR_LANTERNA := Color(1.0, 0.72, 0.28)
@@ -75,6 +75,8 @@ var _boca_chao := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _material := GeometriaLowPoly.material_toon(0.2, 3)
 var _ar_da_caverna: Environment
+## Os móveis do posto (etapa 3); guarda as contagens de livros e velas.
+var moveis: MoveisDaForja = null
 
 
 func _ready() -> void:
@@ -108,7 +110,7 @@ func _criar_ar_da_caverna() -> Environment:
 	ar.background_color = COR_AR
 	ar.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	ar.ambient_light_color = COR_AMBIENTE_CAVERNA
-	ar.ambient_light_energy = 0.45
+	ar.ambient_light_energy = 0.3
 	ar.fog_enabled = true
 	ar.fog_light_color = COR_NEVOA_CAVERNA
 	ar.fog_density = 0.004
@@ -249,14 +251,15 @@ func _criar_camara() -> void:
 	_linhas_de_runa(c)
 	_lanternas_e_cerca(c, colisores)
 	_fundo_aberto(c, colisores)
+	moveis = MoveisDaForja.montar(self, c, RAIO_CAMARA, _altura_do_teto, _material, colisores)
 	# Luz quente da forja alcançando as paredes (a bigorna cuida das luzes
 	# dela; esta é só o banho alaranjado do ambiente: quente no meio, frio e
 	# arroxeado nas bordas, como no conceito).
 	var brasa := OmniLight3D.new()
 	brasa.name = "LuzQuenteDaForja"
-	brasa.light_color = Color(1.0, 0.5, 0.17)
-	brasa.light_energy = 6.0
-	brasa.omni_range = 38.0
+	brasa.light_color = Color(1.0, 0.46, 0.12)
+	brasa.light_energy = 9.0
+	brasa.omni_range = 44.0
 	brasa.omni_attenuation = 1.3
 	brasa.position = c + Vector3.UP * 6.0
 	add_child(brasa)
@@ -265,7 +268,7 @@ func _criar_camara() -> void:
 	var roxo := OmniLight3D.new()
 	roxo.name = "LuzRoxaDoTeto"
 	roxo.light_color = Color(0.72, 0.42, 1.0)
-	roxo.light_energy = 0.5
+	roxo.light_energy = 0.3
 	roxo.omni_range = 52.0
 	roxo.omni_attenuation = 0.6
 	roxo.position = c + Vector3.UP * 15.0
@@ -616,8 +619,8 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 		var luz := OmniLight3D.new()
 		luz.name = "LuzDaLanterna%d" % k
 		luz.light_color = Color(1.0, 0.58, 0.2)
-		luz.light_energy = 3.2
-		luz.omni_range = 11.0
+		luz.light_energy = 4.6
+		luz.omni_range = 14.0
 		luz.position = p + Vector3.UP * 1.5
 		add_child(luz)
 	# cerca de postes com lanterna e corrente
@@ -625,8 +628,13 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 	var quantos := 22
 	for k in quantos:
 		var a := TAU * k / quantos
-		if absf(wrapf(a, -PI, PI)) < 0.3:
-			postes.append(Vector3.INF) # setor da saída: sem poste
+		# A cerca fica só na frente (lado da entrada, menos o vão da saída) e
+		# na beira do abismo (menos onde sobe a rampa do mirante). Nas
+		# laterais ficam os móveis do posto, como na folha.
+		var na_frente := absf(wrapf(a, -PI, PI)) < 0.75 and absf(wrapf(a, -PI, PI)) >= 0.3
+		var no_abismo := absf(wrapf(a - PI, -PI, PI)) < FUNDO_MEIA_ABERTURA + 0.1 and absf(wrapf(a - deg_to_rad(152.0), -PI, PI)) > 0.22
+		if not (na_frente or no_abismo):
+			postes.append(Vector3.INF)
 			continue
 		var p := c + Vector3(cos(a), 0, sin(a)) * RAIO_CERCA
 		postes.append(p)
@@ -815,8 +823,8 @@ func _raizes_metalicas(c: Vector3) -> void:
 			var cima := lado.cross(frente).normalized()
 			if cima.dot(Vector3.UP if absf(frente.y) < 0.7 else (c - p0)) < 0.0:
 				cima = -cima
-			var l0 := lerpf(0.6, 0.22, f0)
-			var l1 := lerpf(0.6, 0.22, f1)
+			var l0 := lerpf(0.34, 0.14, f0)
+			var l1 := lerpf(0.34, 0.14, f1)
 			var olho := (p0 + p1) / 2.0 + cima * 3.0
 			# barra de metal: topo e duas abas inclinadas
 			var cor := G.variar(COR_METAL, _rng, 0.12)
@@ -832,7 +840,7 @@ func _raizes_metalicas(c: Vector3) -> void:
 			_face(st_metal, t0b, p1 - lado * l1 - cima * 0.03, p0 - lado * l0 - cima * 0.03, cor * 0.8, olho - lado * 4.0)
 			# veio de brasa: fita fina no meio do topo, que vai apagando longe da bigorna
 			var brilho0 := COR_VEIO * lerpf(1.0, 0.25, f0)
-			var v := 0.14
+			var v := 0.42
 			_face(st_veio, p0 + lado * l0 * v + cima * 0.135, p0 - lado * l0 * v + cima * 0.135, p1 - lado * l1 * v + cima * 0.135, brilho0, olho)
 			_face(st_veio, p0 + lado * l0 * v + cima * 0.135, p1 - lado * l1 * v + cima * 0.135, p1 + lado * l1 * v + cima * 0.135, brilho0, olho)
 	var metal := MeshInstance3D.new()

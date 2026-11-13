@@ -2,7 +2,7 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 e 2 pela folha)
+Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 a 3 pela folha)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035). O ciclo roda e tem teste de ponta a ponta; da fase só falta o que é do Vitor (jogar, achar divertido, medir FPS).
@@ -12,24 +12,25 @@ Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 e 2 pela folha)
 - **Galinha v4: crítico 8,0, aprovada.** Ao apanhar pisca branca por 0,08 s; a zumbi incha, tomba para trás e treme no aviso da bicada (aviso x andar foi de 0,98 para 1,47 em pixels mudados). Asas ficam bem abertas no aviso (decisão do Vitor).
 - HUD (crítico 8,0), mago com esqueleto (8,4) e runas v6 (6,5, esperando símbolos) seguem como estavam.
 - **Mago assenta ao parar (auditoria, item 6):** o corpo inclina 7 graus para onde anda e, ao parar ou arrancar, balança numa mola e agacha 5%; em 1ª pessoa as mãos descem 1,7 cm e voltam. É só visual: a velocidade continua respondendo no mesmo quadro (tem teste). **Sem nota do crítico:** nas folhas de quadros da nuvem o efeito quase não aparece; quem julga é o Vitor em movimento.
-- **Caverna da forja, etapas 1 e 2 (ADR-049), pela folha `docs/referencias/lote02/lote02_09_caverna_forja.png`:** câmara grande (raio 26 m, teto a 19,5 m), bigorna com 10 m (3,5 magos; `ESCALA_BIGORNA`), piso de lajotas em anéis, linhas e losangos de runa acesos, pedestal de dois degraus em rampa, 4 lanternas de pedra com luz, cerca de postes com lanterna e corrente, cristais roxos, cipós pequenos, **fundo aberto** do lado oposto à entrada (céu de caverna azul, colunas, 7 ilhas flutuantes com cristais, cachoeiras azuis e quedas de lava; parede invisível ali) e **ar próprio** (a câmera troca de ambiente abaixo de y -40: escuro, roxo, sem a névoa azul de fora). Decisões do Vitor em 13/11: abertura no teto fica de fora (`COM_ABERTURA_NO_TETO` falso); proporções corrigidas a pedido dele. **Falta:** móveis do posto, passarelas e escadas do fundo, água e lava paradas (sem movimento). Sem nota do crítico ainda.
-- Testes: 443/443 (11 do gigante, 14 da galinha, 13 do mago, 26 da caverna).
+- **Caverna da forja, etapas 1 a 3 (ADR-049), pela folha `docs/referencias/lote02/lote02_09_caverna_forja.png`. Crítico: 4/10, reprovado** (avaliou antes do último acerto de cor). Tem: câmara de raio 26 m, bigorna de 10 m (3,5 magos, aprovado pelo Vitor), piso de lajotas em anéis, linhas de runa, pedestal em rampa, lanternas, cerca na frente e no abismo, cristais, fundo aberto (ilhas, cachoeiras, lava, parede invisível), ar próprio da caverna e os **móveis do posto** em `moveis_da_forja.gd` (2 estantes com tábuas de runa, livros e poções; 4 estandartes; mesa do grimório; mesa de trabalho; baú, barris, caixotes; 126 livros; 105 velas; 6 lanternas penduradas; mirante com rampa na beira do abismo), tudo em duas malhas. Depois do crítico a paleta foi esquentada (pedra menos roxa, mais luz laranja). Decisões do Vitor: sem abertura no teto; escala aprovada; "encher de detalhe".
+- Testes: 449/449 (11 do gigante, 14 da galinha, 13 do mago, 32 da caverna).
 
 ## Próximo passo
-0. **Caverna, etapa 3:** móveis do posto (estantes com runas, baú, barris, caixotes, mesa do grimório, estandartes com o losango), depois passarelas e escadas, e dar movimento às cachoeiras e à lava. Rodar o crítico quando os móveis entrarem. **Sempre abrir a folha antes de modelar cenário** (listar `docs/referencias` e `lote02`).
+0. **Caverna, etapa 4, na ordem do crítico:** (1) conferir a cor no PC do Vitor antes de mexer mais em luz; (2) trocar as raízes metálicas e as linhas do piso por sulcos finos de lava acesa, rachaduras de lava no pedestal, e dar movimento e luz às quedas de lava e de água; (3) juntar os móveis em dois blocos encostados na parede com andaime, escada e passarela de madeira, e correntes em arco; (4) cristais menores, em cachos; (5) rejunte nas lajotas e pedestal mais alto em blocos. **Sempre abrir a folha antes de modelar cenário** (listar `docs/referencias` e `lote02`).
 1. Vitor e Matheus jogam o pacote (`build/ArcaneForge_teste_Matheus.zip`; a pasta `build/` não vai para o git, gerar com `ferramentas/gerar_pacote_teste.sh`) e respondem as 4 perguntas do LEIA-ME.
 2. Auditoria de animação, o que sobrou: medalhão nascendo e voando até a barra (precisa da referência do medalhão); som de passo do mago (fase de áudio).
 3. Runas: montar as 8 quando os símbolos chegarem.
 
 ## Problemas conhecidos
 - Teste instável "área continua machucando a cada segundo": nunca reproduzido na nuvem. Se falhar no PC do Vitor, anotar a distância que ele imprime.
+- Na nuvem (Compatibility) cada malha recebe no máximo 8 luzes: como a câmara e os móveis são malhas únicas, parte das lanternas e das luzes dos móveis não acende nos prints (a mesa do grimório sai escura). No Forward+ do Vitor não há esse limite.
 - Névoa volumétrica, SDFGI, brilho da explosão, do martelo, dos olhos da zumbi e dos olhos do gigante só aparecem de verdade no PC do Vitor (a nuvem renderiza em Compatibility).
 - O gigante de perto fica fora da névoa de distância e a silhueta distante não: pode haver salto de cor na troca (52 m).
 - Gigante: a mão é uma malha fundida por voxel e reduzida (`fundir` em `gigante_arvore.py`); as facetas dela são menos regulares que as do resto do corpo.
 - Sessão na nuvem nova precisa baixar de novo os modelos de exportação do Godot (1,2 GB, GitHub) para gerar o pacote.
 
 ## Pendente do Vitor
-- **Caverna:** ver no PC dele a cor, o brilho e o FPS dentro da câmara (ficou bem maior e com fundo aberto); dizer se a escala agora está certa.
+- **Caverna:** mandar um print de dentro da câmara no PC dele (a nuvem só acende 8 luzes por malha e não tem brilho, então a cor de lá não vale) e o FPS lá dentro (13 luzes, câmara grande).
 - **Só dá para conferir no PC dele:** se o balanço do mago ao parar e arrancar agrada, é pouco ou enjoa (botões no topo de `visual_mago.gd`: `INCLINACAO_ANDAR`, `AGACHAR_NA_PARADA`, `MOLA_AMORTECIMENTO`; mãos em `maos_primeira_pessoa.gd`); se o clarão branco da galinha sai branco de verdade (na nuvem sai 214 de 255) e se o tremor do aviso da zumbi parece tremor ou falha; brilho dos olhos do gigante e se o rosto fica bom com a névoa de verdade; se o 0,1 s de preparação do mago parece atraso; se a tremida da explosão incomoda; a troca de cor do gigante a 52 m; FPS (`ferramentas\medir_fps.bat`).
 - ADR-048: confirmar ou revogar depois de jogar.
 - Runas: símbolos de gravitação, arremesso e quebrar; pedra acesa tingida ou cinza.

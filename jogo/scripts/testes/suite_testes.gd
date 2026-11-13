@@ -2991,7 +2991,16 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 	var cristais := caverna.get_children().filter(func(n): return String(n.name).begins_with("Cristais"))
 	_afirmar("caverna: cristais espalhados (%d grupos)" % cristais.size(), cristais.size() >= 12)
 	var luzes := caverna.find_children("*", "Light3D", true, false).filter(func(l): return l.global_position.y < -40.0 and not caverna.forja.is_ancestor_of(l))
-	_afirmar("caverna: poucas luzes na câmara, pelo FPS (%d, teto 9)" % luzes.size(), luzes.size() <= 9)
+	_afirmar("caverna: luzes da câmara dentro do teto, pelo FPS (%d, teto 14)" % luzes.size(), luzes.size() <= 14)
+	# Etapa 3: móveis do posto, cheios de detalhe (pedido do Vitor), em só duas malhas.
+	for nome in ["MoveisDaForja", "MoveisAcesos"]:
+		_afirmar("caverna: tem %s" % nome, caverna.get_node_or_null(nome) != null)
+	if caverna.moveis:
+		_afirmar("caverna: posto cheio de detalhe (%d livros, %d velas)" % [caverna.moveis.livros, caverna.moveis.velas], caverna.moveis.livros >= 80 and caverna.moveis.velas >= 90)
+	var malha_moveis := caverna.get_node_or_null("MoveisDaForja") as MeshInstance3D
+	if malha_moveis:
+		var triangulos := malha_moveis.mesh.get_faces().size() / 3
+		_afirmar("caverna: móveis com muito detalhe, mas numa malha só (%d triângulos)" % triangulos, triangulos > 8000 and triangulos < 60000)
 	var raizes := caverna.get_node_or_null("RaizesDoTeto") as MeshInstance3D
 	if raizes:
 		var caixa: AABB = raizes.global_transform * raizes.get_aabb()
@@ -3019,5 +3028,20 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 	Input.action_release("mover_frente")
 	var subiu: float = mago.global_position.y - c.y
 	_afirmar("caverna: o mago sobe o pedestal andando (ficou a %.2f m de altura)" % subiu, subiu > Caverna.ALTURA_PEDESTAL - 0.1)
+	# E sobe a rampa do mirante até a plataforma, na beira do abismo.
+	if caverna.moveis:
+		var mirante: Transform3D = caverna.global_transform * caverna.moveis._estacao(deg_to_rad(152.0), Caverna.RAIO_CAMARA - 4.6)
+		mago.global_position = mirante * Vector3(0, 0.1, 6.6)
+		mago.look_at(mirante * Vector3(0, 0.1, 0.0), Vector3.UP)
+		for i in 10:
+			await get_tree().physics_frame
+		Input.action_press("mover_frente")
+		for i in 100:
+			await get_tree().physics_frame
+		Input.action_release("mover_frente")
+		_afirmar("caverna: o mago sobe a rampa do mirante (ficou a %.1f m de altura)" % (mago.global_position.y - c.y), mago.global_position.y - c.y > 2.0)
+		for i in 60:
+			await get_tree().physics_frame
+		_afirmar("caverna: o corrimão do mirante segura o mago (não cai no abismo)", mago.global_position.y - c.y > 2.0)
 	mago.queue_free()
 	caverna.queue_free()
