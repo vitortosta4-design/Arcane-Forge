@@ -360,3 +360,12 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Testes:** 4 novos (malha animada das quedas, lava da parede com luz, sulcos e linhas com material pulsante). 459/459.
 - **Evidência:** `evidencias/fase-2/caverna/caverna_folha_x_jogo_etapa5.png`, prints da etapa 5 e `caverna_lava_correndo.gif`.
 - **Limitações:** a cor foi ajustada duas vezes às cegas (roxo demais, depois laranja demais) porque a nuvem não mostra brilho nem todas as luzes; o próximo acerto de cor espera o print do PC do Vitor.
+
+## 13/11/2026 (manhã) · Caverna, etapa 6 (fundo e cristais) e rascunhos de som ambiente
+
+- **Pedido do Vitor:** opção 1c (plataformas e pontes distantes), "depois mexe só nos cristais, o resto está ótimo"; ouvir sons do ambiente (martelada dominando, poções, páginas, fogo); e, para o futuro, mexer na cara da bigorna, que ele acha estranha desde o começo.
+- **Fundo:** 5 pontes de tábua com corda e postes entre as ilhas, uma sexta até a beirada da câmara, 3 plataformas em anel abraçando colunas, com corrimão, casinha de janela acesa e lanternas. Tudo nas malhas que já existiam (pedra e brilhos), sem luz nova.
+- **Cristais:** de 5 cones compridos para cachos de 8 pontas curtas e grossas, cada uma com corpo e ponta em tons diferentes; os grupos grandes caíram de tamanho 2,6 para 1,5 e há 22 pequenos na parede.
+- **Som:** `ferramentas/gerar_ambiente_forja.py` (numpy, síntese própria): martelada de 7 parciais com estalo e baque, eco de caverna por convolução com resposta de sala inventada (cauda de 3 s); bolhas que sobem de tom sobre fervura baixa; páginas (chiado de 1,8 a 8,5 kHz que tremula, com toque no fim); fogo (ronco grave que respira e uns 14 estalos por segundo); mistura de 45 s em estéreo (fogo no meio, poções à esquerda, páginas à direita, séries de 3 a 6 marteladas com quique e pausas de 2,5 a 5 s). MP3 em `evidencias/fase-2/audio/`. **Não ouvi o resultado** (não tenho como): só medi nível e espectro. Não entrou no jogo.
+- **Testes:** 2 novos (fundo com pontes e plataformas, cristais pequenos). 461/461.
+- **Evidência:** `evidencias/fase-2/caverna/caverna_etapa6_*.png`.

@@ -36,7 +36,7 @@ const COR_NEVOA_CAVERNA := Color(0.2, 0.1, 0.36)
 const COR_PEDRA := Color(0.36, 0.33, 0.4)
 const COR_CHAO := Color(0.42, 0.34, 0.37)
 const COR_BURACO := Color(0.03, 0.02, 0.05)
-const CORES_CRISTAL := [Color(0.6, 0.35, 1.0), Color(0.3, 0.75, 1.0)]
+const CORES_CRISTAL := [Color(0.62, 0.28, 1.0), Color(0.3, 0.75, 1.0)]
 ## Câmara (1ª passada da caverna definitiva, pedido do Vitor em 12/11/2026).
 ## Quem manda é a folha `docs/referencias/lote02/lote02_09_caverna_forja.png`:
 ## posto avançado quente, piso de pedra em anéis com linhas de runa acesas,
@@ -292,12 +292,12 @@ func _criar_camara() -> void:
 		if absf(wrapf(a - deg_to_rad(96.0), -PI, PI)) < 0.62 or absf(wrapf(a - deg_to_rad(-92.0), -PI, PI)) < 0.62:
 			continue
 		# Só 3 grupos têm luz de verdade (as lanternas gastam as outras).
-		_cristais(p, CORES_CRISTAL[1] if i == 3 else CORES_CRISTAL[0], 2.6, i % 2 == 1)
-	for i in 14:
+		_cristais(p, CORES_CRISTAL[1] if i == 3 else CORES_CRISTAL[0], 1.5, i % 2 == 1)
+	for i in 22:
 		var a := _rng.randf_range(0.5, TAU - 0.5)
 		var subida := _rng.randf_range(0.0, 8.0)
 		var r := sqrt(maxf(0.0, 1.0 - pow(subida / (RAIO_CAMARA * 0.75), 2))) * RAIO_CAMARA - 1.4
-		_cristais(c + Vector3(cos(a) * r, subida, sin(a) * r), CORES_CRISTAL[0] if i % 4 else CORES_CRISTAL[1], 1.2, false)
+		_cristais(c + Vector3(cos(a) * r, subida, sin(a) * r), CORES_CRISTAL[0] if i % 4 else CORES_CRISTAL[1], 0.85, false)
 
 	# Saída: um buraco escuro na parede atrás de quem entra.
 	var saida := MeshInstance3D.new()
@@ -319,13 +319,20 @@ func _criar_camara() -> void:
 func _cristais(base: Vector3, cor: Color, tamanho := 1.0, com_luz := true) -> void:
 	var G := GeometriaLowPoly
 	var st := G.nova()
-	for k in 5:
-		var altura := _rng.randf_range(1.0, 2.6) * tamanho
-		var inclinado := Basis(Vector3(_rng.randf_range(-1, 1), 0, _rng.randf_range(-1, 1)).normalized(), _rng.randf_range(0.1, 0.55))
-		# Cada ponta num tom (mais claro ou mais escuro), para ler como cristal lapidado.
-		G.anexar(st, G.cilindro(_rng.randf_range(0.18, 0.35) * tamanho, 0.0, altura, 5),
-			Transform3D(inclinado, base + Vector3(_rng.randf_range(-0.6, 0.6) * tamanho, altura / 2.0 - 0.1, _rng.randf_range(-0.6, 0.6) * tamanho)),
-			cor.lerp(Color.WHITE, _rng.randf_range(0.0, 0.3)) * _rng.randf_range(0.75, 1.0))
+	# Cacho (folha): muitas pontas curtas e grossas saindo de um miolo, cada
+	# uma com o corpo num tom e a ponta mais clara, para ler como lapidado.
+	var pontas := 8
+	for k in pontas:
+		var altura := _rng.randf_range(0.55, 1.5) * tamanho * (1.35 if k == 0 else 1.0)
+		var raio := altura * _rng.randf_range(0.2, 0.28)
+		var abre := 0.0 if k == 0 else _rng.randf_range(0.25, 0.8)
+		var para_onde := TAU * k / pontas + _rng.randf_range(-0.3, 0.3)
+		var eixo := Vector3(cos(para_onde), 0, sin(para_onde))
+		var inclinado := Basis(eixo.cross(Vector3.UP).normalized(), -abre)
+		var pe := base + eixo * (0.0 if k == 0 else _rng.randf_range(0.15, 0.4) * tamanho)
+		var tom := cor * _rng.randf_range(0.72, 0.95)
+		G.anexar(st, G.cilindro(raio, raio * 0.82, altura * 0.62, 5), Transform3D(inclinado, pe + inclinado * Vector3(0, altura * 0.31 - 0.08, 0)), tom)
+		G.anexar(st, G.cilindro(raio * 0.82, 0.0, altura * 0.38, 5), Transform3D(inclinado, pe + inclinado * Vector3(0, altura * 0.81 - 0.08, 0)), tom.lerp(Color.WHITE, _rng.randf_range(0.3, 0.5)))
 	var cristal := MeshInstance3D.new()
 	cristal.name = "Cristais"
 	cristal.mesh = G.finalizar(st)
@@ -414,6 +421,59 @@ func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
 				CORES_CRISTAL[0].lerp(Color.WHITE, rng.randf_range(0.0, 0.25)))
 		if k % 2 == 0:
 			fita_em_pe.call(p + Vector3(r * 0.8, r * 0.1, 0.0), 30.0 + r * 2.0, r * 0.35, COR_AGUA)
+	# Plataformas e pontes distantes (folha): pontes de tábua com corda entre
+	# as ilhas, plataformas de madeira abraçando as colunas, lanternas acesas.
+	var madeira_longe := Color(0.5, 0.33, 0.2)
+	var lanterninha := func(p: Vector3) -> void:
+		G.anexar(st_brilho, G.cubo(Vector3(0.5, 0.6, 0.5)), Transform3D(Basis(), p), COR_LANTERNA)
+	var ponte := func(de: Vector3, ate: Vector3) -> void:
+		var comprimento := de.distance_to(ate)
+		var tabuas := int(comprimento / 1.3)
+		var rumo := (ate - de).normalized()
+		var base_ponte := Basis.looking_at(rumo, Vector3.UP)
+		for k in tabuas + 1:
+			var f := float(k) / tabuas
+			var p := de.lerp(ate, f) + Vector3.DOWN * sin(f * PI) * comprimento * 0.07
+			G.anexar(st, G.cubo(Vector3(2.4, 0.16, 1.0)), Transform3D(base_ponte, p), G.variar(madeira_longe, rng, 0.15))
+			for lado_p: float in [-1.0, 1.0]:
+				# corda (um trecho por tábua) e um poste a cada três tábuas
+				G.anexar(st, G.cubo(Vector3(0.1, 0.1, 1.35)), Transform3D(base_ponte, p + base_ponte.x * lado_p * 1.2 + Vector3.UP * 1.1), madeira_longe * 0.6)
+				if k % 3 == 0:
+					G.anexar(st, G.cubo(Vector3(0.16, 1.2, 0.16)), Transform3D(base_ponte, p + base_ponte.x * lado_p * 1.2 + Vector3.UP * 0.55), madeira_longe * 0.75)
+		for ponta: Vector3 in [de, ate]:
+			for lado_p: float in [-1.0, 1.0]:
+				G.anexar(st, G.cubo(Vector3(0.3, 2.6, 0.3)), Transform3D(base_ponte, ponta + base_ponte.x * lado_p * 1.3 + Vector3.UP * 1.1), madeira_longe * 0.75)
+				lanterninha.call(ponta + base_ponte.x * lado_p * 1.3 + Vector3.UP * 2.7)
+	var topo_da_ilha := func(k: int) -> Vector3:
+		return c + Vector3(ilhas[k][0], ilhas[k][1] + ilhas[k][3] * 0.2, ilhas[k][2])
+	for par in [[0, 1], [1, 6], [0, 5], [4, 3], [2, 4]]:
+		var de_i: Vector3 = topo_da_ilha.call(par[0])
+		var ate_i: Vector3 = topo_da_ilha.call(par[1])
+		var rumo_i := (ate_i - de_i).normalized()
+		var raio_de: float = ilhas[par[0]][3]
+		var raio_ate: float = ilhas[par[1]][3]
+		ponte.call(de_i + rumo_i * raio_de * 0.75, ate_i - rumo_i * raio_ate * 0.75)
+	# uma ponte chega da primeira ilha até a beirada da câmara (some atrás das pedras)
+	ponte.call(c + Vector3(-RAIO_CAMARA - 1.0, 0.6, -6.0), topo_da_ilha.call(0) + Vector3(4.0, 0, 1.5))
+	# plataformas em anel abraçando três colunas, com corrimão e lanternas
+	for k in 3:
+		var pc := c + Vector3([-62.0, -80.0, -70.0][k], [6.0, 12.0, -2.0][k], [-40.0, 30.0, 46.0][k])
+		var rp: float = [9.5, 10.5, 9.0][k]
+		G.anexar(st, G.cilindro(rp, rp, 0.5, 9), Transform3D(Basis(), pc), G.variar(madeira_longe, rng, 0.1))
+		G.anexar(st, G.cilindro(rp * 0.96, rp * 0.8, 1.6, 9), Transform3D(Basis(), pc + Vector3.DOWN * 1.0), madeira_longe * 0.6)
+		for q in 9:
+			var aq := TAU * q / 9.0
+			var pq := pc + Vector3(cos(aq), 0, sin(aq)) * (rp - 0.3)
+			G.anexar(st, G.cubo(Vector3(0.3, 2.0, 0.3)), Transform3D(Basis(), pq + Vector3.UP * 1.2), madeira_longe * 0.75)
+			if q % 3 == 0:
+				lanterninha.call(pq + Vector3.UP * 2.5)
+		G.anexar(st, G.cilindro(rp - 0.3, rp - 0.3, 0.14, 9), Transform3D(Basis(), pc + Vector3.UP * 1.9), madeira_longe * 0.7)
+		# uma casinha de tábua em cima, com janela acesa
+		var casa := pc + Vector3(rp * 0.45, 1.8, rp * 0.3)
+		G.anexar(st, G.cubo(Vector3(4.2, 3.2, 3.6)), Transform3D(Basis(), casa), G.variar(madeira_longe, rng, 0.1))
+		G.anexar(st, G.cilindro(3.6, 0.0, 2.0, 4), Transform3D(Basis(Vector3.UP, PI / 4.0), casa + Vector3.UP * 2.6), madeira_longe * 0.6)
+		G.anexar(st_brilho, G.cubo(Vector3(0.9, 1.1, 0.1)), Transform3D(Basis(), casa + Vector3(0.0, 0.0, 1.82)), COR_LANTERNA)
+		G.anexar(st_brilho, G.cubo(Vector3(0.1, 1.1, 0.9)), Transform3D(Basis(), casa + Vector3(2.12, 0.0, 0.0)), COR_LANTERNA)
 	# Beirada do abismo: pedras baixas ao longo da borda aberta.
 	for k in 9:
 		var a := PI + lerpf(-FUNDO_MEIA_ABERTURA, FUNDO_MEIA_ABERTURA, k / 8.0)

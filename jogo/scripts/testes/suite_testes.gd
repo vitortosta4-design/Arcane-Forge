@@ -2996,6 +2996,15 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 	var quedas := caverna.get_node_or_null("QuedasDoFundo") as MeshInstance3D
 	_afirmar("caverna: quedas de lava e água numa malha animada", quedas != null and quedas.material_override is ShaderMaterial and quedas.mesh.get_faces().size() / 3 > 60)
 	_afirmar("caverna: lava descendo pela parede dos dois lados, cada uma com luz", caverna.get_node_or_null("LuzDaLavaDaParede0") != null and caverna.get_node_or_null("LuzDaLavaDaParede1") != null)
+	# Etapa 6: plataformas e pontes distantes no fundo; cristais em cachos pequenos.
+	var ilhas := caverna.get_node_or_null("IlhasFlutuantes") as MeshInstance3D
+	_afirmar("caverna: fundo com pontes e plataformas (%d triângulos de pedra e madeira ao longe)" % (ilhas.mesh.get_faces().size() / 3 if ilhas else 0), ilhas != null and ilhas.mesh.get_faces().size() / 3 > 2500)
+	var mais_alto_cristal := 0.0
+	for n in caverna.get_children():
+		if String(n.name).begins_with("Cristais"):
+			var caixa_c: AABB = (n as MeshInstance3D).get_aabb()
+			mais_alto_cristal = maxf(mais_alto_cristal, caixa_c.size.y)
+	_afirmar("caverna: cristais em cachos pequenos (o maior tem %.1f m; o mago tem 2,9)" % mais_alto_cristal, mais_alto_cristal > 0.5 and mais_alto_cristal < 3.6)
 	for nome in ["VeiosDeBrasa", "LinhasDeRuna"]:
 		var malha_acesa := caverna.get_node_or_null(nome) as MeshInstance3D
 		_afirmar("caverna: %s pulsa a partir da bigorna" % nome, malha_acesa != null and malha_acesa.material_override is ShaderMaterial)
