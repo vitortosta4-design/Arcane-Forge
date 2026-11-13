@@ -2,7 +2,7 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 12/11/2026, noite (gigante encerrado na 7ª rodada; ressalvas da galinha resolvidas; mago assenta ao parar)
+Atualizado em: 13/11/2026, manhã (caverna da forja, etapa 1 pela folha)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035). O ciclo roda e tem teste de ponta a ponta; da fase só falta o que é do Vitor (jogar, achar divertido, medir FPS).
@@ -12,9 +12,11 @@ Atualizado em: 12/11/2026, noite (gigante encerrado na 7ª rodada; ressalvas da 
 - **Galinha v4: crítico 8,0, aprovada.** Ao apanhar pisca branca por 0,08 s; a zumbi incha, tomba para trás e treme no aviso da bicada (aviso x andar foi de 0,98 para 1,47 em pixels mudados). Asas ficam bem abertas no aviso (decisão do Vitor).
 - HUD (crítico 8,0), mago com esqueleto (8,4) e runas v6 (6,5, esperando símbolos) seguem como estavam.
 - **Mago assenta ao parar (auditoria, item 6):** o corpo inclina 7 graus para onde anda e, ao parar ou arrancar, balança numa mola e agacha 5%; em 1ª pessoa as mãos descem 1,7 cm e voltam. É só visual: a velocidade continua respondendo no mesmo quadro (tem teste). **Sem nota do crítico:** nas folhas de quadros da nuvem o efeito quase não aparece; quem julga é o Vitor em movimento.
-- Testes: 417/417 (11 novos do gigante, 14 da galinha, 13 do mago). Relatórios do crítico: `evidencias/fase-2/critico_12-11-2026.md`.
+- **Caverna da forja, etapa 1 (ADR-049, pedido do Vitor):** câmara refeita pela folha `lote02_09_caverna_forja.png`: piso de lajotas em anéis, linhas e losangos de runa acesos, pedestal de dois degraus sob a bigorna (rampas, o mago sobe andando), 4 lanternas de pedra com luz, cerca de postes com lanterna e corrente, cristais roxos, cipós, pedra arroxeada, luz laranja no meio e roxa nas bordas. **Ainda longe da folha:** faltam os móveis do posto e o fundo aberto, e a cor ainda sai rosada e pouco laranja na nuvem. Sem nota do crítico (etapa incompleta). Erro desta sessão: comecei pelo texto do conceito sem abrir a folha; a abertura no teto com feixe de luz que saiu disso está desligada (`COM_ABERTURA_NO_TETO`).
+- Testes: 435/435 (11 do gigante, 14 da galinha, 13 do mago, 18 da caverna). Relatórios do crítico: `evidencias/fase-2/critico_12-11-2026.md`.
 
 ## Próximo passo
+0. **Caverna, próximas etapas** (ordem a confirmar com o Vitor): móveis do posto (estantes com runas, baú, barris, caixotes, mesa do grimório, estandartes com o losango); fundo aberto (ilhas flutuantes, cachoeiras azuis, quedas de lava, passarelas); acerto de cor e luz no PC dele (Forward+ com brilho muda muito). Rodar o crítico quando os móveis entrarem. **Sempre abrir a folha antes de modelar cenário.**
 1. Vitor e Matheus jogam o pacote (`build/ArcaneForge_teste_Matheus.zip`; a pasta `build/` não vai para o git, gerar com `ferramentas/gerar_pacote_teste.sh`) e respondem as 4 perguntas do LEIA-ME.
 2. Auditoria de animação, o que sobrou: medalhão nascendo e voando até a barra (precisa da referência do medalhão); som de passo do mago (fase de áudio).
 3. Runas: montar as 8 quando os símbolos chegarem.
@@ -27,6 +29,7 @@ Atualizado em: 12/11/2026, noite (gigante encerrado na 7ª rodada; ressalvas da 
 - Sessão na nuvem nova precisa baixar de novo os modelos de exportação do Godot (1,2 GB, GitHub) para gerar o pacote.
 
 ## Pendente do Vitor
+- **Caverna:** decidir se a abertura no teto com feixe de luz volta (não está na folha) e qual etapa vem primeiro; ver a cor no PC dele.
 - **Só dá para conferir no PC dele:** se o balanço do mago ao parar e arrancar agrada, é pouco ou enjoa (botões no topo de `visual_mago.gd`: `INCLINACAO_ANDAR`, `AGACHAR_NA_PARADA`, `MOLA_AMORTECIMENTO`; mãos em `maos_primeira_pessoa.gd`); se o clarão branco da galinha sai branco de verdade (na nuvem sai 214 de 255) e se o tremor do aviso da zumbi parece tremor ou falha; brilho dos olhos do gigante e se o rosto fica bom com a névoa de verdade; se o 0,1 s de preparação do mago parece atraso; se a tremida da explosão incomoda; a troca de cor do gigante a 52 m; FPS (`ferramentas\medir_fps.bat`).
 - ADR-048: confirmar ou revogar depois de jogar.
 - Runas: símbolos de gravitação, arremesso e quebrar; pedra acesa tingida ou cinza.

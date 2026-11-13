@@ -517,6 +517,13 @@ Arte conceitual gerada por IA a pedido do Vitor.
   - Vale só para a galinha zumbi. Outros inimigos decidem a própria regra quando existirem.
 - **Fácil de mudar?** Sim, em uma linha: `APANHAR_NO_AVISO_CANCELA` em `jogo/scripts/inimigos/galinha_zumbi.gd` (trocar para `false` volta ao comportamento antigo; os dois testes da regra precisam sair junto).
 
+## ADR-049 · Caverna da forja definitiva adiantada para a Fase 2
+- **Data:** 13/11/2026. **Quem decidiu:** Vitor (pediu para começar a melhorar a caverna agora).
+- **O que muda:** a ADR-035 deixava a caverna provisória até a Fase 5. O acabamento da câmara passa a ser feito desde já, em etapas, seguindo a folha `docs/referencias/lote02/lote02_09_caverna_forja.png`.
+- **O que não muda:** a entrada continua sendo a boca com teleporte (escavar túnel no relevo segue para a Fase 5); regra da forja, posição da saída e raio de interação iguais.
+- **Limites:** poucas luzes de verdade na câmara (teto de 9, tem teste) e tudo em malhas juntas, pelo FPS na RTX 2060 (ADR-031). A densidade de detalhe da folha não é objetivo (ADR-007).
+- **Fácil de mudar?** Sim: tudo está em `jogo/scripts/ambiente/caverna.gd`.
+
 ## Status da descoberta
 Encerrada em 20/10/2026. `docs/proposta-tecnica.md` aprovada em 20/10/2026.
 

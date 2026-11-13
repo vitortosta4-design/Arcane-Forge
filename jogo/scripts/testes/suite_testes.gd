@@ -160,6 +160,7 @@ func _ready() -> void:
 	await _testar_mago_inclina_ao_andar_e_assenta_ao_parar()
 	await _testar_maos_do_mago_assentam_ao_parar()
 	await _testar_mago_no_jogo_anda_na_hora_e_assenta_so_no_visual()
+	await _testar_camara_da_forja_tem_as_pecas_do_conceito()
 	await _testar_sons_mais_baixos_e_suaves()
 	await _testar_apanhar_depois_do_aviso_nao_cancela_a_bicada()
 
@@ -2951,3 +2952,51 @@ func _testar_mago_no_jogo_anda_na_hora_e_assenta_so_no_visual() -> void:
 	_afirmar("mago no jogo: ao parar o corpo balança para trás e agacha (%.1f graus, %.1f%%)" % [rad_to_deg(-para_tras), (1.0 - mais_baixo) * 100.0], para_tras < -0.008 and mais_baixo < 0.975)
 	mago.queue_free()
 	chao.queue_free()
+
+
+## 1ª passada da caverna definitiva (12 e 13/11/2026), pelo conceito da Forja:
+## abertura no teto com luz caindo na bigorna, raízes descendo do teto,
+## cristais arroxeados, raízes metálicas saindo da bigorna, luz quente no
+## meio. E o que não pode quebrar: o caminho da entrada até a bigorna livre e
+## a saída no lugar.
+func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
+	var caverna := Caverna.new()
+	add_child(caverna)
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	var c := caverna.global_position + Caverna.CENTRO_CAMARA
+	for nome in ["Camara", "LinhasDeRuna", "LanternasECerca", "LanternasAcesas", "RaizesDoTeto", "RaizesMetalicas", "VeiosDeBrasa", "LuzQuenteDaForja", "Sair", "Forja"]:
+		_afirmar("caverna: tem %s" % nome, caverna.get_node_or_null(nome) != null)
+	_afirmar("caverna: 4 lanternas com luz em volta da bigorna", caverna.get_children().filter(func(n): return String(n.name).begins_with("LuzDaLanterna")).size() == 4)
+	_afirmar("caverna: a bigorna fica em cima do pedestal", is_equal_approx(caverna.forja.global_position.y - c.y, Caverna.ALTURA_PEDESTAL))
+	var cristais := caverna.get_children().filter(func(n): return String(n.name).begins_with("Cristais"))
+	_afirmar("caverna: cristais espalhados (%d grupos)" % cristais.size(), cristais.size() >= 12)
+	var luzes := caverna.find_children("*", "Light3D", true, false).filter(func(l): return l.global_position.y < -40.0 and not caverna.forja.is_ancestor_of(l))
+	_afirmar("caverna: poucas luzes na câmara, pelo FPS (%d, teto 9)" % luzes.size(), luzes.size() <= 9)
+	var raizes := caverna.get_node_or_null("RaizesDoTeto") as MeshInstance3D
+	if raizes:
+		var caixa: AABB = raizes.global_transform * raizes.get_aabb()
+		_afirmar("caverna: nenhuma raiz desce até a cabeça do mago (ponta a %.1f m do chão)" % (caixa.position.y - c.y), caixa.position.y - c.y > 2.6)
+	# Caminho livre: da entrada até perto da bigorna, na altura do peito.
+	var espaco := get_viewport().find_world_3d().direct_space_state
+	var de := caverna.global_position + caverna.entrada_camara()
+	var ate := c + Vector3(4.6, 1.0, 0.0)
+	var raio := PhysicsRayQueryParameters3D.create(de, ate)
+	_afirmar("caverna: caminho da entrada até a bigorna sem pedra no meio", espaco.intersect_ray(raio).is_empty())
+	var chao := espaco.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3(6, 3, 4), c + Vector3(6, -3, 4)))
+	_afirmar("caverna: o chão continua plano e sólido", not chao.is_empty() and absf(chao.position.y - c.y) < 0.05)
+	# O mago sobe o pedestal andando (as subidas são rampas de 40 graus).
+	var mago: CharacterBody3D = load("res://cenas/mago.tscn").instantiate()
+	add_child(mago)
+	mago.global_position = c + Vector3(0, 0.05, 6.0)
+	mago.look_at(c + Vector3(0, 0.05, 0), Vector3.UP)
+	for i in 20:
+		await get_tree().physics_frame
+	Input.action_press("mover_frente")
+	for i in 45:
+		await get_tree().physics_frame
+	Input.action_release("mover_frente")
+	var subiu: float = mago.global_position.y - c.y
+	_afirmar("caverna: o mago sobe o pedestal andando (ficou a %.2f m de altura)" % subiu, subiu > Caverna.ALTURA_PEDESTAL - 0.1)
+	mago.queue_free()
+	caverna.queue_free()
