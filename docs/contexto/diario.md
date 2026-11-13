@@ -369,3 +369,14 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Som:** `ferramentas/gerar_ambiente_forja.py` (numpy, síntese própria): martelada de 7 parciais com estalo e baque, eco de caverna por convolução com resposta de sala inventada (cauda de 3 s); bolhas que sobem de tom sobre fervura baixa; páginas (chiado de 1,8 a 8,5 kHz que tremula, com toque no fim); fogo (ronco grave que respira e uns 14 estalos por segundo); mistura de 45 s em estéreo (fogo no meio, poções à esquerda, páginas à direita, séries de 3 a 6 marteladas com quique e pausas de 2,5 a 5 s). MP3 em `evidencias/fase-2/audio/`. **Não ouvi o resultado** (não tenho como): só medi nível e espectro. Não entrou no jogo.
 - **Testes:** 2 novos (fundo com pontes e plataformas, cristais pequenos). 461/461.
 - **Evidência:** `evidencias/fase-2/caverna/caverna_etapa6_*.png`.
+
+## 13/11/2026 (manhã) · Caverna estourada em branco no jogo de verdade: luz refeita no Forward+
+
+- **Achado do Vitor:** abriu o jogo no PC do serviço e a caverna estava "exageradamente clara e luminosa" (print: névoa branca-amarelada cobrindo o chão e os móveis).
+- **Causa:** erro de método meu. Calibrei luz e cor pelos prints do `tirar_print.sh`, que renderiza em Compatibility: no máximo 8 luzes por malha e sem brilho (glow). No Forward+ as 15 luzes somam todas e o brilho espalha o que passa do limiar. Subi as luzes três vezes para "esquentar" um print que nunca ia mostrar o resultado real.
+- **Ferramenta nova:** `ferramentas/tirar_print_forward.sh`, que roda o jogo em Forward+ com o Vulkan por software do Mesa (lavapipe). Reproduziu o estouro do print do Vitor na primeira tentativa. Leva uns 40 s por print. Instalei o pacote `mesa-vulkan-drivers` (Mesa, licença MIT) só na máquina desta sessão; pôr no hook depende da aprovação dele.
+- **Acerto (conferido no Forward+):** luz da forja 9,0 → 3,4; lanternas de pedra 4,6 → 2,0; luzes dos móveis 5,0 → 2,2; lava da parede 4,0 → 1,5; cristais 2,0 → 1,1 e emissão deles 2,0 → 0,35; lanternas acesas 1,4 → 0,35; sulcos de lava com menos emissão; quedas um pouco mais escuras; no ar da caverna, brilho 1,2 → 0,8 com limiar 1,1, exposição 0,95 → 0,85 e SDFGI desligado. Fora da caverna nada mudou (conferido).
+- **Resultado no Forward+:** pedra arroxeada, poça quente no meio e nos móveis, fundo azul, sem névoa branca.
+- **Lição:** print de Compatibility serve para forma e posição, nunca para luz. As notas do crítico sobre cor nesta manhã foram dadas em cima de prints que não representam o jogo.
+- **Testes:** 461/461. **Evidência:** `evidencias/fase-2/caverna/caverna_forward_*.png` (antes estourado, entrada, alto, bloco esquerdo).
+- **Som:** o Vitor não gostou da maioria dos sons sintetizados e sugeriu repositório gratuito (já previsto na ADR-026). Mandei 9 candidatos CC0 do OpenGameArt e do BigSoundBank para ele escolher; nada entrou no repositório ainda.
