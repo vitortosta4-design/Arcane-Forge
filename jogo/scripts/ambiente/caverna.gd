@@ -11,7 +11,28 @@ extends Node3D
 
 const BOCA := Vector2(22.0, 2.0)
 const CENTRO_CAMARA := Vector3(0.0, -80.0, 0.0)
-const RAIO_CAMARA := 15.0
+## 2ª etapa (13/11/2026, o Vitor achou as proporções erradas): a caverna da
+## folha é bem maior, os cipós são detalhe pequeno e a bigorna tem de 3 a 4
+## vezes a altura do mago (o mago tem 2,9 m com o chapéu; a bigorna ficou
+## com uns 10 m).
+const RAIO_CAMARA := 26.0
+const ESCALA_BIGORNA := 1.5
+## Fundo aberto (folha): do lado oposto à entrada a parede some e a câmara dá
+## para uma caverna funda, azul e roxa, com ilhas flutuantes, cachoeiras e
+## quedas de lava. É só paisagem: a colisão da casca continua fechada ali
+## (parede invisível), então ninguém cai.
+const FUNDO_MEIA_ABERTURA := 0.75   # radianos para cada lado (uns 43 graus)
+const COR_FUNDO := Color(0.1, 0.11, 0.36)
+const COR_AGUA := Color(0.3, 0.62, 1.0)
+const COR_LAVA := Color(1.0, 0.5, 0.12)
+## Ar da caverna. A câmara fica embaixo do mapa e herdava o céu, a luz
+## ambiente e a névoa azul-clara da clareira: de longe tudo virava cinza
+## azulado e o fundo parecia gelo. Quando a câmera está aqui embaixo ela
+## troca para um ar próprio: escuro, roxo, com névoa fraca e arroxeada.
+const ALTURA_DO_AR_DA_CAVERNA := -40.0
+const COR_AR := Color(0.05, 0.04, 0.14)
+const COR_AMBIENTE_CAVERNA := Color(0.5, 0.33, 0.8)
+const COR_NEVOA_CAVERNA := Color(0.2, 0.1, 0.36)
 const COR_PEDRA := Color(0.36, 0.33, 0.4)
 const COR_CHAO := Color(0.4, 0.32, 0.47)
 const COR_BURACO := Color(0.03, 0.02, 0.05)
@@ -25,26 +46,26 @@ const CORES_CRISTAL := [Color(0.6, 0.35, 1.0), Color(0.3, 0.75, 1.0)]
 ## aparece na folha: fica desligada até o Vitor decidir.
 const COM_ABERTURA_NO_TETO := false
 const ACHATAMENTO := 0.75        # cúpula achatada: teto a uns 11 m
-const ANEIS_CASCA := 6
-const LADOS_CASCA := 16
+const ANEIS_CASCA := 7
+const LADOS_CASCA := 20
 const POLAR_ABERTURA := 0.25     # ângulo do buraco no topo (raio de uns 3,7 m)
 const ALTURA_CHAMINE := 7.0
 const COR_PEDRA_BAIXA := Color(0.44, 0.3, 0.43)
 const COR_PEDRA_ALTA := Color(0.24, 0.19, 0.44)
-const COR_CHAO_QUENTE := Color(0.6, 0.48, 0.47)
+const COR_CHAO_QUENTE := Color(0.64, 0.52, 0.4)
 const COR_CEU_ABERTURA := Color(0.78, 0.9, 1.0)
 const COR_RAIZ := Color(0.4, 0.46, 0.22)   # cipó (na folha pendem cipós e correntes do teto)
 const COR_METAL := Color(0.2, 0.2, 0.27)
 const COR_VEIO := Color(1.0, 0.55, 0.16)
-const QUANTAS_RAIZES := 13
+const QUANTAS_RAIZES := 16
 const QUANTAS_RAIZES_METALICAS := 6
 ## Pedestal em dois degraus sob a bigorna. As subidas são rampas curtas (40
 ## graus), não degraus retos: o mago sobe andando, sem travar na quina.
-const PEDESTAL := [[4.4, 0.0], [4.1, 0.25], [3.5, 0.25], [3.2, 0.5], [0.0, 0.5]]
-const ALTURA_PEDESTAL := 0.5
-const RAIO_ANEL_DE_RUNAS := 6.4
-const COR_PEDESTAL := Color(0.56, 0.47, 0.55)
-const RAIO_CERCA := 12.2
+const PEDESTAL := [[8.0, 0.0], [7.46, 0.45], [6.5, 0.45], [5.96, 0.9], [0.0, 0.9]]
+const ALTURA_PEDESTAL := 0.9
+const RAIO_ANEL_DE_RUNAS := 11.4
+const COR_PEDESTAL := Color(0.6, 0.52, 0.44)
+const RAIO_CERCA := 19.5
 const COR_MADEIRA := Color(0.5, 0.3, 0.18)
 const COR_LANTERNA := Color(1.0, 0.72, 0.28)
 const COR_CORRENTE := Color(0.2, 0.17, 0.2)
@@ -53,6 +74,7 @@ var forja: Forja = null
 var _boca_chao := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _material := GeometriaLowPoly.material_toon(0.2, 3)
+var _ar_da_caverna: Environment
 
 
 func _ready() -> void:
@@ -62,12 +84,45 @@ func _ready() -> void:
 	_boca_chao = Vector3(BOCA.x, altura, BOCA.y)
 	_criar_boca()
 	_criar_camara()
+	_ar_da_caverna = _criar_ar_da_caverna()
+
+
+## Troca o ar da câmera que estiver desenhando (1ª pessoa, 3ª, câmera livre
+## dos prints): dentro da caverna, o ar dela; fora, o do mundo.
+func _process(_delta: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return # normal: sem câmera (testes sem tela)
+	var dentro := camera.global_position.y < ALTURA_DO_AR_DA_CAVERNA
+	if dentro and camera.environment != _ar_da_caverna:
+		camera.environment = _ar_da_caverna
+	elif not dentro and camera.environment == _ar_da_caverna:
+		camera.environment = null
+
+
+func _criar_ar_da_caverna() -> Environment:
+	# Parte do ar do mundo (mesmo ajuste de tons e brilho) e muda só o que é da caverna.
+	var mundo := get_parent().get_node_or_null("WorldEnvironment") as WorldEnvironment if get_parent() else null
+	var ar: Environment = mundo.environment.duplicate() if mundo and mundo.environment else Environment.new()
+	ar.background_mode = Environment.BG_COLOR
+	ar.background_color = COR_AR
+	ar.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	ar.ambient_light_color = COR_AMBIENTE_CAVERNA
+	ar.ambient_light_energy = 0.45
+	ar.fog_enabled = true
+	ar.fog_light_color = COR_NEVOA_CAVERNA
+	ar.fog_density = 0.004
+	ar.fog_sun_scatter = 0.0
+	ar.fog_aerial_perspective = 0.0
+	ar.fog_sky_affect = 0.0
+	ar.volumetric_fog_enabled = false
+	return ar
 
 
 ## Para onde o mago vai ao entrar e ao sair (virado para a bigorna / para o
 ## centro da clareira).
 func entrada_camara() -> Vector3:
-	return CENTRO_CAMARA + Vector3(10.5, 1.0, 0.0)
+	return CENTRO_CAMARA + Vector3(RAIO_CAMARA - 4.5, 1.0, 0.0)
 
 
 func saida_clareira() -> Vector3:
@@ -127,31 +182,33 @@ func _criar_camara() -> void:
 	_pedestal(st, c)
 	# Costelas de pedra encostadas na parede (quebram a cúpula lisa). O setor
 	# da saída (ângulo zero) fica livre.
-	for i in 9:
-		var a := TAU * (i + 0.5) / 9.0
-		if absf(wrapf(a, -PI, PI)) < 0.5:
+	for i in 13:
+		var a := TAU * (i + 0.5) / 13.0
+		if absf(wrapf(a, -PI, PI)) < 0.3 or _no_fundo_aberto(a):
 			continue
 		var pe := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 1.3)
 		var para_dentro := (c - pe).normalized()
-		var largura := _rng.randf_range(2.2, 3.4)
+		var largura := _rng.randf_range(3.8, 5.6)
 		for andar in 3:
 			var encolhe := 1.0 - andar * 0.24
-			_pedregulho(st, colisores, pe + para_dentro * andar * 0.5 + Vector3.UP * (1.3 + andar * 2.4),
-				Vector3(largura * encolhe, 3.4, largura * encolhe), _cor_pedra(0.15 + andar * 0.2))
+			_pedregulho(st, colisores, pe + para_dentro * andar * 0.8 + Vector3.UP * (2.2 + andar * 4.0),
+				Vector3(largura * encolhe, 5.6, largura * encolhe), _cor_pedra(0.15 + andar * 0.2))
 	# Estalactites no teto e estalagmites no pé da parede.
-	for i in 26:
+	for i in 44:
 		var a := _rng.randf_range(0.0, TAU)
-		var r := _rng.randf_range(4.5, RAIO_CAMARA - 2.5)
-		var comprimento := _rng.randf_range(1.0, 3.6)
+		var r := _rng.randf_range(6.0, RAIO_CAMARA - 3.0)
+		var comprimento := _rng.randf_range(1.5, 6.0)
 		var topo := c + Vector3(cos(a) * r, _altura_do_teto(r) - 0.2, sin(a) * r)
-		G.anexar(st, G.cilindro(0.0, _rng.randf_range(0.3, 0.75), comprimento, 5),
+		G.anexar(st, G.cilindro(0.0, _rng.randf_range(0.5, 1.3), comprimento, 5),
 			Transform3D(Basis(), topo + Vector3.DOWN * comprimento / 2.0), _cor_pedra(0.7))
-	for i in 12:
-		var a := _rng.randf_range(0.6, TAU - 0.6)
-		var r := _rng.randf_range(11.0, RAIO_CAMARA - 2.2)
-		var altura := _rng.randf_range(0.7, 1.9)
+	for i in 16:
+		var a := _rng.randf_range(0.4, TAU - 0.4)
+		if _no_fundo_aberto(a):
+			continue
+		var r := _rng.randf_range(RAIO_CAMARA - 4.5, RAIO_CAMARA - 2.2)
+		var altura := _rng.randf_range(1.0, 3.0)
 		var base := c + Vector3(cos(a) * r, 0, sin(a) * r)
-		var raio := _rng.randf_range(0.3, 0.6)
+		var raio := _rng.randf_range(0.4, 0.9)
 		G.anexar(st, G.cilindro(raio, 0.0, altura, 5), Transform3D(Basis(), base + Vector3.UP * altura / 2.0), _cor_pedra(0.1))
 		var forma_pedra := CylinderShape3D.new()
 		forma_pedra.radius = raio * 0.8
@@ -187,54 +244,47 @@ func _criar_camara() -> void:
 	add_child(colisores)
 	if COM_ABERTURA_NO_TETO:
 		_abertura_no_teto(c)
-	else:
-		# Tampa escura no topo da cúpula (a casca tem um furo pequeno ali).
-		var tampa := MeshInstance3D.new()
-		tampa.name = "TampaDoTeto"
-		tampa.mesh = G.cilindro(1.2, 1.2, 0.2, 8)
-		tampa.position = c + Vector3.UP * (RAIO_CAMARA * ACHATAMENTO + 0.05)
-		tampa.material_override = _material_escuro()
-		add_child(tampa)
 	_raizes_do_teto(c)
 	_raizes_metalicas(c)
 	_linhas_de_runa(c)
 	_lanternas_e_cerca(c, colisores)
+	_fundo_aberto(c, colisores)
 	# Luz quente da forja alcançando as paredes (a bigorna cuida das luzes
 	# dela; esta é só o banho alaranjado do ambiente: quente no meio, frio e
 	# arroxeado nas bordas, como no conceito).
 	var brasa := OmniLight3D.new()
 	brasa.name = "LuzQuenteDaForja"
 	brasa.light_color = Color(1.0, 0.5, 0.17)
-	brasa.light_energy = 7.0
-	brasa.omni_range = 24.0
-	brasa.omni_attenuation = 1.5
-	brasa.position = c + Vector3.UP * 3.6
+	brasa.light_energy = 6.0
+	brasa.omni_range = 38.0
+	brasa.omni_attenuation = 1.3
+	brasa.position = c + Vector3.UP * 6.0
 	add_child(brasa)
 	# Preenchimento roxo vindo do alto: sem ele, o que a luz quente não
 	# alcança cai no azul acinzentado da névoa de fora, e a folha é roxa.
 	var roxo := OmniLight3D.new()
 	roxo.name = "LuzRoxaDoTeto"
 	roxo.light_color = Color(0.72, 0.42, 1.0)
-	roxo.light_energy = 0.6
-	roxo.omni_range = 30.0
+	roxo.light_energy = 0.5
+	roxo.omni_range = 52.0
 	roxo.omni_attenuation = 0.6
-	roxo.position = c + Vector3.UP * 9.0
+	roxo.position = c + Vector3.UP * 15.0
 	add_child(roxo)
 
 	# Cristais arroxeados que iluminam as bordas da câmara: 6 grupos grandes
 	# com luz e grupos pequenos sem luz espalhados na parede.
 	for i in 6:
 		var a := TAU * i / 6.0 + 0.3
-		var p := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 3.2)
-		if p.x > c.x + 8.0 and absf(p.z - c.z) < 5.0:
+		var p := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 4.0)
+		if p.x > c.x + 14.0 and absf(p.z - c.z) < 6.0:
 			continue
 		# Só 3 grupos têm luz de verdade (as lanternas gastam as outras).
-		_cristais(p, CORES_CRISTAL[1] if i == 3 else CORES_CRISTAL[0], 1.6, i % 2 == 1)
-	for i in 10:
-		var a := _rng.randf_range(0.7, TAU - 0.7)
-		var subida := _rng.randf_range(0.0, 4.5)
+		_cristais(p, CORES_CRISTAL[1] if i == 3 else CORES_CRISTAL[0], 2.6, i % 2 == 1)
+	for i in 14:
+		var a := _rng.randf_range(0.5, TAU - 0.5)
+		var subida := _rng.randf_range(0.0, 8.0)
 		var r := sqrt(maxf(0.0, 1.0 - pow(subida / (RAIO_CAMARA * 0.75), 2))) * RAIO_CAMARA - 1.4
-		_cristais(c + Vector3(cos(a) * r, subida, sin(a) * r), CORES_CRISTAL[0] if i % 4 else CORES_CRISTAL[1], 0.7, false)
+		_cristais(c + Vector3(cos(a) * r, subida, sin(a) * r), CORES_CRISTAL[0] if i % 4 else CORES_CRISTAL[1], 1.2, false)
 
 	# Saída: um buraco escuro na parede atrás de quem entra.
 	var saida := MeshInstance3D.new()
@@ -248,6 +298,7 @@ func _criar_camara() -> void:
 	forja = Forja.new()
 	forja.name = "Forja"
 	forja.position = c + Vector3.UP * ALTURA_PEDESTAL
+	forja.scale = Vector3.ONE * ESCALA_BIGORNA
 	forja.rotation.y = PI / 2.0
 	add_child(forja)
 
@@ -278,13 +329,99 @@ func _cristais(base: Vector3, cor: Color, tamanho := 1.0, com_luz := true) -> vo
 		return # normal: grupo pequeno de parede, só enfeite (menos luzes = mais FPS)
 	var luz := OmniLight3D.new()
 	luz.light_color = cor
-	luz.light_energy = 1.6
-	luz.omni_range = 9.0
-	luz.position = base + Vector3.UP * 1.8
+	luz.light_energy = 2.0
+	luz.omni_range = 9.0 * tamanho
+	luz.position = base + Vector3.UP * 1.8 * tamanho
 	add_child(luz)
 
 
 # --- Peças da câmara --------------------------------------------------------
+
+## O ângulo cai no setor do fundo aberto (oposto à entrada, que fica no ângulo zero)?
+func _no_fundo_aberto(angulo: float) -> bool:
+	return absf(wrapf(angulo - PI, -PI, PI)) < FUNDO_MEIA_ABERTURA
+
+
+## Paisagem do fundo (folha): céu de caverna azul, colunas distantes, ilhas
+## flutuantes com cristais, cachoeiras azuis e quedas de lava. Sem luzes de
+## verdade: tudo que brilha é só cor acesa, pelo FPS.
+func _fundo_aberto(c: Vector3, colisores: StaticBody3D) -> void:
+	var G := GeometriaLowPoly
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	# Céu da caverna: meia casca achatada (não pode furar o chão da clareira lá em cima).
+	var st_ceu := G.nova()
+	G.anexar_invertido(st_ceu, G.esfera(95.0, 16, 8), Transform3D(Basis().scaled(Vector3(1.0, 0.45, 1.0)), c + Vector3(-50.0, 6.0, 0.0)), COR_FUNDO)
+	var ceu := MeshInstance3D.new()
+	ceu.name = "FundoDaCaverna"
+	ceu.mesh = G.finalizar(st_ceu)
+	var mat_ceu := StandardMaterial3D.new()
+	mat_ceu.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat_ceu.vertex_color_use_as_albedo = true
+	mat_ceu.disable_fog = true
+	ceu.material_override = mat_ceu
+	ceu.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ceu)
+
+	var st := G.nova()        # pedra (ilhas, colunas, beirada)
+	var st_brilho := G.nova() # água, lava e cristais acesos
+	var fita_em_pe := func(topo: Vector3, altura: float, largura: float, cor: Color) -> void:
+		# duas fitas cruzadas, para ler de qualquer lado
+		for giro in [0.0, PI / 2.0]:
+			var lado := Vector3(cos(giro), 0, sin(giro)) * largura / 2.0
+			var base := topo + Vector3.DOWN * altura
+			var claro := cor.lerp(Color.WHITE, 0.25)
+			var olho := topo + Vector3(sin(giro), 0, -cos(giro)) * 9.0 + Vector3.DOWN * altura / 2.0
+			_face(st_brilho, topo + lado, topo - lado, base - lado * 1.3, claro, olho)
+			_face(st_brilho, topo + lado, base - lado * 1.3, base + lado * 1.3, cor, olho)
+			_face(st_brilho, topo + lado, base - lado * 1.3, topo - lado, claro, topo + (topo - olho))
+			_face(st_brilho, topo + lado, base + lado * 1.3, base - lado * 1.3, cor, topo + (topo - olho))
+	# Colunas distantes (do teto ao fundo), para dar profundidade.
+	for k in 7:
+		var x := rng.randf_range(-95.0, -55.0)
+		var z := rng.randf_range(-55.0, 55.0)
+		var grossura := rng.randf_range(5.0, 9.0)
+		G.anexar(st, G.cilindro(grossura * 0.55, grossura, 70.0, 7), Transform3D(Basis(), c + Vector3(x, 0.0, z)), Color(0.2, 0.17, 0.4) * rng.randf_range(0.8, 1.1))
+		if k % 3 == 0:
+			fita_em_pe.call(c + Vector3(x + grossura * 0.9, 18.0, z), 50.0, 3.0, COR_LAVA)
+	# Ilhas flutuantes: pedra em cunha, tampo mais claro, cristais em cima.
+	var ilhas := [[-38.0, 4.0, -14.0, 5.5], [-46.0, 11.0, 9.0, 4.0], [-58.0, 2.0, 24.0, 7.0], [-64.0, 15.0, -22.0, 5.0],
+		[-74.0, 7.0, 2.0, 8.0], [-52.0, -4.0, -32.0, 4.5], [-41.0, 15.5, 27.0, 3.2]]
+	for k in ilhas.size():
+		var p := c + Vector3(ilhas[k][0], ilhas[k][1], ilhas[k][2])
+		var r: float = ilhas[k][3]
+		var giro := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
+		G.anexar(st, G.cilindro(r * 0.15, r, r * 1.3, 7), Transform3D(giro, p + Vector3.DOWN * r * 0.65), _cor_pedra(0.5))
+		G.anexar(st, G.cilindro(r, r * 0.92, r * 0.18, 7), Transform3D(giro, p + Vector3.UP * r * 0.09), _cor_pedra(0.0) * 1.15)
+		for q in 3:
+			var altura := r * rng.randf_range(0.35, 0.7)
+			var pe := p + Vector3(rng.randf_range(-0.5, 0.5) * r, r * 0.18, rng.randf_range(-0.5, 0.5) * r)
+			G.anexar(st_brilho, G.cilindro(altura * 0.22, 0.0, altura, 5), Transform3D(Basis(Vector3(1, 0, 0.3).normalized(), rng.randf_range(-0.3, 0.3)), pe + Vector3.UP * altura / 2.0),
+				CORES_CRISTAL[0].lerp(Color.WHITE, rng.randf_range(0.0, 0.25)))
+		if k % 2 == 0:
+			fita_em_pe.call(p + Vector3(r * 0.8, r * 0.1, 0.0), 30.0 + r * 2.0, r * 0.35, COR_AGUA)
+	# Beirada do abismo: pedras baixas ao longo da borda aberta.
+	for k in 9:
+		var a := PI + lerpf(-FUNDO_MEIA_ABERTURA, FUNDO_MEIA_ABERTURA, k / 8.0)
+		var p := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 0.6)
+		_pedregulho(st, colisores, p + Vector3.UP * 0.5, Vector3(rng.randf_range(2.6, 4.2), rng.randf_range(1.2, 2.2), rng.randf_range(2.2, 3.4)), _cor_pedra(0.1))
+	var pedras := MeshInstance3D.new()
+	pedras.name = "IlhasFlutuantes"
+	pedras.mesh = G.finalizar(st)
+	pedras.material_override = _material
+	pedras.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pedras)
+	var brilhos := MeshInstance3D.new()
+	brilhos.name = "BrilhosDoFundo"
+	brilhos.mesh = G.finalizar(st_brilho)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.disable_fog = true
+	brilhos.material_override = mat
+	brilhos.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(brilhos)
+
 
 ## Pedra da caverna: arroxeada e fria; `altura` 0 = pé da parede (um pouco
 ## mais clara e quente, perto da luz da forja), 1 = teto (escura e azulada).
@@ -313,7 +450,7 @@ func _casca(st: SurfaceTool, c: Vector3, enfeitada := true) -> void:
 	rng.seed = 31
 	var pontos: Array = []
 	for i in ANEIS_CASCA + 1:
-		var polar := lerpf(POLAR_ABERTURA if COM_ABERTURA_NO_TETO else 0.06, PI / 2.0, float(i) / ANEIS_CASCA)
+		var polar := lerpf(POLAR_ABERTURA if COM_ABERTURA_NO_TETO else 0.001, PI / 2.0, float(i) / ANEIS_CASCA)
 		var anel: Array[Vector3] = []
 		for j in LADOS_CASCA:
 			var giro := TAU * (j + (0.5 if i % 2 else 0.0)) / LADOS_CASCA
@@ -326,6 +463,9 @@ func _casca(st: SurfaceTool, c: Vector3, enfeitada := true) -> void:
 		var altura := 1.0 - float(i + 0.5) / ANEIS_CASCA
 		for j in LADOS_CASCA:
 			var jj := (j + 1) % LADOS_CASCA
+			# No fundo aberto a parede some (do 3º anel para baixo); o teto fica.
+			if enfeitada and i >= 2 and _no_fundo_aberto(TAU * (j + 0.75) / LADOS_CASCA):
+				continue
 			var a: Vector3 = pontos[i][j]
 			var b: Vector3 = pontos[i][jj]
 			var d: Vector3 = pontos[i + 1][j]
@@ -342,12 +482,12 @@ func _casca(st: SurfaceTool, c: Vector3, enfeitada := true) -> void:
 ## clara perto da forja, roxa e fria na borda. É plano: a colisão do chão é
 ## um disco liso à parte.
 func _chao(st: SurfaceTool, c: Vector3) -> void:
-	var raios := [0.0, 4.4, 6.2, 8.2, 10.4, 12.6, RAIO_CAMARA + 1.0]
+	var raios := [0.0, 8.0, 10.6, 13.4, 16.4, 19.6, 23.0, RAIO_CAMARA + 1.0]
 	var olho := c + Vector3.UP * 5.0
 	for i in raios.size() - 1:
 		var dentro: float = raios[i]
 		var fora: float = raios[i + 1]
-		var lajotas := 10 + i * 5
+		var lajotas := 14 + i * 6
 		var perto := 1.0 - float(i) / (raios.size() - 2)
 		for j in lajotas:
 			var a0 := TAU * (j + (0.5 if i % 2 else 0.0)) / lajotas
@@ -398,7 +538,7 @@ func _fita(st: SurfaceTool, a: Vector3, b: Vector3, largura: float, cor: Color) 
 func _linhas_de_runa(c: Vector3) -> void:
 	var st := GeometriaLowPoly.nova()
 	var y := Vector3.UP * 0.03
-	for anel in [[4.55, 0.16, 28, 1.0], [RAIO_ANEL_DE_RUNAS, 0.1, 36, 0.8], [10.6, 0.08, 44, 0.45]]:
+	for anel in [[8.25, 0.26, 36, 1.0], [RAIO_ANEL_DE_RUNAS, 0.16, 48, 0.8], [17.6, 0.12, 60, 0.45]]:
 		var raio: float = anel[0]
 		var partes: int = anel[2]
 		for j in partes:
@@ -411,21 +551,21 @@ func _linhas_de_runa(c: Vector3) -> void:
 	for k in 6:
 		var a := TAU * k / 6.0
 		var m := c + y + Vector3(cos(a), 0, sin(a)) * RAIO_ANEL_DE_RUNAS
-		var para_fora := Vector3(cos(a), 0, sin(a)) * 0.5
-		var de_lado := Vector3(-sin(a), 0, cos(a)) * 0.34
+		var para_fora := Vector3(cos(a), 0, sin(a)) * 0.9
+		var de_lado := Vector3(-sin(a), 0, cos(a)) * 0.6
 		var pontas := [m + para_fora, m + de_lado, m - para_fora, m - de_lado]
 		for q in 4:
-			_fita(st, pontas[q], pontas[(q + 1) % 4], 0.09, COR_VEIO)
+			_fita(st, pontas[q], pontas[(q + 1) % 4], 0.14, COR_VEIO)
 	# lava nas subidas do pedestal
-	for k in 10:
-		var a := TAU * (k + 0.3) / 10.0
+	for k in 16:
+		var a := TAU * (k + 0.3) / 16.0
 		var d := Vector3(cos(a), 0, sin(a))
 		for n in [0, 2]:
 			var baixo: Array = PEDESTAL[n]
 			var alto: Array = PEDESTAL[n + 1]
 			var p0: Vector3 = c + d * (float(baixo[0]) + 0.02) + Vector3.UP * (float(baixo[1]) + 0.03)
 			var p1: Vector3 = c + d * (float(alto[0]) + 0.02) + Vector3.UP * (float(alto[1]) + 0.03)
-			_fita(st, p0, p1, 0.2 if (k + n) % 3 else 0.42, COR_VEIO * 1.0)
+			_fita(st, p0, p1, 0.3 if (k + n) % 3 else 0.7, COR_VEIO * 1.0)
 	var linhas := MeshInstance3D.new()
 	linhas.name = "LinhasDeRuna"
 	linhas.mesh = GeometriaLowPoly.finalizar(st)
@@ -468,7 +608,7 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 	# pedestais de pedra perto da bigorna
 	for k in 4:
 		var a := TAU * k / 4.0 + PI / 4.0
-		var p := c + Vector3(cos(a), 0, sin(a)) * 5.4
+		var p := c + Vector3(cos(a), 0, sin(a)) * 9.6
 		G.anexar(st, G.cubo(Vector3(0.7, 0.3, 0.7)), Transform3D(Basis(Vector3.UP, a), p + Vector3.UP * 0.15), _cor_pedra(0.0))
 		G.anexar(st, G.cubo(Vector3(0.5, 0.6, 0.5)), Transform3D(Basis(Vector3.UP, a), p + Vector3.UP * 0.6), _cor_pedra(0.05))
 		lanterna.call(p + Vector3.UP * 0.9, 2.0)
@@ -476,16 +616,16 @@ func _lanternas_e_cerca(c: Vector3, colisores: StaticBody3D) -> void:
 		var luz := OmniLight3D.new()
 		luz.name = "LuzDaLanterna%d" % k
 		luz.light_color = Color(1.0, 0.58, 0.2)
-		luz.light_energy = 3.0
-		luz.omni_range = 8.5
+		luz.light_energy = 3.2
+		luz.omni_range = 11.0
 		luz.position = p + Vector3.UP * 1.5
 		add_child(luz)
 	# cerca de postes com lanterna e corrente
 	var postes: Array[Vector3] = []
-	var quantos := 14
+	var quantos := 22
 	for k in quantos:
 		var a := TAU * k / quantos
-		if absf(wrapf(a, -PI, PI)) < 0.55:
+		if absf(wrapf(a, -PI, PI)) < 0.3:
 			postes.append(Vector3.INF) # setor da saída: sem poste
 			continue
 		var p := c + Vector3(cos(a), 0, sin(a)) * RAIO_CERCA
@@ -626,9 +766,9 @@ func _raizes_do_teto(c: Vector3) -> void:
 	for i in QUANTAS_RAIZES:
 		var perto_da_abertura := i < 5
 		var a := TAU * i / 5.0 + 0.4 if perto_da_abertura else _rng.randf_range(0.0, TAU)
-		var r := 4.2 if perto_da_abertura else _rng.randf_range(6.0, 11.5)
-		var comprimento := _rng.randf_range(3.5, 5.0) if perto_da_abertura else _rng.randf_range(2.5, 5.0)
-		var grossura := _rng.randf_range(0.2, 0.28) if perto_da_abertura else _rng.randf_range(0.12, 0.2)
+		var r := 7.0 if perto_da_abertura else _rng.randf_range(9.0, RAIO_CAMARA - 5.0)
+		var comprimento := _rng.randf_range(2.0, 4.0)
+		var grossura := _rng.randf_range(0.08, 0.14)
 		var topo := c + Vector3(cos(a) * r, _altura_do_teto(r) + 0.4, sin(a) * r)
 		var pontos: Array = []
 		var raios: Array = []
@@ -658,7 +798,7 @@ func _raizes_metalicas(c: Vector3) -> void:
 		var pontos: Array[Vector3] = []
 		for k in 8:
 			var f := k / 7.0
-			var r := lerpf(4.5, RAIO_CAMARA - 0.8, f)
+			var r := lerpf(8.2, RAIO_CAMARA - 0.8, f)
 			var giro := a + desvio * 0.35 * sin(f * PI) + 0.04 * sin(f * 9.0 + i)
 			pontos.append(c + Vector3(cos(giro) * r, 0.0, sin(giro) * r))
 		# sobe pela parede
@@ -675,8 +815,8 @@ func _raizes_metalicas(c: Vector3) -> void:
 			var cima := lado.cross(frente).normalized()
 			if cima.dot(Vector3.UP if absf(frente.y) < 0.7 else (c - p0)) < 0.0:
 				cima = -cima
-			var l0 := lerpf(0.42, 0.16, f0)
-			var l1 := lerpf(0.42, 0.16, f1)
+			var l0 := lerpf(0.6, 0.22, f0)
+			var l1 := lerpf(0.6, 0.22, f1)
 			var olho := (p0 + p1) / 2.0 + cima * 3.0
 			# barra de metal: topo e duas abas inclinadas
 			var cor := G.variar(COR_METAL, _rng, 0.12)

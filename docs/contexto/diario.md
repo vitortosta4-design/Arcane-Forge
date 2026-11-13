@@ -321,3 +321,13 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Testes:** 18 novos (peças presentes, 4 lanternas com luz, teto de 9 luzes, bigorna no pedestal, caminho livre, chão sólido, mago sobe o pedestal andando). 435/435.
 - **Evidência:** `evidencias/fase-2/caverna/` (folha x jogo, antes, alto e entrada).
 - **Limitações:** ainda sem os móveis do posto e sem o fundo aberto da folha; a abertura no teto com feixe de luz ficou no código, desligada, esperando decisão do Vitor; sem crítico nesta etapa.
+
+## 13/11/2026 (manhã) · Caverna da forja, etapa 2: proporções, fundo aberto e ar próprio
+
+- **Pedidos do Vitor:** abertura no teto fica de fora (1a); fundo aberto primeiro (2b); "as proporções estão erradas: a caverna é bem maior, as raízes são detalhe pequeno, a bigorna tem 3 ou 4 vezes o mago".
+- **Medido:** o mago tem 2,9 m com o chapéu e a bigorna tinha 6,7 m (2,3 magos). Agora `ESCALA_BIGORNA = 1,5`: 10 m (3,5 magos). Câmara de raio 15 para 26 m (teto de 11 para 19,5 m); pedestal, anéis, cerca, cristais, costelas e estalactites aumentados juntos; cipós mantidos pequenos e finos.
+- **Fundo aberto:** a casca não desenha a parede num setor de 86 graus oposto à entrada; atrás, meia casca azul achatada (não pode furar o chão da clareira, tem teste), 7 colunas distantes, 7 ilhas flutuantes com cristais, cachoeiras azuis e quedas de lava em fitas acesas. A colisão da casca continua inteira ali (parede invisível) e há pedras na beirada.
+- **Achado principal: o ar.** A câmara herdava céu, luz ambiente e névoa azul-clara da clareira; por isso tudo ficava cinza azulado e o fundo parecia gelo. `Caverna._process` troca o `environment` da câmera ativa quando ela está abaixo de y -40 para um ar próprio (fundo escuro, ambiente roxo, névoa fraca arroxeada), copiado do ar do mundo para manter ajuste de tons e brilho. Fora da caverna nada muda. Foi o que mais aproximou da folha.
+- **Testes:** 8 novos (altura da bigorna entre 3 e 4 magos, câmara grande, peças do fundo, céu do fundo abaixo de y -20, parede invisível no abismo, ar próprio). 443/443.
+- **Evidência:** `evidencias/fase-2/caverna/caverna_folha_x_jogo_etapa2.png` e prints da etapa 2.
+- **Limitações:** água e lava são fitas paradas; sem móveis, passarelas nem escadas; a borda do recorte do fundo é dura; luzes da bigorna não foram reescaladas (alcance igual ao de antes); FPS com a câmara maior só no PC do Vitor; sem crítico nesta etapa.

@@ -2969,6 +2969,25 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 		_afirmar("caverna: tem %s" % nome, caverna.get_node_or_null(nome) != null)
 	_afirmar("caverna: 4 lanternas com luz em volta da bigorna", caverna.get_children().filter(func(n): return String(n.name).begins_with("LuzDaLanterna")).size() == 4)
 	_afirmar("caverna: a bigorna fica em cima do pedestal", is_equal_approx(caverna.forja.global_position.y - c.y, Caverna.ALTURA_PEDESTAL))
+	# Proporção pedida pelo Vitor (13/11): bigorna com 3 a 4 vezes a altura do mago (2,9 m com o chapéu).
+	var bigorna := AABB()
+	var primeira := true
+	for m in caverna.forja.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = m
+		if mi.mesh == null or not mi.is_visible_in_tree():
+			continue
+		var caixa_m: AABB = mi.global_transform * mi.get_aabb()
+		bigorna = caixa_m if primeira else bigorna.merge(caixa_m)
+		primeira = false
+	_afirmar("caverna: bigorna com 3 a 4 magos de altura (%.1f m)" % bigorna.size.y, bigorna.size.y > 2.9 * 3.0 and bigorna.size.y < 2.9 * 4.0)
+	_afirmar("caverna: câmara grande (raio %.0f m, teto a %.0f m)" % [Caverna.RAIO_CAMARA, Caverna.RAIO_CAMARA * Caverna.ACHATAMENTO], Caverna.RAIO_CAMARA >= 24.0)
+	_afirmar("caverna: tem ar próprio, escuro e roxo, sem a névoa azul de fora", caverna._ar_da_caverna != null and caverna._ar_da_caverna.fog_light_color.b > caverna._ar_da_caverna.fog_light_color.g * 2.0 and caverna._ar_da_caverna.background_color.v < 0.2)
+	for nome in ["FundoDaCaverna", "IlhasFlutuantes", "BrilhosDoFundo"]:
+		_afirmar("caverna: fundo aberto tem %s" % nome, caverna.get_node_or_null(nome) != null)
+	var fundo := caverna.get_node_or_null("FundoDaCaverna") as MeshInstance3D
+	if fundo:
+		var caixa_fundo: AABB = fundo.global_transform * fundo.get_aabb()
+		_afirmar("caverna: o céu do fundo não fura o chão da clareira (topo a %.0f m)" % caixa_fundo.end.y, caixa_fundo.end.y < -20.0)
 	var cristais := caverna.get_children().filter(func(n): return String(n.name).begins_with("Cristais"))
 	_afirmar("caverna: cristais espalhados (%d grupos)" % cristais.size(), cristais.size() >= 12)
 	var luzes := caverna.find_children("*", "Light3D", true, false).filter(func(l): return l.global_position.y < -40.0 and not caverna.forja.is_ancestor_of(l))
@@ -2980,20 +2999,22 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 	# Caminho livre: da entrada até perto da bigorna, na altura do peito.
 	var espaco := get_viewport().find_world_3d().direct_space_state
 	var de := caverna.global_position + caverna.entrada_camara()
-	var ate := c + Vector3(4.6, 1.0, 0.0)
+	var ate := c + Vector3(8.6, 1.0, 0.0)
 	var raio := PhysicsRayQueryParameters3D.create(de, ate)
 	_afirmar("caverna: caminho da entrada até a bigorna sem pedra no meio", espaco.intersect_ray(raio).is_empty())
-	var chao := espaco.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3(6, 3, 4), c + Vector3(6, -3, 4)))
+	var chao := espaco.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3(14, 3, 6), c + Vector3(14, -3, 6)))
 	_afirmar("caverna: o chão continua plano e sólido", not chao.is_empty() and absf(chao.position.y - c.y) < 0.05)
+	var abismo := espaco.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3(-21, 1.5, 0), c + Vector3(-45, 1.5, 0)))
+	_afirmar("caverna: no fundo aberto há parede invisível (ninguém cai no abismo)", not abismo.is_empty() and abismo.position.x > c.x - Caverna.RAIO_CAMARA - 1.5)
 	# O mago sobe o pedestal andando (as subidas são rampas de 40 graus).
 	var mago: CharacterBody3D = load("res://cenas/mago.tscn").instantiate()
 	add_child(mago)
-	mago.global_position = c + Vector3(0, 0.05, 6.0)
+	mago.global_position = c + Vector3(0, 0.05, 11.0)
 	mago.look_at(c + Vector3(0, 0.05, 0), Vector3.UP)
 	for i in 20:
 		await get_tree().physics_frame
 	Input.action_press("mover_frente")
-	for i in 45:
+	for i in 85:
 		await get_tree().physics_frame
 	Input.action_release("mover_frente")
 	var subiu: float = mago.global_position.y - c.y
