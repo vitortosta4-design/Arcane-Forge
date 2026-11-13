@@ -2,7 +2,7 @@
 
 Bilhete curto para a próxima sessão. **Reescrever inteiro no fim de toda sessão**, em no máximo uma tela. Histórico vai para `diario.md`, não aqui.
 
-Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 a 3 pela folha)
+Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 a 4 pela folha)
 
 ## Onde estamos
 - Fase 2 do plano novo: ciclo da forja jogando sozinho (ADR-035). O ciclo roda e tem teste de ponta a ponta; da fase só falta o que é do Vitor (jogar, achar divertido, medir FPS).
@@ -13,10 +13,11 @@ Atualizado em: 13/11/2026, manhã (caverna da forja, etapas 1 a 3 pela folha)
 - HUD (crítico 8,0), mago com esqueleto (8,4) e runas v6 (6,5, esperando símbolos) seguem como estavam.
 - **Mago assenta ao parar (auditoria, item 6):** o corpo inclina 7 graus para onde anda e, ao parar ou arrancar, balança numa mola e agacha 5%; em 1ª pessoa as mãos descem 1,7 cm e voltam. É só visual: a velocidade continua respondendo no mesmo quadro (tem teste). **Sem nota do crítico:** nas folhas de quadros da nuvem o efeito quase não aparece; quem julga é o Vitor em movimento.
 - **Caverna da forja, etapas 1 a 3 (ADR-049), pela folha `docs/referencias/lote02/lote02_09_caverna_forja.png`. Crítico: 4/10, reprovado** (avaliou antes do último acerto de cor). Tem: câmara de raio 26 m, bigorna de 10 m (3,5 magos, aprovado pelo Vitor), piso de lajotas em anéis, linhas de runa, pedestal em rampa, lanternas, cerca na frente e no abismo, cristais, fundo aberto (ilhas, cachoeiras, lava, parede invisível), ar próprio da caverna e os **móveis do posto** em `moveis_da_forja.gd` (2 estantes com tábuas de runa, livros e poções; 4 estandartes; mesa do grimório; mesa de trabalho; baú, barris, caixotes; 126 livros; 105 velas; 6 lanternas penduradas; mirante com rampa na beira do abismo), tudo em duas malhas. Depois do crítico a paleta foi esquentada (pedra menos roxa, mais luz laranja). Decisões do Vitor: sem abertura no teto; escala aprovada; "encher de detalhe".
-- Testes: 449/449 (11 do gigante, 14 da galinha, 13 do mago, 32 da caverna).
+- **Caverna, etapa 4 (depois do crítico, sem nova nota):** os móveis foram juntados em dois blocos encostados na parede (96 e -92 graus), cada um dentro de um andaime de madeira de dois andares com escada (rampa com colisão), passarela com corrimão, travessas em X, correntes em arco com lanterna e uma segunda estante em cima; e **livros voadores** (`livros_voadores.gd`: 6 livros que decolam de cima de uma estante, batem as capas e pousam em outra; só enfeite, não sincronizado no cooperativo).
+- Testes: 455/455 (11 do gigante, 14 da galinha, 13 do mago, 38 da caverna). **A suíte agora leva uns 45 s** (testes em que o mago anda de verdade); o limite do `rodar_testes.sh` subiu de 40 para 120 s.
 
 ## Próximo passo
-0. **Caverna, etapa 4, na ordem do crítico:** (1) conferir a cor no PC do Vitor antes de mexer mais em luz; (2) trocar as raízes metálicas e as linhas do piso por sulcos finos de lava acesa, rachaduras de lava no pedestal, e dar movimento e luz às quedas de lava e de água; (3) juntar os móveis em dois blocos encostados na parede com andaime, escada e passarela de madeira, e correntes em arco; (4) cristais menores, em cachos; (5) rejunte nas lajotas e pedestal mais alto em blocos. **Sempre abrir a folha antes de modelar cenário** (listar `docs/referencias` e `lote02`).
+0. **Caverna, etapa 5, na ordem do crítico:** (1) conferir a cor no PC do Vitor antes de mexer mais em luz; (2) trocar as raízes metálicas e as linhas do piso por sulcos finos de lava acesa, rachaduras de lava no pedestal, e dar movimento e luz às quedas de lava e de água; (3) cristais menores, em cachos; (4) rejunte nas lajotas e pedestal mais alto em blocos; (5) rodar o crítico de novo. **Sempre abrir a folha antes de modelar cenário** (listar `docs/referencias` e `lote02`).
 1. Vitor e Matheus jogam o pacote (`build/ArcaneForge_teste_Matheus.zip`; a pasta `build/` não vai para o git, gerar com `ferramentas/gerar_pacote_teste.sh`) e respondem as 4 perguntas do LEIA-ME.
 2. Auditoria de animação, o que sobrou: medalhão nascendo e voando até a barra (precisa da referência do medalhão); som de passo do mago (fase de áudio).
 3. Runas: montar as 8 quando os símbolos chegarem.

@@ -2997,10 +2997,53 @@ func _testar_camara_da_forja_tem_as_pecas_do_conceito() -> void:
 		_afirmar("caverna: tem %s" % nome, caverna.get_node_or_null(nome) != null)
 	if caverna.moveis:
 		_afirmar("caverna: posto cheio de detalhe (%d livros, %d velas)" % [caverna.moveis.livros, caverna.moveis.velas], caverna.moveis.livros >= 80 and caverna.moveis.velas >= 90)
+	# Livros voadores (pedido do Vitor): saem de uma estante e pousam em outra.
+	var voadores := caverna.get_node_or_null("LivrosVoadores") as LivrosVoadores
+	_afirmar("caverna: tem livros voadores e 4 estantes para pousar", voadores != null and voadores._livros.size() == LivrosVoadores.QUANTOS and caverna.moveis != null and caverna.moveis.pousos.size() >= 12)
+	if voadores and not voadores._livros.is_empty():
+		voadores.set_process(false) # o teste anda o tempo na mão
+		var de_onde: Array = voadores._livros.map(func(d): return caverna.moveis.pousos[d["pouso"]]["estante"])
+		var maximo_no_ar := 0
+		var mais_alto := -INF
+		var abriu := false
+		for i in 900: # 30 s em passos de 1/30
+			voadores.avancar(1.0 / 30.0)
+			maximo_no_ar = maxi(maximo_no_ar, voadores.voando())
+			for d in voadores._livros:
+				if d["destino"] >= 0:
+					mais_alto = maxf(mais_alto, (d["no"] as Node3D).position.y - maxf(caverna.moveis.pousos[d["pouso"]]["pos"].y, caverna.moveis.pousos[d["destino"]]["pos"].y))
+					abriu = abriu or absf(((d["no"] as Node3D).get_node("Corpo/CapaD") as Node3D).rotation.z) < 1.0
+		_afirmar("livros voadores: em 30 s algum levanta voo (até %d no ar ao mesmo tempo)" % maximo_no_ar, maximo_no_ar >= 1)
+		_afirmar("livros voadores: voam num arco por cima das estantes (%.1f m acima) e de capas abertas" % mais_alto, mais_alto > 1.5 and abriu)
+		var mudaram := 0
+		for k in voadores._livros.size():
+			if caverna.moveis.pousos[voadores._livros[k]["pouso"]]["estante"] != de_onde[k]:
+				mudaram += 1
+		_afirmar("livros voadores: trocam de estante (%d de %d mudaram em 30 s)" % [mudaram, voadores._livros.size()], mudaram >= 3)
+		var lugares := voadores._livros.map(func(d): return d["pouso"])
+		var repetido := false
+		for l in lugares:
+			repetido = repetido or lugares.count(l) > 1
+		_afirmar("livros voadores: dois livros nunca pousam no mesmo lugar", not repetido)
+	# Andaimes: dá para subir a escada até a passarela de cima.
+	if caverna.moveis:
+		var bloco: Transform3D = caverna.global_transform * caverna.moveis._estacao(deg_to_rad(96.0), Caverna.RAIO_CAMARA - 3.3)
+		var mago_a: CharacterBody3D = load("res://cenas/mago.tscn").instantiate()
+		add_child(mago_a)
+		mago_a.global_position = bloco * Vector3(6.0, 0.1, 10.2)
+		mago_a.look_at(bloco * Vector3(6.0, 0.1, 0.0), Vector3.UP)
+		for i in 10:
+			await get_tree().physics_frame
+		Input.action_press("mover_frente")
+		for i in 160:
+			await get_tree().physics_frame
+		Input.action_release("mover_frente")
+		_afirmar("caverna: o mago sobe a escada do andaime até a passarela (%.1f m)" % (mago_a.global_position.y - c.y), mago_a.global_position.y - c.y > MoveisDaForja.ALTURA_DO_ANDAIME - 0.3)
+		mago_a.queue_free()
 	var malha_moveis := caverna.get_node_or_null("MoveisDaForja") as MeshInstance3D
 	if malha_moveis:
 		var triangulos := malha_moveis.mesh.get_faces().size() / 3
-		_afirmar("caverna: móveis com muito detalhe, mas numa malha só (%d triângulos)" % triangulos, triangulos > 8000 and triangulos < 60000)
+		_afirmar("caverna: móveis com muito detalhe, mas numa malha só (%d triângulos)" % triangulos, triangulos > 12000 and triangulos < 80000)
 	var raizes := caverna.get_node_or_null("RaizesDoTeto") as MeshInstance3D
 	if raizes:
 		var caixa: AABB = raizes.global_transform * raizes.get_aabb()

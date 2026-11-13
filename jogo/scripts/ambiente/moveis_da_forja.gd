@@ -25,6 +25,7 @@ const CERA := Color(0.93, 0.88, 0.74)
 const CHAMA := Color(1.0, 0.76, 0.3)
 const PEDRA_DE_RUNA := Color(0.34, 0.3, 0.4)
 const CAPAS := [Color(0.62, 0.2, 0.2), Color(0.2, 0.36, 0.62), Color(0.24, 0.5, 0.3), Color(0.55, 0.36, 0.7), Color(0.75, 0.55, 0.2), Color(0.3, 0.22, 0.2)]
+const ALTURA_DO_ANDAIME := 4.9
 const POCOES := [Color(1.0, 0.35, 0.3), Color(0.35, 0.7, 1.0), Color(0.45, 0.95, 0.5), Color(0.8, 0.5, 1.0)]
 
 var _st: SurfaceTool        # madeira, pedra, ferro, pano (material toon)
@@ -35,6 +36,10 @@ var _centro: Vector3
 var _cores_runa: Array = []
 var livros := 0
 var velas := 0
+## Lugares de pouso em cima das estantes, para os livros voadores:
+## cada um é {"pos": ponto no espaço da caverna, "estante": número da estante}.
+var pousos: Array = []
+var _estantes := 0
 
 
 ## Monta tudo e pendura as duas malhas e as luzes em `dono`.
@@ -48,18 +53,37 @@ static func montar(dono: Node3D, centro: Vector3, raio_camara: float, altura_do_
 	m._cores_runa = RunaColetavel.CORES.values()
 	var r := raio_camara - 5.0
 
-	# Lado esquerdo de quem entra (+Z): estante grande, mesa do grimório, baú e barris.
-	m._estante(m._estacao(deg_to_rad(100.0), r), 6.4, 3, 9)
-	m._estandarte(m._estacao(deg_to_rad(100.0), r + 0.9), 6.2, 2.2)
-	m._mesa_do_grimorio(m._estacao(deg_to_rad(54.0), r - 0.6))
-	m._bau_e_barris(m._estacao(deg_to_rad(121.0), r - 0.3))
-	m._estandarte(m._estacao(deg_to_rad(66.0), r + 1.6), 5.0, 1.8)
-	# Lado direito (-Z): estante de poções, mesa de trabalho, caixotes com cristal.
-	m._estante(m._estacao(deg_to_rad(-78.0), r), 5.0, 3, 5, true)
-	m._estandarte(m._estacao(deg_to_rad(-78.0), r + 0.9), 5.8, 2.0)
-	m._mesa_de_trabalho(m._estacao(deg_to_rad(-121.0), r - 0.4))
-	m._caixotes(m._estacao(deg_to_rad(-57.0), r - 0.2))
-	m._estandarte(m._estacao(deg_to_rad(-100.0), r + 1.6), 5.0, 1.8)
+	# Os móveis ficam em dois blocos encostados na parede, cada um dentro de
+	# um andaime de madeira de dois andares com escada e passarela (folha).
+	var parede := raio_camara - 3.3
+	# Bloco esquerdo de quem entra (+Z): estante grande, baú e barris embaixo;
+	# estante pequena e caixotes em cima; mesa do grimório na frente.
+	var esq := m._estacao(deg_to_rad(96.0), parede)
+	m._andaime(esq, 15.0, 3.6, ALTURA_DO_ANDAIME, 1.0)
+	m._estante(m._em(esq, -3.4, 0.0, -0.9), 6.4, 3, 9)
+	m._bau_e_barris(m._em(esq, 4.3, 0.0, 0.2))
+	m._estante(m._em(esq, -3.0, ALTURA_DO_ANDAIME + 0.1, -1.0), 3.4, 2, 4)
+	m._caixote(m._em(esq, 2.0, ALTURA_DO_ANDAIME + 0.1, -0.6), Vector3.ZERO, 1.0, 0.3)
+	m._barril(m._em(esq, 3.4, ALTURA_DO_ANDAIME + 0.1, -0.8), Vector3.ZERO, 1.1)
+	m._pilha_de_livros(m._em(esq, 2.0, ALTURA_DO_ANDAIME + 1.1, -0.6), Vector3.ZERO, 4)
+	m._velas(m._em(esq, 0.4, ALTURA_DO_ANDAIME + 0.1, -1.0), Vector3.ZERO, 5)
+	m._estandarte(m._em(esq, -5.6, 0.0, 1.85), ALTURA_DO_ANDAIME - 0.25, 1.3)
+	m._estandarte(m._em(esq, 1.9, 0.0, 1.85), ALTURA_DO_ANDAIME - 0.25, 1.3)
+	m._mesa_do_grimorio(m._em(esq, -3.0, 0.0, 5.2))
+	# Bloco direito (-Z): estante de poções e caixotes embaixo; tábuas de runa
+	# e barris em cima; mesa de trabalho na frente.
+	var dir := m._estacao(deg_to_rad(-92.0), parede)
+	m._andaime(dir, 15.0, 3.6, ALTURA_DO_ANDAIME, -1.0)
+	m._estante(m._em(dir, 3.2, 0.0, -0.9), 5.0, 3, 5, true)
+	m._caixotes(m._em(dir, -4.0, 0.0, 0.0))
+	m._estante(m._em(dir, 2.8, ALTURA_DO_ANDAIME + 0.1, -1.0), 3.4, 2, 6)
+	m._barril(m._em(dir, -2.2, ALTURA_DO_ANDAIME + 0.1, -0.8), Vector3.ZERO, 1.15)
+	m._barril(m._em(dir, -3.3, ALTURA_DO_ANDAIME + 0.1, -0.5), Vector3.ZERO, 1.0)
+	m._caixote(m._em(dir, -0.6, ALTURA_DO_ANDAIME + 0.1, -0.7), Vector3.ZERO, 0.9, -0.2)
+	m._velas(m._em(dir, 0.6, ALTURA_DO_ANDAIME + 0.1, -1.0), Vector3.ZERO, 4)
+	m._estandarte(m._em(dir, 5.6, 0.0, 1.85), ALTURA_DO_ANDAIME - 0.25, 1.3)
+	m._estandarte(m._em(dir, -1.9, 0.0, 1.85), ALTURA_DO_ANDAIME - 0.25, 1.3)
+	m._mesa_de_trabalho(m._em(dir, 3.0, 0.0, 5.4))
 	# Mirante de madeira na beira do abismo (as passarelas da folha, em pequeno).
 	m._mirante(m._estacao(deg_to_rad(152.0), raio_camara - 4.6))
 	# Miudezas espalhadas: velas no chão, pilhas de livros, lanternas penduradas.
@@ -67,9 +91,9 @@ static func montar(dono: Node3D, centro: Vector3, raio_camara: float, altura_do_
 		var t := m._estacao(deg_to_rad(grau + m._rng.randf_range(-3.0, 3.0)), r - m._rng.randf_range(1.6, 3.4))
 		m._velas(t, Vector3.ZERO, 3 + m._rng.randi() % 3)
 	for grau: float in [46.0, 62.0, 92.0, 108.0, -50.0, -70.0, -88.0, -114.0, -128.0, 128.0]:
-		var t := m._estacao(deg_to_rad(grau), r - m._rng.randf_range(0.6, 2.6))
+		var t := m._estacao(deg_to_rad(grau), r - m._rng.randf_range(2.6, 4.6))
 		m._pilha_de_livros(t, Vector3(m._rng.randf_range(-0.8, 0.8), 0, 0), 3 + m._rng.randi() % 4)
-	for grau: float in [84.0, 116.0, 58.0, -64.0, -92.0, -116.0]:
+	for grau: float in [70.0, 122.0, 50.0, -62.0, -122.0, -40.0]:
 		var a := deg_to_rad(grau)
 		var pe := centro + Vector3(cos(a), 0, sin(a)) * (r - 1.5)
 		var teto: float = altura_do_teto.call(r - 1.5)
@@ -92,14 +116,14 @@ static func montar(dono: Node3D, centro: Vector3, raio_camara: float, altura_do_
 	# Quatro poças de luz quente, uma por canto do posto (as velas e lanternas
 	# em si são só cor acesa).
 	for k in 4:
-		var a := deg_to_rad([100.0, 56.0, -78.0, -118.0][k])
+		var a := deg_to_rad([84.0, 108.0, -80.0, -104.0][k])
 		var luz := OmniLight3D.new()
 		luz.name = "LuzDosMoveis%d" % k
 		luz.light_color = Color(1.0, 0.6, 0.24)
 		luz.light_energy = 5.0
 		luz.omni_range = 14.0
 		luz.omni_attenuation = 0.8
-		luz.position = centro + Vector3(cos(a), 0, sin(a)) * (r - 3.2) + Vector3.UP * 2.4
+		luz.position = centro + Vector3(cos(a), 0, sin(a)) * (r - 2.6) + Vector3.UP * 3.0
 		dono.add_child(luz)
 	return m
 
@@ -110,6 +134,29 @@ static func montar(dono: Node3D, centro: Vector3, raio_camara: float, altura_do_
 func _estacao(angulo: float, raio: float) -> Transform3D:
 	var fora := Vector3(cos(angulo), 0, sin(angulo))
 	return Transform3D(Basis(Vector3(-sin(angulo), 0, cos(angulo)), Vector3.UP, -fora), _centro + fora * raio)
+
+
+## Um ponto dentro de uma estação vira a origem de outra (mesma orientação).
+func _em(t: Transform3D, x: float, y: float, z: float) -> Transform3D:
+	return t * Transform3D(Basis(), Vector3(x, y, z))
+
+
+## Rampa de degraus com colisão: sobe de frente, do centro da câmara para a
+## parede. `z_topo` é onde ela chega em cima; o pé fica `corrida` adiante.
+func _rampa(t: Transform3D, x: float, z_topo: float, corrida: float, alto: float, largura := 2.0) -> void:
+	var comprimento := sqrt(alto * alto + corrida * corrida)
+	var plano := Transform3D(Basis(Vector3.RIGHT, atan2(alto, corrida)), Vector3(x, alto / 2.0 + 0.02, z_topo + corrida / 2.0))
+	_colidir(t * plano, Vector3(0, -0.15, 0), Vector3(largura, 0.3, comprimento))
+	var degraus := int(alto / 0.26)
+	for k in degraus:
+		var f := (k + 0.5) / degraus
+		_caixa(t, Vector3(x, alto * (1.0 - f) - 0.03, z_topo + corrida * f), Vector3(largura, 0.12, corrida / degraus + 0.06), MADEIRA if k % 2 else MADEIRA * 1.12)
+	for dx: float in [-1.0, 1.0]:
+		_caixa(t * plano, Vector3(dx * (largura / 2.0 + 0.05), -0.2, 0), Vector3(0.14, 0.34, comprimento), MADEIRA_ESCURA)
+		# corrimão da escada
+		_caixa(t * plano, Vector3(dx * (largura / 2.0 + 0.05), 0.95, 0), Vector3(0.08, 0.08, comprimento), MADEIRA)
+		for q in 4:
+			_caixa(t * plano, Vector3(dx * (largura / 2.0 + 0.05), 0.4, -comprimento / 2.0 + 0.4 + q * (comprimento - 0.8) / 3.0), Vector3(0.1, 1.1, 0.1), MADEIRA_ESCURA)
 
 
 func _caixa(t: Transform3D, pos: Vector3, tam: Vector3, cor: Color, giro := 0.0, tomba := 0.0, aceso := false) -> void:
@@ -293,6 +340,10 @@ func _estante(t: Transform3D, largura: float, prateleiras: int, tabuas: int, de_
 			else:
 				_fileira_de_livros(t, Vector3(centro_x - 0.3, y + 0.045, 0.1), vao - 0.7)
 				_pilha_de_livros(t, Vector3(centro_x + vao / 2.0 - 0.3, y + 0.045, 0.1), 2 + _rng.randi() % 2)
+	# lugares de pouso dos livros voadores, em cima da estante
+	_estantes += 1
+	for dx: float in [-1.0, 0.0, 1.0]:
+		pousos.append({"pos": t * Vector3(dx * (largura / 2.0 - 1.25), altura + (0.3 if dx == 0.0 else 0.2), 0.05), "estante": _estantes})
 	# em cima: velas, um cristal e pergaminhos
 	_velas(t, Vector3(-largura / 2.0 + 0.5, altura + 0.16, 0.1), 4)
 	_velas(t, Vector3(largura / 2.0 - 0.5, altura + 0.16, 0.1), 3)
@@ -447,14 +498,7 @@ func _mirante(t: Transform3D) -> void:
 		_caixa(t, Vector3(dx * 2.45, alto * 0.55, -0.4), Vector3(0.12, 0.12, 3.5), MADEIRA_ESCURA, 0.0, 0.6 * dx)
 	_colidir(t, Vector3(0, alto - 0.3, -0.4), Vector3(5.4, 0.82, 3.6))
 	# rampa de degraus subindo de frente (do centro da câmara para a beirada)
-	var corrida := 4.2
-	var rampa := Transform3D(Basis(Vector3.RIGHT, atan2(alto, corrida)), Vector3(0, alto / 2.0 + 0.02, 1.4 + corrida / 2.0))
-	_colidir(t * rampa, Vector3(0, -0.15, 0), Vector3(2.0, 0.3, sqrt(alto * alto + corrida * corrida)))
-	for k in 9:
-		var f := (k + 0.5) / 9.0
-		_caixa(t, Vector3(0, alto * (1.0 - f) - 0.03, 1.4 + corrida * f), Vector3(2.0, 0.12, corrida / 9.0 + 0.06), MADEIRA if k % 2 else MADEIRA * 1.12)
-	for dx: float in [-1.0, 1.0]:
-		_caixa(t * rampa, Vector3(dx * 1.05, -0.2, 0), Vector3(0.14, 0.34, sqrt(alto * alto + corrida * corrida)), MADEIRA_ESCURA)
+	_rampa(t, 0.0, 1.4, 4.2, alto)
 	# corrimão: postes e travessa nos três lados que dão para o vazio
 	for k in 6:
 		var x := -2.6 + k * 1.04
@@ -478,3 +522,52 @@ func _mirante(t: Transform3D) -> void:
 	_caixote(t, Vector3(-1.9, alto + 0.11, 0.4), 0.7, 0.3)
 	_barril(t, Vector3(2.1, 0, 2.2), 1.2)
 	_velas(t, Vector3(-1.5, 0, 2.4), 3)
+
+
+## Andaime de madeira de dois andares (folha): postes, passarela em cima com
+## corrimão, travessas em X no fundo, escada numa ponta e correntes em arco
+## com lanterna entre os postes da frente. `lado_da_escada`: +1 ou -1 (ponta
+## em X onde a escada sobe).
+func _andaime(t: Transform3D, largura: float, fundo: float, altura: float, lado_da_escada: float) -> void:
+	var vaos := 5
+	var passo := largura / vaos
+	var x_escada := lado_da_escada * (largura / 2.0 - passo / 2.0)
+	for k in vaos + 1:
+		var x := -largura / 2.0 + k * passo
+		# poste do fundo (até o piso de cima) e da frente (sobe além do corrimão)
+		_caixa(t, Vector3(x, altura / 2.0, -fundo / 2.0), Vector3(0.34, altura, 0.34), MADEIRA_ESCURA)
+		_caixa(t, Vector3(x, (altura + 2.4) / 2.0, fundo / 2.0), Vector3(0.34, altura + 2.4, 0.34), MADEIRA_ESCURA)
+		_caixa(t, Vector3(x, altura + 2.45, fundo / 2.0), Vector3(0.46, 0.12, 0.46), MADEIRA)
+		_colidir(t, Vector3(x, altura / 2.0, fundo / 2.0), Vector3(0.4, altura, 0.4))
+		# viga entre a frente e o fundo, sob o piso
+		_caixa(t, Vector3(x, altura - 0.22, 0), Vector3(0.2, 0.24, fundo), MADEIRA_ESCURA)
+		if k < vaos:
+			var meio := x + passo / 2.0
+			# travessas em X no fundo
+			for sentido: float in [-1.0, 1.0]:
+				GeometriaLowPoly.anexar(_st, GeometriaLowPoly.cubo(Vector3(sqrt(passo * passo + altura * altura * 0.36), 0.12, 0.1)),
+					t * Transform3D(Basis(Vector3.BACK, sentido * atan2(altura * 0.6, passo)), Vector3(meio, altura * 0.5, -fundo / 2.0 - 0.05 * sentido)), MADEIRA_ESCURA * 0.85)
+			# corrimão da frente (menos no vão em que a escada chega)
+			if absf(meio - x_escada) > 0.1:
+				_caixa(t, Vector3(meio, altura + 1.05, fundo / 2.0), Vector3(passo, 0.1, 0.1), MADEIRA)
+				_caixa(t, Vector3(meio, altura + 0.6, fundo / 2.0), Vector3(passo, 0.07, 0.07), MADEIRA)
+				_colidir(t, Vector3(meio, altura + 0.6, fundo / 2.0), Vector3(passo, 1.2, 0.2))
+			# corrente em arco entre os topos dos postes, com lanterna no meio
+			for q in 7:
+				var f := (q + 0.5) / 7.0
+				var queda := sin(f * PI) * 0.9
+				_caixa(t, Vector3(x + passo * f, altura + 2.3 - queda, fundo / 2.0), Vector3(0.36, 0.06, 0.06) if q % 2 else Vector3(0.36, 0.11, 0.035), FERRO)
+			if k % 2 == 0:
+				_lanterna(t, Vector3(meio, altura + 0.75, fundo / 2.0), 1.4)
+	# piso de cima: tábuas com fresta
+	var tabuas := int(largura / 0.75)
+	for k in tabuas:
+		_caixa(t, Vector3(-largura / 2.0 + (k + 0.5) * largura / tabuas, altura, 0), Vector3(largura / tabuas - 0.05, 0.16, fundo + 0.3), MADEIRA if k % 3 else MADEIRA * 0.88)
+	_colidir(t, Vector3(0, altura - 0.12, 0), Vector3(largura, 0.4, fundo + 0.3))
+	# corrimão das duas pontas; atrás, uma parede invisível encostada na pedra
+	for ponta: float in [-1.0, 1.0]:
+		_caixa(t, Vector3(ponta * largura / 2.0, altura + 1.05, 0), Vector3(0.1, 0.1, fundo), MADEIRA)
+		_colidir(t, Vector3(ponta * (largura / 2.0 + 0.1), altura + 0.6, 0), Vector3(0.2, 1.2, fundo))
+	_colidir(t, Vector3(0, altura + 0.6, -fundo / 2.0 - 0.2), Vector3(largura, 1.2, 0.2))
+	# escada
+	_rampa(t, x_escada, fundo / 2.0 + 0.1, 7.6, altura, passo - 0.9)

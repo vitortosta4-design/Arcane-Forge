@@ -341,3 +341,13 @@ Sessão na nuvem, só em `gigante_arvore.py`, `arvore_gigante.gd` e `suite_teste
 - **Achado:** no renderizador da nuvem cada malha recebe no máximo 8 luzes; como câmara e móveis são malhas únicas, parte das luzes não acende nos prints. No PC do Vitor (Forward+) não há esse limite. A cor só fecha com print de lá.
 - **Testes:** 6 novos (malhas dos móveis, contagem de livros e velas, triângulos, mago sobe a rampa do mirante e o corrimão segura). 449/449.
 - **Evidência:** `evidencias/fase-2/caverna/caverna_folha_x_jogo_etapa3.png` e `caverna_etapa3_*.png` (já com a cor esquentada).
+
+## 13/11/2026 (manhã) · Caverna da forja, etapa 4: andaimes e livros voadores
+
+- **Pedido do Vitor:** opção 1a (andaimes, escadas e passarelas, móveis em dois blocos na parede) e "livros voando e trocando sozinhos de estantes".
+- **Andaimes (`MoveisDaForja._andaime`):** 15 m de largura, passarela a 4,9 m, 6 postes na frente e 6 atrás, travessas em X, corrimão, correntes em arco com lanterna e escada de 7,6 m de corrida (rampa com colisão, `_rampa`, que o mirante passou a usar também). Embaixo ficam a estante grande e o baú (esquerda) e a estante de poções e os caixotes (direita); em cima, uma segunda estante, barris e caixotes; as mesas ficam na frente. As costelas de pedra e os cristais grandes saíram de trás dos blocos.
+- **Livros voadores (`livros_voadores.gd`):** cada livro são duas metades presas na lombada; pousado fica fechado e deitado, no ar abre e bate as capas 3,2 vezes por segundo, faz um arco de 2,6 m e vira para onde voa. Só escolhe lugar livre em outra estante (12 lugares, 3 por estante). O tempo anda por `avancar(delta)`, que o teste acelera.
+- **Achado:** com 7 livros e 8 lugares só um voava por vez (só havia um lugar livre); com 6 livros e 12 lugares chegam a voar todos juntos.
+- **Testes:** 6 novos (decolam, arco por cima das estantes de capas abertas, trocam de estante, nunca dois no mesmo lugar, mago sobe a escada do andaime). 455/455. A suíte passou a levar uns 45 s e o limite do `rodar_testes.sh` subiu para 120 s.
+- **Evidência:** `evidencias/fase-2/caverna/caverna_folha_x_jogo_etapa4.png`, prints da etapa 4 e `caverna_livros_voadores.gif`.
+- **Limitações:** sem nova rodada do crítico; os livros atravessam o que estiver no caminho (não desviam); no cooperativo cada jogador vê a sua revoada; cor ainda por conferir no PC do Vitor.

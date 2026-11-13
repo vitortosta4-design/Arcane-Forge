@@ -186,7 +186,9 @@ func _criar_camara() -> void:
 	# da saída (ângulo zero) fica livre.
 	for i in 13:
 		var a := TAU * (i + 0.5) / 13.0
-		if absf(wrapf(a, -PI, PI)) < 0.3 or _no_fundo_aberto(a):
+		# sem costela atrás dos dois blocos de móveis (o andaime encosta na parede)
+		var atras_dos_moveis := absf(wrapf(a - deg_to_rad(96.0), -PI, PI)) < 0.5 or absf(wrapf(a - deg_to_rad(-92.0), -PI, PI)) < 0.5
+		if absf(wrapf(a, -PI, PI)) < 0.3 or _no_fundo_aberto(a) or atras_dos_moveis:
 			continue
 		var pe := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 1.3)
 		var para_dentro := (c - pe).normalized()
@@ -252,6 +254,10 @@ func _criar_camara() -> void:
 	_lanternas_e_cerca(c, colisores)
 	_fundo_aberto(c, colisores)
 	moveis = MoveisDaForja.montar(self, c, RAIO_CAMARA, _altura_do_teto, _material, colisores)
+	var voadores := LivrosVoadores.new()
+	voadores.name = "LivrosVoadores"
+	voadores.pousos = moveis.pousos
+	add_child(voadores)
 	# Luz quente da forja alcançando as paredes (a bigorna cuida das luzes
 	# dela; esta é só o banho alaranjado do ambiente: quente no meio, frio e
 	# arroxeado nas bordas, como no conceito).
@@ -280,6 +286,9 @@ func _criar_camara() -> void:
 		var a := TAU * i / 6.0 + 0.3
 		var p := c + Vector3(cos(a), 0, sin(a)) * (RAIO_CAMARA - 4.0)
 		if p.x > c.x + 14.0 and absf(p.z - c.z) < 6.0:
+			continue
+		# nada de cristal grande atravessando os andaimes dos móveis
+		if absf(wrapf(a - deg_to_rad(96.0), -PI, PI)) < 0.62 or absf(wrapf(a - deg_to_rad(-92.0), -PI, PI)) < 0.62:
 			continue
 		# Só 3 grupos têm luz de verdade (as lanternas gastam as outras).
 		_cristais(p, CORES_CRISTAL[1] if i == 3 else CORES_CRISTAL[0], 2.6, i % 2 == 1)
